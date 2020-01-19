@@ -161,17 +161,58 @@ void adc_channel_sel(enum E_ADCCNL_SEL channel)
 void adc_init_interrupt(void)
 {
     /* 关闭P0.1 的数字逻辑输入输出功能 设置P0.1 为输入(高阻)模式 */
-    Set_ADC_Input_Mode(E_CHANNEL0);
+    adc_set_input_mode(E_CHANNEL0);
     /* AADR2 AADR1 AADR2 = 000B 选择ADC0 即P0.1作为ADC采样端口 */
-    ADC_Channel_Sel(E_CHANNEL0);
+    adc_channel_sel(E_CHANNEL0);
 
     /* 打开ADC中断和全局中断 */
-    Enable_ADC_Interrupt();
+    adc_enable_interrupt();
     /* 打开ADC电路 */
     set_ADCEN;
 }
 
-void Trigger_ADC_Convertion(void)
+void adc_enable_interrupt(void)
+{
+    /* 打开ADC中断 */
+    EADC = 1;
+    /* 打开全局中断 */
+    EA = 1;
+}
+
+uint16_t adc_sensor(void)
+{
+    uint16_t temp[10];
+    uint8_t i;
+
+    /* 采集10次用来滤波 */
+    for (i = 0; i < 10; i++)
+    {
+        /* 获取单次的ADC采样结果 */
+        temp[i] = adc_single_sample();
+    }
+
+    /* 返回滤波后的值 */
+    return Adc_Fil_Sensor(temp);
+}
+
+uint16_t adc_single_sample(void)
+{
+    uint16_t u16_ADCL;
+    uint16_t u16_ADC;
+    adc_trigger_convertion();
+
+    /* 从ADCCON0获取 ADC 10bit 采集值的最后2个bit ADC.1 ADC.0 ADC[1:0]*/
+    u16_ADCL = ADCCON0;
+    u16_ADCL = u16_ADCL >> 6;
+    /* 从ADCH中获取 ADC 转换结果位 ADC[9:2] */
+    u16_ADC = ADCH;
+    /* 将ADC的采样结果合成 10bit */
+    u16_ADC = (u16_ADC << 2) + u16_ADCL;
+
+    return u16_ADC;
+}
+
+void adc_trigger_convertion(void)
 {
     /* Clear ADC flag 
         - ADCI = 0 ADC空闲
@@ -197,38 +238,14 @@ void Trigger_ADC_Convertion(void)
     check_BOD();
 }
 
-void Enable_ADC_Interrupt(void)
+
+
+uint16_t adc_sensor_filter(uint16_t *p)
 {
-    /* 打开ADC中断 */
-    EADC = 1;
-    /* 打开全局中断 */
-    EA = 1;
-}
-
-
-
-uint16_t Adc_Sigl_Sensor(void)
-{
-    uint16_t u16_ADCL;
-    Trigger_ADC_Convertion();
-
-    /* 从ADCCON0获取 ADC 10bit 采集值的最后2个bit ADC.1 ADC.0 ADC[1:0]*/
-    u16_ADCL = ADCCON0;
-    u16_ADCL = u16_ADCL >> 6;
-    /* 从ADCH中获取 ADC 转换结果位 ADC[9:2] */
-    u16ADC = ADCH;
-    /* 将ADC的采样结果合成 10bit */
-    u16ADC = (u16ADC << 2) + u16ADCL;
-
-    return u16ADC;
-}
-
-UINT16 Adc_Fil_Sensor(UINT16 *p)
-{
-    UINT8 i;
-    UINT32 sum = 0;
-    UINT16 maxtemp = 0, mintemp = 0;
-    UINT16 *ptemp = p;
+    uint8_t i;
+    uint32_t sum = 0;
+    uint16_t maxtemp = 0, mintemp = 0;
+    uint16_t *ptemp = p;
 
     for (i = 0; i < 10; i++)
     {
@@ -261,23 +278,7 @@ UINT16 Adc_Fil_Sensor(UINT16 *p)
     /* 总值除以8 因为已经去掉两个成员 最大值和最小值 */
     sum = sum >> 3;
 
-    return (UINT16)sum;
-}
-
-uint16_t adc_sensor(void)
-{
-    uint16_t temp[10];
-    uint8_t i;
-
-    /* 采集10次用来滤波 */
-    for (i = 0; i < 10; i++)
-    {
-        /* 获取单次的ADC采样结果 */
-        temp[i] = Adc_Sigl_Sensor();
-    }
-
-    /* 返回滤波后的值 */
-    return Adc_Fil_Sensor(temp);
+    return (uint16_t)sum;
 }
 
 /* ADC 采样中断服务程序 Vecotr @ 0x5B */

@@ -244,7 +244,7 @@ void main(void)
     //     adc_init();
 
     //     /* 得到ADC采样并滤波之后的值 */
-    //     CH4_Adc_Valu = Adc_Sensor();
+    //     CH4_Adc_Valu = adc_sensor();
 
     //     /* ---- UART 通讯程序段 ----*/
     //     /* UART接收完成 */

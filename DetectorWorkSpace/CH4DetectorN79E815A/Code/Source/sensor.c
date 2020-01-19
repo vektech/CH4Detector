@@ -63,8 +63,8 @@ uint8_t demarcation_result[4] = 0;
 /* 标定函数 */
 /*  1.按键按下 消抖后
     2.电源灯声音闪亮3声,声音与报警和故障声不同，随后进入3分钟预热
-    3.开始读取AD，if ((adcvalue < 41) || (adcvalue > 260))，则认为是故障，故障灯闪亮，标定失败
-    4.if (adcvalue < 410)，则电源，故障，报警灯全亮，等待。若>=410，则故障、报警灯闪亮100s左右以指示
+    3.开始读取AD，if ((adc_value < 41) || (adc_value > 260))，则认为是故障，故障灯闪亮，标定失败
+    4.if (adc_value < 410)，则电源，故障，报警灯全亮，等待。若>=410，则故障、报警灯闪亮100s左右以指示
     5.if ((temp_data < 410)||(temp_data > 950))，则反应值不合法，故障灯亮，标定失败
     6.标定成功，报警灯常亮。进入死循环等待重启
     */
@@ -72,7 +72,7 @@ void sersor_demarcation(void)
 {
     uint8_t demarcate_key;
     uint16_t i = 0;
-    uint16_t adcvalue = 0;
+    uint16_t adc_value = 0;
     uint16_t temp_data = 0;
     uint16_t d1 = 0;
 
@@ -140,9 +140,9 @@ void sersor_demarcation(void)
             }
 
             /* 得到ADC采样并滤波之后的值 */
-            adcvalue = Adc_Sensor();
+            adc_value = adc_sensor();
             /* 将该采样值存储到ch4_0中 ch4_0为0传感器0点的值 */
-            ch4_0 = adcvalue;
+            ch4_0 = adc_value;
 
             /* 串口输出该次采样的值 */
             uart_send(0x1f);
@@ -155,18 +155,18 @@ void sersor_demarcation(void)
             Delay1ms(5);
 
             /* 再次得到ADC采样并滤波之后的值 */
-            adcvalue = Adc_Sensor();
+            adc_value = adc_sensor();
 
             while (1)
             {
                 /* 得到ADC采样并滤波之后的值 */
-                adcvalue = Adc_Sensor();
+                adc_value = adc_sensor();
                 
                 /* 采样值点 合理性判断 AD超出范围 0.2V-1.27V 则故障灯亮 */
-                if ((adcvalue < 41) || (adcvalue > 260))
+                if ((adc_value < 41) || (adc_value > 260))
                 {
                     Delay1ms(1000);
-                    if ((adcvalue < 41) || (adcvalue > 260))
+                    if ((adc_value < 41) || (adc_value > 260))
                     {
                         while (1)
                         {
@@ -182,7 +182,7 @@ void sersor_demarcation(void)
                 do
                 {
                     /* 再次得到ADC采样并滤波之后的值 */
-                    adcvalue = Adc_Sensor();
+                    adc_value = adc_sensor();
 
                     /* <1> 电源 故障 报警 三灯常亮 */
                     /* 电源灯开 */
@@ -200,12 +200,12 @@ void sersor_demarcation(void)
                         Delay1ms(5);
                         uart_send(0x2f);
                         Delay1ms(5);
-                        uart_send(adcvalue >> 8);
+                        uart_send(adc_value >> 8);
                         Delay1ms(5);
-                        uart_send(adcvalue);
+                        uart_send(adc_value);
                         Delay1ms(5);
                     }
-                } while (adcvalue < 410);
+                } while (adc_value < 410);
 
                 Delay1ms(250);
                 Delay1ms(250);
@@ -233,14 +233,14 @@ void sersor_demarcation(void)
                     Delay1ms(5);
                     uart_send(0x3f);
                     Delay1ms(5);
-                    uart_send(adcvalue >> 8);
+                    uart_send(adc_value >> 8);
                     Delay1ms(5);
-                    uart_send(adcvalue);
+                    uart_send(adc_value);
                     Delay1ms(5);
                 }
 
                 /* 暂存得到ADC采样并滤波之后的值 */
-                temp_data = Adc_Sensor();
+                temp_data = adc_sensor();
 
                 /* 采样值 合理性判断 AD超出范围 ADC_result < 410 or  ADC_result > 950 */
                 if ((temp_data < 410) || (temp_data > 950))
@@ -267,7 +267,7 @@ void sersor_demarcation(void)
                     /* 报警灯关 */
                     LED_ALARM_OFF;
                     /* 暂存 得到ADC采样并滤波之后的值 */
-                    temp_data = Adc_Sensor();
+                    temp_data = adc_sensor();
 
                     /* 将暂存的ADC采样值 存入ch4_3500中 ch4_3500为传感器 3500 XXX 的值 */
                     ch4_3500 = temp_data;

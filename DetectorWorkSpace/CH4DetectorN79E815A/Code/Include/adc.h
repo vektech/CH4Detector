@@ -72,17 +72,12 @@ typedef enum
 void adc_init(void);
 void adc_set_input_mode(enum E_ADCCNL_SEL channel);
 void adc_channel_sel(enum E_ADCCNL_SEL channel);
-
-void Enable_ADC_Interrupt(void);
-
-
-void Trigger_ADC_Convertion(void);
-
-
 void adc_init_interrupt(void);
-UINT16 Adc_Sigl_Sensor(void);
-UINT16 Adc_Fil_Sensor(UINT16 *p);
-UINT16 Adc_Sensor(void);
+void adc_enable_interrupt(void);
+uint16_t adc_sensor(void);
+uint16_t adc_single_sample(void);
+void adc_trigger_convertion(void);
+uint16_t adc_sensor_filter(uint16_t *p);
 
 #endif /* _ADC_H_ */
 /*******************************************************************************
