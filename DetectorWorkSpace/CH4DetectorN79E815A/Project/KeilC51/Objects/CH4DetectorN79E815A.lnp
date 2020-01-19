@@ -1,0 +1,10 @@
+".\Objects\delay.obj",
+".\Objects\main.obj",
+".\Objects\signal.obj",
+".\Objects\STARTUP.obj",
+".\Objects\utlities.obj",
+".\Objects\uart.obj",
+".\Objects\device.obj" 
+TO ".\Objects\CH4DetectorN79E815A" 
+PRINT(".\Listings\CH4DetectorN79E815A.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 
