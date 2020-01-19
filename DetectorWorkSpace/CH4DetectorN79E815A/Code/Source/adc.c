@@ -238,8 +238,7 @@ void adc_trigger_convertion(void)
     check_BOD();
 }
 
-
-
+/* XXX 可以不使用 ptemp 只使用 p 指针即可 */
 uint16_t adc_sensor_filter(uint16_t *p)
 {
     uint8_t i;
