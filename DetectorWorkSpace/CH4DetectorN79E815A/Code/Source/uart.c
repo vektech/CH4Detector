@@ -36,10 +36,12 @@
 /*******************************************************************************
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
-// uint8_t uart_buffer[20] = 0x00;
+uint8_t uart_buffer[20] = {0x00};
 uint8_t rx_index;
-// uint8_t rx_finished;
-// uint8_t rx_count;
+uint8_t rx_finished;
+
+/* 用于在 Timer2 中检查串口接受超时 每次接收清零 两次 Timer2 中断后检查接收的结果 */
+uint8_t rx_count;
 
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
@@ -103,99 +105,101 @@ void uart_init(uint32_t bandrate)
     TR1 = 1;
 }
 
-// void uart_send(uint8_t byte)
-// {
-//     /* 奇偶校验 0 = 偶校验, 1 = 奇校验 */
-// #if (UART_PARITY_SET == EVEN_PARITY)
-//     /* 将发送的数据放至ACC中 */
-//     /* PSW 中的 P位 为奇偶标志 累加结果为奇数时为1 偶数时为0 */
-//     ACC = byte;
-//     /* 偶校验 TB8 存储要发送的校验位 */
-//     TB8 = P;
-// #else
-//     /* 将发送的数据放至ACC中 */
-//     /* PSW 中的 P位 为奇偶标志 累加结果为奇数时为1 偶数时为0 */
-//     ACC = byte;
-//     /* 奇校验 TB8 存储要发送的校验位 */
-//     TB8 = ~P;
-// #endif
-//     /* SBUF 串行口接收或者发送的数据都放在这个寄存器中
-//         - 实际上改地址上有2个独立的8位寄存器 一个用于接收数据 一个用于发送数据
-//         - 对它进行读操作将会接收串行数据 对它进行写操作则发送串行数据 
-//         - 每次向SBUF写入一字节数据 启动一次发送 
-//         */
-//     SBUF = byte;
-// }
+void uart_send(uint8_t byte)
+{
+    /* 奇偶校验 0 = 偶校验, 1 = 奇校验 */
+#if (UART_PARITY_SET == EVEN_PARITY)
+    /* 将发送的数据放至ACC中 */
+    /* PSW 中的 P位 为奇偶标志 累加结果为奇数时为1 偶数时为0 */
+    ACC = byte;
+    /* 偶校验 TB8 存储要发送的校验位 */
+    TB8 = P;
+#else
+    /* 将发送的数据放至ACC中 */
+    /* PSW 中的 P位 为奇偶标志 累加结果为奇数时为1 偶数时为0 */
+    ACC = byte;
+    /* 奇校验 TB8 存储要发送的校验位 */
+    TB8 = ~P;
+#endif
+    /* SBUF 串行口接收或者发送的数据都放在这个寄存器中
+        - 实际上改地址上有2个独立的8位寄存器 一个用于接收数据 一个用于发送数据
+        - 对它进行读操作将会接收串行数据 对它进行写操作则发送串行数据 
+        - 每次向SBUF写入一字节数据 启动一次发送 
+        */
+    SBUF = byte;
+}
 
-// /* UART 中断服务函数 */
-// void UART_ISR(void) interrupt 4
-// {
-//     uint8_t i = 0;
-//     bit parity_bit = 0;
+/* UART 中断服务函数 */
+void UART_ISR(void) interrupt 4
+{
+    uint8_t i = 0;
+    bit parity_bit = 0;
 
-//     /* 读过程 RI 即 Reception Interrupt Flag */
-//     if (RI == 1)
-//     {
-//         /* Clear reception flag for next reception */
-//         RI = 0;
+    /* 读过程 RI 即 Reception Interrupt Flag */
+    if (RI == 1)
+    {
+        /* Clear reception flag for next reception */
+        RI = 0;
 
-//         /* SBUF 串行口接收或者发送的数据都放在这个寄存器中
-//             - 实际上改地址上有2个独立的8位寄存器 一个用于接收数据 一个用于发送数据
-//             - 对它进行读操作将会接收串行数据 对它进行写操作则发送串行数据 
-//             - 每次向SBUF写入一字节数据 启动一次发送 
-//             */
-//         ACC = SBUF;
+        /* SBUF 串行口接收或者发送的数据都放在这个寄存器中
+            - 实际上改地址上有2个独立的8位寄存器 一个用于接收数据 一个用于发送数据
+            - 对它进行读操作将会接收串行数据 对它进行写操作则发送串行数据 
+            - 每次向SBUF写入一字节数据 启动一次发送 
+            */
+        ACC = SBUF;
 
-//         /* PSW 中的 P位 为奇偶标志 累加结果为奇数时为1 偶数时为0 */
-//         if (P)
-//         {
-//             /* 为奇数时置1 */
-//             parity_bit = 1;
-//         }
+        /* PSW 中的 P位 为奇偶标志 累加结果为奇数时为1 偶数时为0 */
+        if (P)
+        {
+            /* 为奇数时置1 */
+            parity_bit = 1;
+        }
 
-//     /* 奇偶校验 0=偶校验 1=奇校验 */
-// #if (UART_PARITY_SET == EVEN_PARITY)
-//         /* 偶校验 */
-//         if (RB8 == (parity_bit))
-//         {
-//             /* 读SBUF 存入rxbuf中 */
-//             uart_buffer[rx_index++] = SBUF;
-//             /* Rx 存储空间将满 */
-//             if (rx_index >= (sizeof(uart_buffer) - 1))
-//             {
-//                 /* UART0 关闭接收功能 */
-//                 UART0_RX_DISABLE;
-//                 /* 接收完成 */
-//                 rx_finished = 1;
-//             }
-//         }
-// #else
-//         /* 奇校验 */
-//         if (RB8 == (~parity_bit))
-//         {
-//             /* 读SBUF 存入rxbuf中 */
-//             uart_buffer[rx_index++] = SBUF;
-//             /* Rx 存储空间将满 */
-//             if (rx_index >= sizeof(uart_buffer))
-//             {
-//                 /* UART0 关闭接收功能 */
-//                 UART0_RX_DISABLE;
-//                 /* 接收完成 */
-//                 rx_finished = 1;
-//             }
-//         }
-// #endif
-//         /* XXX */
-//         rx_count = 0;
-//     }
-//     else
-//     {
-//         /* Clear transmit flag for next transmition */
-//         TI = 0;
-//     }
-//     /* XXX 使能TIME2定时器 因为在蜂鸣器响之前 把TR2关掉了 所以一旦接收到数据 则把TIME2打开以增加串口接收完成判断的实时性 */
-//     TR2 = 1;
-// }
+    /* 奇偶校验 0=偶校验 1=奇校验 */
+#if (UART_PARITY_SET == EVEN_PARITY)
+        /* 偶校验 */
+        if (RB8 == (parity_bit))
+        {
+            /* 读SBUF 存入rxbuf中 */
+            uart_buffer[rx_index++] = SBUF;
+            /* Rx 存储空间将满 */
+            if (rx_index >= (sizeof(uart_buffer) - 1))
+            {
+                /* UART0 关闭接收功能 */
+                UART0_RX_DISABLE;
+                /* 接收完成 */
+                rx_finished = 1;
+            }
+        }
+#else
+        /* 奇校验 */
+        if (RB8 == (~parity_bit))
+        {
+            /* 读SBUF 存入rxbuf中 */
+            uart_buffer[rx_index++] = SBUF;
+            /* Rx 存储空间满 XXX 为何和前项不同 */
+            if (rx_index >= sizeof(uart_buffer))
+            {
+                /* UART0 关闭接收功能 */
+                UART0_RX_DISABLE;
+                /* 接收完成 */
+                rx_finished = 1;
+            }
+        }
+#endif
+        /* 读串口数据直到存储空间将满为止 */
+        rx_count = 0;
+    }
+    /* 写中断 此处清除写中断标志 */
+    else
+    {
+        /* Clear transmit flag for next transmition */
+        TI = 0;
+    }
+    /* XXX 使能TIME2定时器 因为在蜂鸣器响之前 把TR2关掉了 蜂鸣器独占CPU时间 
+       所以一旦接收到数据 则把TIME2打开以增加串口接收完成判断的实时性 */
+    TR2 = 1;
+}
 
 /*******************************************************************************
  *                 File Static Function Define Section ('static function')
