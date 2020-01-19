@@ -83,7 +83,7 @@ void main(void)
     /* 设备标定 */
     sersor_demarcation();
 
-    // /* XXX 上电状态位为0 进行一次上电记录 */
+    /* XXX 上电状态位为0 进行一次上电记录 */
     // if (device_first_power_on == false)
     // {
     //     device_first_power_on = true;
