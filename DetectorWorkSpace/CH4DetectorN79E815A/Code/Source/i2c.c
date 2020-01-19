@@ -50,9 +50,11 @@
 static void i2c_start(void);
 static void i2c_8563_address(uint8_t sub);
 static void i2c_reapeat_start(void);
-static void i2c_read_date(uint8_t *temp, uint8_t u8_data);
+static void i2c_read_data(uint8_t *temp, uint8_t u8_data);
 static void i2c_deal_time_code(void);
 static void i2c_stop(void);
+static void i2c_write_data(uint8_t *time, uint8_t length);
+
 
 /*******************************************************************************
  *                 Global Variable Declare Section ('variable')
@@ -91,7 +93,7 @@ void i2c_get_time(void)
     
     /* 8563 读、写地址 */
     i2c_8563_address(0xA3);
-    i2c_read_date(i2c_time_code, 7);
+    i2c_read_data(i2c_time_code, 7);
     i2c_deal_time_code();
 #else
     /* 8563 读、写地址 */
@@ -103,7 +105,7 @@ void i2c_get_time(void)
 
     /* 8563 读、写地址 */
     i2c_8563_address(0x65);
-    i2c_read_date(i2c_time_code, 7);
+    i2c_read_data(i2c_time_code, 7);
     i2c_time_code[3] += i2c_time_code[4];
     i2c_time_code[4] = i2c_time_code[3] - i2c_time_code[4];
     i2c_time_code[3] = i2c_time_code[3] - i2c_time_code[4];
@@ -117,10 +119,10 @@ void i2c_get_time(void)
     i2c_stop();
 }
 
-/* YYY maybe not use */
-void Master_Write_Data()
+void i2c_set_time()
 {
     uint8_t i = 0;
+    
     i2c_start();
 #if PCF8563 == 1
     /* 8563 读、写地址 */
@@ -128,7 +130,7 @@ void Master_Write_Data()
     i2c_8563_address(0x02);
 
     /* 8563 写入时间数据 */
-    Write_Data_To_Slave(i2c_time_code, 7);
+    i2c_write_data(i2c_time_code, 7);
 #else
     /* 8563 读、写地址 */
     i2c_8563_address(0x64);
@@ -138,33 +140,33 @@ void Master_Write_Data()
     i2c_time_code[3] = i2c_time_code[4];
     i2c_time_code[4] = i;
     /* 8563 写入时间数据 */
-    i2c_read_date(i2c_time_code, 7);
+    i2c_write_data(i2c_time_code, 7);
     i = i2c_time_code[3];
     i2c_time_code[3] = i2c_time_code[4];
     i2c_time_code[4] = i;
 #endif
-    I2C_Stop();
+    i2c_stop();
 }
 
-void I2C_StartRTCClock(void)
+void i2c_start_rtc(void)
 {
-    I2C_Start();
+    i2c_start();
 #if PCF8563 == 1
     /* 8563 读、写地址 */
-    I2C_8563_Address(0xA2);
-    /* 8563 寄存器地址 */
-    I2C_8563_Sla_Address(0x00);
+    i2c_8563_address(0xA2);
+    i2c_8563_address(0x00);
+
     i2c_time_code[0] = 0;
-    Write_Data_To_Slave(i2c_time_code, 1);
+    i2c_write_data(i2c_time_code, 1);
 #else
     /* 8563 读、写地址 */
-    I2C_8563_Address(0x64);
-    /* 8563 寄存器地址 */
-    I2C_8563_Sla_Address(0x1f);
+    i2c_8563_address(0x64);
+    i2c_8563_address(0x1f);
+
     i2c_time_code[0] = 0;
-    Write_Data_To_Slave(i2c_time_code, 1);
+    i2c_write_data(i2c_time_code, 1);
 #endif
-    I2C_Stop();
+    i2c_stop();
 }
 
 /*******************************************************************************
@@ -254,16 +256,16 @@ static void i2c_8563_address(uint8_t sub)
     }
 }
 
-static void Write_Data_To_Slave(uint8_t *Str, uint8_t u8Data)
+static void i2c_write_data(uint8_t *time, uint8_t length)
 {
-    uint8_t *Ptemp = Str;
+    uint8_t *ptemp = time;
     uint8_t i = 0;
     uint8_t delay_count;
 
-    for (i = 0; i < u8Data; i++)
+    for (i = 0; i < length; i++)
     {
         /* I2C 数据寄存器 只要SI为逻辑1 I2DAT中的数据保持不变 在I2C发送接收过程中 读或写I2DAT的结果都是不确定的 */
-        I2DAT = *Ptemp;
+        I2DAT = *ptemp;
         /* 串行中断标志SI清零 串行传输暂停 */
         SI = 0;
 
@@ -278,12 +280,12 @@ static void Write_Data_To_Slave(uint8_t *Str, uint8_t u8Data)
             }
         }
 
-        Ptemp++;
+        ptemp++;
     }
 }
 
 /* 从I2C中读取固定长度数据放入缓冲数组 */
-static void i2c_read_date(uint8_t *temp, uint8_t length)
+static void i2c_read_data(uint8_t *temp, uint8_t length)
 {
     uint8_t i = 0;
     uint8_t delay_count;

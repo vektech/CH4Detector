@@ -39,10 +39,7 @@ extern uint8_t i2c_time_code[7];
 
 void i2c_init(void);
 void i2c_get_time(void);
-
-void Master_Write_Data();
-
-void I2C_StartRTCClock(void);
+void i2c_set_time();
 
 #endif /* _I2C_H_ */
 /*******************************************************************************
