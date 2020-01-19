@@ -1,0 +1,10 @@
+{
+    "editor.fontFamily": "Fira Code",
+    "editor.fontLigatures": true,
+
+    "http.proxy": "http://127.0.0.1:10808",
+    "http.proxyStrictSSL": false,
+    "http.proxySupport": "off",
+    
+    "files.encoding": "gbk"
+}
