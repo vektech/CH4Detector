@@ -39,10 +39,10 @@ void timecodeTotimecopy(void);
 void timecopyTotimecode(void);
 
 /* 16进制转BCD码 */
-UINT8 hex2bcd(UINT8 temp);
+uint8_t hex2bcd(uint8_t temp);
 /* BCD转16进制 BCD:0~99 */
-UINT8 bcd2hex(UINT8 temp);
-UINT8 Get_crc(UINT8 *Pdata, UINT8 num);
+uint8_t bcd2hex(uint8_t temp);
+uint8_t Get_crc(uint8_t *Pdata, uint8_t num);
 
 
 #endif /* _UTLITIES_H_ */

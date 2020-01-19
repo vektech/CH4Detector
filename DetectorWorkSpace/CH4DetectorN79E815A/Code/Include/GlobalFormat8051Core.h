@@ -27,38 +27,38 @@
  *                 Macro Define Section ('#define')
  ******************************************************************************/
 typedef bit                   BIT;
-typedef unsigned char         UINT8;
-typedef unsigned int          UINT16;
-typedef unsigned long         UINT32;
+typedef unsigned char         uint8_t;
+typedef unsigned int          uint16_t;
+typedef unsigned long         uint32_t;
 
 typedef unsigned char         uint8_t;
 typedef unsigned int          uint16_t;
 typedef unsigned long         uint32_t;
 
 /* 16 --> 8 x 2 */
-/* v1 is UINT16 */
-#define HIBYTE(v1)              ((UINT8)((v1)>>8))                      
-#define LOBYTE(v1)              ((UINT8)((v1)&0xFF))
+/* v1 is uint16_t */
+#define HIBYTE(v1)              ((uint8_t)((v1)>>8))                      
+#define LOBYTE(v1)              ((uint8_t)((v1)&0xFF))
 
 /* 8 x 2 --> 16 */
-/* v1,v2 is UINT8 */
-#define MAKEWORD(v1,v2)         ((((UINT16)(v1))<<8)+(UINT16)(v2))      
+/* v1,v2 is uint8_t */
+#define MAKEWORD(v1,v2)         ((((uint16_t)(v1))<<8)+(uint16_t)(v2))      
 
 /* 8 x 4 --> 32 */
-/* v1,v2,v3,v4 is UINT8 */
-#define MAKELONG(v1,v2,v3,v4)   (UINT32)((v1<<32)+(v2<<16)+(v3<<8)+v4)  
+/* v1,v2,v3,v4 is uint8_t */
+#define MAKELONG(v1,v2,v3,v4)   (uint32_t)((v1<<32)+(v2<<16)+(v3<<8)+v4)  
 
 /* 32 --> 16 x 2 */
-/* v1 is UINT32 */
-#define YBYTE1(v1)              ((UINT16)((v1)>>16))                    
-#define YBYTE0(v1)              ((UINT16)((v1)&0xFFFF))
+/* v1 is uint32_t */
+#define YBYTE1(v1)              ((uint16_t)((v1)>>16))                    
+#define YBYTE0(v1)              ((uint16_t)((v1)&0xFFFF))
 
 /* 32 --> 8 x 4 */
-/* v1 is UINT32 */
-#define TBYTE3(v1)              ((UINT8)((v1)>>24))                     
-#define TBYTE2(v1)              ((UINT8)((v1)>>16))
-#define TBYTE1(v1)              ((UINT8)((v1)>>8))
-#define TBYTE0(v1)              ((UINT8)((v1)&0xFF))
+/* v1 is uint32_t */
+#define TBYTE3(v1)              ((uint8_t)((v1)>>24))                     
+#define TBYTE2(v1)              ((uint8_t)((v1)>>16))
+#define TBYTE1(v1)              ((uint8_t)((v1)>>8))
+#define TBYTE0(v1)              ((uint8_t)((v1)&0xFF))
 
 #define SET_BIT0        0x01
 #define SET_BIT1        0x02

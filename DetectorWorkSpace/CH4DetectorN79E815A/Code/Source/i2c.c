@@ -47,18 +47,18 @@
 /*******************************************************************************
  *                 File Static Prototype Declare Section ('static function')
  ******************************************************************************/
-static void I2C_Start(void);
-static void I2C_Repeat_Start(void);
-static void I2C_Stop(void);
-static void I2C_8563_Address(uint8_t Sub);
-static void I2C_8563_Sla_Address(uint8_t Sla);
-static void Write_Data_To_Slave(uint8_t *Str, uint8_t u8Data);
-static void Read_Data_from_Slave(uint8_t *Temp, uint8_t u8Data);
-static void I2C_Deal_Read_Data(void);
+static void i2c_start(void);
+static void i2c_8563_address(uint8_t sub);
+static void i2c_reapeat_start(void);
+static void i2c_read_date(uint8_t *temp, uint8_t u8_data);
+static void i2c_deal_time_code(void);
+static void i2c_stop(void);
 
 /*******************************************************************************
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
+/* 秒--分钟--小时--日--星期--月--年 */
+uint8_t i2c_time_code[7] = {0x00};
 
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
@@ -75,70 +75,74 @@ void i2c_init(void)
     I2CEN = 1;
 }
 
-void Master_Write_Data()
-{
-    UINT8 i = 0;
-    I2C_Start();
-#if PCF8563 == 1
-    /* 8563 读、写地址 */
-    I2C_8563_Address(0xA2);
-    /* 8563 寄存器地址 */
-    I2C_8563_Sla_Address(0x02);
-    /* 8563 写入时间数据 */
-    Write_Data_To_Slave(Time_Code, 7);
-#else
-    /* 8563 读、写地址 */
-    I2C_8563_Address(0x64);
-    /* 8563 寄存器地址 */
-    I2C_8563_Sla_Address(0x10);
-
-    i = Time_Code[3];
-    Time_Code[3] = Time_Code[4];
-    Time_Code[4] = i;
-    /* 8563 写入时间数据 */
-    Write_Data_To_Slave(Time_Code, 7);
-    i = Time_Code[3];
-    Time_Code[3] = Time_Code[4];
-    Time_Code[4] = i;
-#endif
-    I2C_Stop();
-}
-
 /* 调用一次读函数 约耗时500uS */
-void Master_Read_Data()
+void i2c_get_time(void)
 {
-    UINT8 i = 0;
+    uint8_t i = 0;
 
-    I2C_Start();
+    i2c_start();
 #if PCF8563 == 1
     /* 8563 读、写地址 */
-    I2C_8563_Address(0xA2);
-    /* 8563 寄存器地址 */
-    I2C_8563_Sla_Address(0x02);
-    I2C_Repeat_Start();
+    i2c_8563_address(0xA2);
+    i2c_8563_address(0x02);
+
+    /* I2C 停止后重启 */
+    i2c_reapeat_start();
+    
     /* 8563 读、写地址 */
-    I2C_8563_Address(0xA3);
-    Read_Data_from_Slave(Time_Code, 7);
-    I2C_Deal_Read_Data();
+    i2c_8563_address(0xA3);
+    i2c_read_date(i2c_time_code, 7);
+    i2c_deal_time_code();
 #else
     /* 8563 读、写地址 */
-    I2C_8563_Address(0x64);
-    /* 8563 寄存器地址 */
-    I2C_8563_Sla_Address(0x10);
-    I2C_Repeat_Start();
+    i2c_8563_address(0x64);
+    i2c_8563_address(0x10);
+    
+    /* I2C 停止后重启 */
+    i2c_reapeat_start();
+
     /* 8563 读、写地址 */
-    I2C_8563_Address(0x65);
-    Read_Data_from_Slave(Time_Code, 7);
-    Time_Code[3] += Time_Code[4];
-    Time_Code[4] = Time_Code[3] - Time_Code[4];
-    Time_Code[3] = Time_Code[3] - Time_Code[4];
-    I2C_Deal_Read_Data();
+    i2c_8563_address(0x65);
+    i2c_read_date(i2c_time_code, 7);
+    i2c_time_code[3] += i2c_time_code[4];
+    i2c_time_code[4] = i2c_time_code[3] - i2c_time_code[4];
+    i2c_time_code[3] = i2c_time_code[3] - i2c_time_code[4];
+    i2c_deal_time_code();
 #endif
 
     for (i = 0; i < 7; i++)
     {
-        Time_Code[i] = bcd2hex(Time_Code[i]);
+        i2c_time_code[i] = bcd2hex(i2c_time_code[i]);
     }
+    i2c_stop();
+}
+
+/* YYY maybe not use */
+void Master_Write_Data()
+{
+    uint8_t i = 0;
+    i2c_start();
+#if PCF8563 == 1
+    /* 8563 读、写地址 */
+    i2c_8563_address(0xA2);
+    i2c_8563_address(0x02);
+
+    /* 8563 写入时间数据 */
+    Write_Data_To_Slave(i2c_time_code, 7);
+#else
+    /* 8563 读、写地址 */
+    i2c_8563_address(0x64);
+    i2c_8563_address(0x10);
+
+    i = i2c_time_code[3];
+    i2c_time_code[3] = i2c_time_code[4];
+    i2c_time_code[4] = i;
+    /* 8563 写入时间数据 */
+    i2c_read_date(i2c_time_code, 7);
+    i = i2c_time_code[3];
+    i2c_time_code[3] = i2c_time_code[4];
+    i2c_time_code[4] = i;
+#endif
     I2C_Stop();
 }
 
@@ -150,15 +154,15 @@ void I2C_StartRTCClock(void)
     I2C_8563_Address(0xA2);
     /* 8563 寄存器地址 */
     I2C_8563_Sla_Address(0x00);
-    Time_Code[0] = 0;
-    Write_Data_To_Slave(Time_Code, 1);
+    i2c_time_code[0] = 0;
+    Write_Data_To_Slave(i2c_time_code, 1);
 #else
     /* 8563 读、写地址 */
     I2C_8563_Address(0x64);
     /* 8563 寄存器地址 */
     I2C_8563_Sla_Address(0x1f);
-    Time_Code[0] = 0;
-    Write_Data_To_Slave(Time_Code, 1);
+    i2c_time_code[0] = 0;
+    Write_Data_To_Slave(i2c_time_code, 1);
 #endif
     I2C_Stop();
 }
@@ -166,9 +170,9 @@ void I2C_StartRTCClock(void)
 /*******************************************************************************
  *                 File Static Function Define Section ('static function')
  ******************************************************************************/
-static void I2C_Start(void)
+static void i2c_start(void)
 {
-    UINT8 cntt = 0;
+    uint8_t delay_count = 0;
 
     /* I2C Start标志 若总线空闲则产生I2C起始信号 */
     STA = 1;
@@ -176,7 +180,7 @@ static void I2C_Start(void)
     /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x0e */
     while (!(I2CON & SET_BIT3))
     {
-        if (++cntt > 250)
+        if (++delay_count > 250)
         {
             break;
         }
@@ -186,9 +190,9 @@ static void I2C_Start(void)
     STA = 0;
 }
 
-static void I2C_Repeat_Start(void)
+static void i2c_reapeat_start(void)
 {
-    UINT8 cntt = 0;
+    uint8_t delay_count = 0;
 
     /* I2C Start标志 若总线空闲则产生I2C起始信号 */
     STA = 1;
@@ -200,7 +204,7 @@ static void I2C_Repeat_Start(void)
     /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x0e */
     while (!(I2CON & SET_BIT3))
     {
-        if (++cntt > 250)
+        if (++delay_count > 250)
         {
             break;
         }
@@ -210,9 +214,9 @@ static void I2C_Repeat_Start(void)
     STA = 0;
 }
 
-static void I2C_Stop(void)
+static void i2c_stop(void)
 {
-    UINT8 cntt = 0;
+    uint8_t delay_count = 0;
 
     /* STO置1 将在总线上输出停止信号 */
     STO = 1;
@@ -222,48 +226,28 @@ static void I2C_Stop(void)
     /* 检测STO停止标志 通过测试得知 等待时间为cnnt=0x0e */
     while ((I2CON & 0x10) == 0x10)
     {
-        if (++cntt > 250)
+        if (++delay_count > 250)
         {
             break;
         }
     }
 }
 
-static void I2C_8563_Address(uint8_t Sub)
+/* 写寄存器地址 */
+static void i2c_8563_address(uint8_t sub)
 {
-    UINT8 cntt = 0;
+    uint8_t delay_count = 0;
 
     /* I2C 数据寄存器 只要SI为逻辑1 I2DAT中的数据保持不变 在I2C发送接收过程中 读或写I2DAT的结果都是不确定的 */
     /* XXX Address high for I2C EEPROM */
-    I2DAT = Sub;
+    I2DAT = sub;
     /* 串行中断标志SI清零 串行传输暂停 */
     SI = 0;
 
     /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x0e */
     while (!(I2CON & SET_BIT3))
     {
-        if (++cntt > 250)
-        {
-            break;
-        }
-    }
-}
-
-/* 寄存器地址 */
-static void I2C_8563_Sla_Address(uint8_t Sla)
-{
-    UINT8 cntt = 0;
-
-    /* I2C 数据寄存器 只要SI为逻辑1 I2DAT中的数据保持不变 在I2C发送接收过程中 读或写I2DAT的结果都是不确定的 */
-    /* XXX Address high for I2C EEPROM */
-    I2DAT = Sla;
-    /* 串行中断标志SI清零 串行传输暂停 */
-    SI = 0;
-
-    /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x0e */
-    while (!(I2CON & SET_BIT3))
-    {
-        if (++cntt > 250)
+        if (++delay_count > 250)
         {
             break;
         }
@@ -272,9 +256,9 @@ static void I2C_8563_Sla_Address(uint8_t Sla)
 
 static void Write_Data_To_Slave(uint8_t *Str, uint8_t u8Data)
 {
-    UINT8 *Ptemp = Str;
-    UINT8 i = 0;
-    UINT8 cntt;
+    uint8_t *Ptemp = Str;
+    uint8_t i = 0;
+    uint8_t delay_count;
 
     for (i = 0; i < u8Data; i++)
     {
@@ -283,12 +267,12 @@ static void Write_Data_To_Slave(uint8_t *Str, uint8_t u8Data)
         /* 串行中断标志SI清零 串行传输暂停 */
         SI = 0;
 
-        cntt = 0;
+        delay_count = 0;
         /* 通过测试得知，等待时间为cnnt=0x69。反汇编得知：该行语句共7条指令。总指令数=735.=33uS@22M */
         /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x0e */
         while (!(I2CON & SET_BIT3))
         {
-            if (++cntt > 250)
+            if (++delay_count > 250)
             {
                 break;
             }
@@ -298,12 +282,13 @@ static void Write_Data_To_Slave(uint8_t *Str, uint8_t u8Data)
     }
 }
 
-static void Read_Data_from_Slave(uint8_t *Temp, uint8_t u8Data)
+/* 从I2C中读取固定长度数据放入缓冲数组 */
+static void i2c_read_date(uint8_t *temp, uint8_t length)
 {
-    UINT8 i = 0;
-    UINT8 cntt;
+    uint8_t i = 0;
+    uint8_t delay_count;
 
-    for (i = 0; i < u8Data; i++)
+    for (i = 0; i < length; i++)
     {
         /* I2CON[2] -> AA
             - 如果AA标志置位 当I2C设备为接收器时 在应答时钟脉冲期间将返回ACK。
@@ -314,17 +299,17 @@ static void Read_Data_from_Slave(uint8_t *Temp, uint8_t u8Data)
         /* 串行中断标志SI清零 串行传输暂停 */
         SI = 0;
 
-        cntt = 0;
+        delay_count = 0;
         /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x69 */
         while (!(I2CON & SET_BIT3))
         {
-            if (++cntt > 250)
+            if (++delay_count > 250)
             {
                 break;
             }
         }
-        *Temp = I2DAT;
-        Temp++;
+        *temp = I2DAT;
+        temp++;
     }
 
     /* I2CON[2] -> AA
@@ -336,11 +321,11 @@ static void Read_Data_from_Slave(uint8_t *Temp, uint8_t u8Data)
     /* 串行中断标志SI清零 串行传输暂停 */
     SI = 0;
 
-    cntt = 0;
+    delay_count = 0;
     /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x69 */
     while (!(I2CON & SET_BIT3))
     {
-        if (++cntt > 250)
+        if (++delay_count > 250)
         {
             break;
         }
@@ -348,22 +333,22 @@ static void Read_Data_from_Slave(uint8_t *Temp, uint8_t u8Data)
 }
 
 /* 进行数据转换 */
-static void I2C_Deal_Read_Data(void)
+static void i2c_deal_time_code(void)
 {
     /* second */
-    Time_Code[0] = Time_Code[0] & 0x7f;
+    i2c_time_code[0] = i2c_time_code[0] & 0x7f;
     /* minuter */
-    Time_Code[1] = Time_Code[1] & 0x7f;
+    i2c_time_code[1] = i2c_time_code[1] & 0x7f;
     /* hour */
-    Time_Code[2] = Time_Code[2] & 0x3f;
+    i2c_time_code[2] = i2c_time_code[2] & 0x3f;
     /* day */
-    Time_Code[3] = Time_Code[3] & 0x3f;
+    i2c_time_code[3] = i2c_time_code[3] & 0x3f;
     /* week */
-    Time_Code[4] = Time_Code[4] & 0x07;
+    i2c_time_code[4] = i2c_time_code[4] & 0x07;
     /* month */
-    Time_Code[5] = Time_Code[5] & 0x1f;
+    i2c_time_code[5] = i2c_time_code[5] & 0x1f;
     /* year */
-    Time_Code[6] = Time_Code[6] & 0xff;
+    i2c_time_code[6] = i2c_time_code[6] & 0xff;
 }
 
 /*******************************************************************************

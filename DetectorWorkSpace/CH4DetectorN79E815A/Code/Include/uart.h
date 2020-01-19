@@ -37,6 +37,9 @@
  ******************************************************************************/
 extern uint8_t rx_index;
 
+/* 用于在 Timer2 中检查串口接受超时 每次接收清零 两次 Timer2 中断后检查接收的结果 */
+extern uint8_t rx_count;
+
 void uart_init(uint32_t bandrate);
 void uart_send(uint8_t byte);
 

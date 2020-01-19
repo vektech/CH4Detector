@@ -17,6 +17,7 @@
  *                 Include File Section ('#include')
  ******************************************************************************/
 #include "utlities.h"
+#include "i2c.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
@@ -33,8 +34,7 @@
 /*******************************************************************************
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
-/* 秒--分钟--小时--日--星期--月--年 */
-uint8_t Time_Code[7] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
 uint8_t timeCOPY[6];
 
 /*******************************************************************************
@@ -46,40 +46,40 @@ uint8_t timeCOPY[6];
  ******************************************************************************/
 void timecodeTotimecopy(void)
 {
-    timeCOPY[0] = Time_Code[0];
-    timeCOPY[1] = Time_Code[1];
-    timeCOPY[2] = Time_Code[2];
-    timeCOPY[3] = Time_Code[3];
-    timeCOPY[4] = Time_Code[5];
-    timeCOPY[5] = Time_Code[6];
+    timeCOPY[0] = i2c_time_code[0];
+    timeCOPY[1] = i2c_time_code[1];
+    timeCOPY[2] = i2c_time_code[2];
+    timeCOPY[3] = i2c_time_code[3];
+    timeCOPY[4] = i2c_time_code[5];
+    timeCOPY[5] = i2c_time_code[6];
 }
 
 void timecopyTotimecode(void)
 {
-    Time_Code[6] = timeCOPY[5];
-    Time_Code[5] = timeCOPY[4];
-    Time_Code[3] = timeCOPY[3];
-    Time_Code[2] = timeCOPY[2];
-    Time_Code[1] = timeCOPY[1];
-    Time_Code[0] = timeCOPY[0];
+    i2c_time_code[6] = timeCOPY[5];
+    i2c_time_code[5] = timeCOPY[4];
+    i2c_time_code[3] = timeCOPY[3];
+    i2c_time_code[2] = timeCOPY[2];
+    i2c_time_code[1] = timeCOPY[1];
+    i2c_time_code[0] = timeCOPY[0];
 }
 
 /* 16进制转BCD码 */
-UINT8 hex2bcd(UINT8 temp)
+uint8_t hex2bcd(uint8_t temp)
 {
     return temp % 10 + (temp / 10) * 16;
 }
 
 /* BCD转16进制 BCD:0~99 */
-UINT8 bcd2hex(UINT8 temp)
+uint8_t bcd2hex(uint8_t temp)
 {
     return (temp / 16) * 10 + temp % 16;
 }
 
-UINT8 Get_crc(UINT8 *Pdata, UINT8 num)
+uint8_t Get_crc(uint8_t *Pdata, uint8_t num)
 {
-    UINT8 i = 0;
-    UINT8 sum = 0;
+    uint8_t i = 0;
+    uint8_t sum = 0;
     for (i = 0; i < num - 2; i++)
         sum += *(Pdata + i);
     return sum;

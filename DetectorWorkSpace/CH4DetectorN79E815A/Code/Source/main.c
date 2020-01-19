@@ -216,16 +216,16 @@ void main(void)
     //             /* 读取当前时间 存入Time_Code */
     //             Master_Read_Data();
     //             /* XXX */
-    //             if (Time_Code[6] < 15 || (Time_Code[5] > 12) || (Time_Code[3] > 31) || (Time_Code[2] > 23) || (Time_Code[1] > 59) || (Time_Code[0] > 59))
+    //             if (i2c_time_code[6] < 15 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
     //             {
-    //                 /* XXX 将 timeCOPY 转换为 Time_Code */
+    //                 /* XXX 将 timeCOPY 转换为 i2c_time_code */
     //                 timecopyTotimecode();
     //             }
     //             else
     //             {
     //                 /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
     //                 EBO = 0;
-    //                 /* XXX 复制从时钟芯片获取的时间戳 将 Time_Code 转换为 timeCOPY */
+    //                 /* XXX 复制从时钟芯片获取的时间戳 将 i2c_time_code 转换为 timeCOPY */
     //                 timecodeTotimecopy();
     //                 /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
     //                 EBO = 1;
@@ -363,13 +363,13 @@ void main(void)
     //                         for (i = 2; i < 8; i++)
     //                         {
     //                             /* 十六进制转为BCD码 */
-    //                             Time_Code[8 - i] = hex2bcd(rxbuf[i]);
+    //                             i2c_time_code[8 - i] = hex2bcd(rxbuf[i]);
     //                         }
-    //                         Time_Code[0] = Time_Code[1];
-    //                         Time_Code[1] = Time_Code[2];
-    //                         Time_Code[2] = Time_Code[3];
-    //                         Time_Code[3] = Time_Code[4];
-    //                         Time_Code[4] = 0;
+    //                         i2c_time_code[0] = i2c_time_code[1];
+    //                         i2c_time_code[1] = i2c_time_code[2];
+    //                         i2c_time_code[2] = i2c_time_code[3];
+    //                         i2c_time_code[3] = i2c_time_code[4];
+    //                         i2c_time_code[4] = 0;
 
     //                         /* 写入数据 */
     //                         Master_Write_Data();
@@ -377,7 +377,7 @@ void main(void)
     //                         Delay1ms(100);
     //                         Master_Read_Data();
     //                         /* 月：表示写入时间不成功 */
-    //                         if (Time_Code[5] != rxbuf[3] && (Time_Code[5] != (rxbuf[3] + 1)))
+    //                         if (i2c_time_code[5] != rxbuf[3] && (i2c_time_code[5] != (rxbuf[3] + 1)))
     //                         {
     //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
     //                             ;
@@ -387,25 +387,25 @@ void main(void)
     //                             rxbuf[3] = (status[1] & 0xe0);
     //                         }
     //                         /* 年：表示写入时间不成功 */
-    //                         if (Time_Code[6] != rxbuf[2] && (Time_Code[6] != (rxbuf[2] + 1)))
+    //                         if (i2c_time_code[6] != rxbuf[2] && (i2c_time_code[6] != (rxbuf[2] + 1)))
     //                         {
     //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
     //                         }
     //                         /* 日：表示写入时间不成功 */
-    //                         if (Time_Code[3] != rxbuf[4] && (Time_Code[3] != (rxbuf[4] + 1)))
+    //                         if (i2c_time_code[3] != rxbuf[4] && (i2c_time_code[3] != (rxbuf[4] + 1)))
     //                         {
     //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
     //                         }
     //                         /* 时：表示写入时间不成功 */
-    //                         if (Time_Code[2] != rxbuf[5] && (Time_Code[2] != (rxbuf[5] + 1)))
+    //                         if (i2c_time_code[2] != rxbuf[5] && (i2c_time_code[2] != (rxbuf[5] + 1)))
     //                         {
-    //                             if (!((rxbuf[5] == 23) && (Time_Code[2] == 0)))
+    //                             if (!((rxbuf[5] == 23) && (i2c_time_code[2] == 0)))
     //                                 rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
     //                         }
     //                         /* 分：表示写入时间不成功 */
-    //                         if (Time_Code[1] != rxbuf[6] && (Time_Code[1] != (rxbuf[6] + 1)))
+    //                         if (i2c_time_code[1] != rxbuf[6] && (i2c_time_code[1] != (rxbuf[6] + 1)))
     //                         {
-    //                             if (!((rxbuf[6] == 59) && (Time_Code[1] == 0)))
+    //                             if (!((rxbuf[6] == 59) && (i2c_time_code[1] == 0)))
     //                                 rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
     //                         }
     //                     }
@@ -540,12 +540,12 @@ void main(void)
     //                 }
     //                 rxbuf[2] = status[0];
     //                 Master_Read_Data();
-    //                 rxbuf[4] = Time_Code[6];
-    //                 rxbuf[5] = Time_Code[5];
-    //                 rxbuf[6] = Time_Code[3];
-    //                 rxbuf[7] = Time_Code[2];
-    //                 rxbuf[8] = Time_Code[1];
-    //                 rxbuf[9] = Time_Code[0];
+    //                 rxbuf[4] = i2c_time_code[6];
+    //                 rxbuf[5] = i2c_time_code[5];
+    //                 rxbuf[6] = i2c_time_code[3];
+    //                 rxbuf[7] = i2c_time_code[2];
+    //                 rxbuf[8] = i2c_time_code[1];
+    //                 rxbuf[9] = i2c_time_code[0];
     //                 rxbuf[COMMAND_LEN_RE_CLOCK[1] - 2] = Get_crc(rxbuf, COMMAND_LEN_RE_CLOCK[1]);
     //                 rxbuf[COMMAND_LEN_RE_CLOCK[1] - 1] = 0x55;
     //                 for (i = 0; i < COMMAND_LEN_RE_CLOCK[1]; i++)
@@ -781,42 +781,42 @@ void main(void)
 
     //         /* 进行读取的当前时间和记录的生产日期的比较 */
     //         /* 当前时间的年 大于 生产日期中的年 */
-    //         if (Time_Code[6] >= dateofmanufacture[0])
+    //         if (i2c_time_code[6] >= dateofmanufacture[0])
     //         {
     //             /* 计算年差 */
-    //             dateofmanufacture[0] = Time_Code[6] - dateofmanufacture[0];
+    //             dateofmanufacture[0] = i2c_time_code[6] - dateofmanufacture[0];
     //             /* 年差 已经到达五年 如 2020 - 2015 = 5 */
     //             if (dateofmanufacture[0] == SENSOR_LIFE)
     //             {
     //                 /* 当前时间的月 大于 生产日期中的月 2020.6 > 2015.5 */
-    //                 if (Time_Code[5] > dateofmanufacture[1])
+    //                 if (i2c_time_code[5] > dateofmanufacture[1])
     //                 {
     //                     /* 已使用年数 加1 变为6 */
     //                     dateofmanufacture[0]++;
     //                 }
     //                 /* 当前时间的月 等于 生产日期中的月 2020.5 = 2015.5 */
-    //                 if (Time_Code[5] == dateofmanufacture[1])
+    //                 if (i2c_time_code[5] == dateofmanufacture[1])
     //                 {
     //                     /* 当前时间的日 大于 生产日期中的日 2020.5.6 > 2015.5.5 */
-    //                     if (Time_Code[3] > dateofmanufacture[2])
+    //                     if (i2c_time_code[3] > dateofmanufacture[2])
     //                     {
     //                         /* 已使用年数 加1 变为6 */
     //                         dateofmanufacture[0]++;
     //                     }
     //                     /* 当前时间的日 等于 生产日期中的日 2020.5.5 = 2015.5.5 */
-    //                     if (Time_Code[3] == dateofmanufacture[2])
+    //                     if (i2c_time_code[3] == dateofmanufacture[2])
     //                     {
     //                         /* 以此类推比较时 */
-    //                         if (Time_Code[2] > dateofmanufacture[3])
+    //                         if (i2c_time_code[2] > dateofmanufacture[3])
     //                         {
     //                             /* 已使用年数 加1 变为6 */
     //                             dateofmanufacture[0]++;
     //                         }
     //                         /* 时相等 */
-    //                         if (Time_Code[2] == dateofmanufacture[3])
+    //                         if (i2c_time_code[2] == dateofmanufacture[3])
     //                         {
     //                             /* 以此类推比较分 */
-    //                             if (Time_Code[1] > dateofmanufacture[4])
+    //                             if (i2c_time_code[1] > dateofmanufacture[4])
     //                             {
     //                                 /* 已使用年数 加1 变为6 */
     //                                 dateofmanufacture[0]++;

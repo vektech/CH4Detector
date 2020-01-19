@@ -74,7 +74,7 @@ void sersor_demarcation(void)
     uint16_t i = 0;
     uint16_t adc_value = 0;
     uint16_t temp_data = 0;
-    uint16_t d1 = 0;
+    uint16_t delay_count = 0;
 
     /* 读取 P0.6 的值 sbit P06 = P0 ^ 6 (sbit 和 ^ 操作 指为寄存器某位取的别称 为C51特殊类型 而非异或) */
     demarcate_key = P06 & 0x01;
@@ -169,9 +169,12 @@ void sersor_demarcation(void)
                     if ((adc_value < 41) || (adc_value > 260))
                     {
                         while (1)
-                        {
+                        {   
+                            /* 故障灯开 */
                             LED_FAULT_ON;
                             Delay1ms(500);
+
+                            /* 故障灯关 */
                             LED_FAULT_OFF;
                             Delay1ms(500);
                         }
@@ -193,9 +196,9 @@ void sersor_demarcation(void)
                     LED_ALARM_ON;
 
                     /* 周期性 串口输出采样的值 */
-                    if (++d1 > 1200)
+                    if (++delay_count > 1200)
                     {
-                        d1 = 0;
+                        delay_count = 0;
                         uart_send(0x2f);
                         Delay1ms(5);
                         uart_send(0x2f);
@@ -247,6 +250,8 @@ void sersor_demarcation(void)
                 {
                     Delay1ms(1000);
 
+                    /* 再次得到ADC采样并滤波之后的值 */
+                    temp_data = adc_sensor();
                     /* 再次确认 采样值 合理性判断 AD超出范围 ADC_result < 410 or  ADC_result > 950 */
                     if (temp_data < 410 || temp_data > 950)
                     {
@@ -272,12 +277,13 @@ void sersor_demarcation(void)
                     /* 将暂存的ADC采样值 存入ch4_3500中 ch4_3500为传感器 3500 XXX 的值 */
                     ch4_3500 = temp_data;
 
+                    /* 将零点和3500点的ADC采样数据存入数组中 */
                     demarcation_result[0] = ch4_0;
                     demarcation_result[1] = ch4_0 >> 8;
                     demarcation_result[2] = ch4_3500;
                     demarcation_result[3] = ch4_3500 >> 8;
 
-                    /* XXX 将ch4_0 与 ch4_3500 存入FLASH中 */
+                    /* YYY 将采样结果数组存入FLASH中 */
                     WriteData(demarcation_result, 4, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], Life_start_OFFSET_DEMA_CH4_0);
 
                     /* 从I2C时钟芯片中读取时间戳 */
@@ -294,15 +300,15 @@ void sersor_demarcation(void)
                     WriteRecordData(DEM_RECORD);
                     
                     /* XXX 从Flash中读取 ch4_0 与 ch4_3500 数据 并进行比对 */
-                    ReadData(Time_Code, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_CH4_0, 4);
+                    ReadData(i2c_time_code, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_CH4_0, 4);
 
-                    if (Time_Code[0] != demarcation_result[0])
+                    if (i2c_time_code[0] != demarcation_result[0])
                         goto ERROR;
-                    if (Time_Code[1] != demarcation_result[1])
+                    if (i2c_time_code[1] != demarcation_result[1])
                         goto ERROR;
-                    if (Time_Code[2] != demarcation_result[2])
+                    if (i2c_time_code[2] != demarcation_result[2])
                         goto ERROR;
-                    if (Time_Code[3] != demarcation_result[3])
+                    if (i2c_time_code[3] != demarcation_result[3])
                         goto ERROR;
                     
                     /* 发送标定的报警点数据 ch4_3500 */

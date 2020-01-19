@@ -6,5 +6,10 @@
     "http.proxyStrictSSL": false,
     "http.proxySupport": "off",
     
-    "files.encoding": "gbk"
+    "files.encoding": "gbk",
+    "files.associations": {
+        "uart.h": "c",
+        "i2c.h": "c",
+        "utlities.h": "c"
+    }
 }
