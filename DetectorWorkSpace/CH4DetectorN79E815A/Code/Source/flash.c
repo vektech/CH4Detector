@@ -108,11 +108,6 @@ void Trigger_ISP(void)
     EA = EA_save_bit;
 }
 
-void FLASH_OP(uint8_t flash_data)
-{
-    ;
-}
-
 /*******************************************************************************
  *                 File Static Function Define Section ('static function')
  ******************************************************************************/
