@@ -113,7 +113,7 @@ void main(void)
     // EBO = 1;
 
     // device_first_power_down = down_flag = 0;
-    // Life_1s_Count = bReadtime = sensor_preheat = 0;
+    // timer2_life_second_count = bReadtime = sensor_preheat = 0;
 
     // /* WARMUP 设置系统状态 status[1] &= 0x1f */
     // STATUS1_WARMUP;
@@ -129,7 +129,7 @@ void main(void)
     //     while ((P07 & 0x01) == 0x00)
     //     {
     //         /* XXX */
-    //         if (Life_1s_Count > 1)
+    //         if (timer2_life_second_count > 1)
     //         {
     //             /* NOMAL 设置系统状态 status[1] = (status[1] & 0x1f) | 0X20 */
     //             STATUS1_NOMAL;
@@ -142,7 +142,7 @@ void main(void)
     //     }
     // }
     // /* XXX */
-    // Life_1s_Count = 0;
+    // timer2_life_second_count = 0;
 
     // /* ---- 时钟检测 ---- */
     // /* 从Flash存储地址(RECORD_FIRST_ADDRESS[LIFE_RECORD] + 30) 中读取寿命到期信息 */
@@ -205,7 +205,7 @@ void main(void)
     //     }
 
     //     /* XXX */
-    //     if (!(Life_1s_Count % 2))
+    //     if (!(timer2_life_second_count % 2))
     //     {
     //         /* XXX 没有从I2C中读取时间 */
     //         if (!bReadtime)
@@ -758,9 +758,9 @@ void main(void)
     //     }
 
     //     /* 1小时时间到就进行一次寿命比较 */
-    //     if (Life_1h_Flag == 1)
+    //     if (timer2_life_hour_flag == 1)
     //     {
-    //         Life_1h_Flag = 0;
+    //         timer2_life_hour_flag = 0;
 
     //         /* Brown-Out Detector 电源电压检测 */
     //         check_BOD();
@@ -870,13 +870,13 @@ void main(void)
     //         if (Test_key == 0x00)
     //         {
     //             /* XXX */
-    //             if (!keypush_flag)
+    //             if (!key_long_press_flag)
     //             {
-    //                 sen_copy = 0;
-    //                 keypush_flag = 1;
+    //                 timer2_key_long_press_count = 0;
+    //                 key_long_press_flag = 1;
     //             }
     //             /* 这里等于6 通过实际测试出延时时间为11s 国标规定测试键按下后 在7~30s内 应触发继电器 阀 */
-    //             if (sen_copy >= 6)
+    //             if (timer2_key_long_press_count >= 6)
     //             {
     //                 /* XXX 阀 */
     //                 if (!VALVE_flag)
@@ -893,7 +893,7 @@ void main(void)
     //                 }
     //                 /* 继电器开 */
     //                 DELAY_ON;
-    //                 sen_copy = 8;
+    //                 timer2_key_long_press_count = 8;
     //             }
     //             Light_Flash();
     //         }
@@ -902,14 +902,14 @@ void main(void)
     //     else
     //     {
     //         /* XXX */
-    //         if (keypush_flag)
+    //         if (key_long_press_flag)
     //         {
     //             /* 延时去抖 */
     //             Delay1ms(30);
     //             /* 确认测试键未按下 */
     //             if (Test_key != 0x00)
     //             {
-    //                 keypush_flag = 0;
+    //                 key_long_press_flag = 0;
     //                 VALVE_flag = 0;
     //                 if (!sensor_preheat)
     //                 {   

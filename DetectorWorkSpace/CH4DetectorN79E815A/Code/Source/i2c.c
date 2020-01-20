@@ -33,12 +33,15 @@
 #include "N79E81x.h"
 #include "i2c.h"
 #include "delay.h"
-#include "device.h"
+#include "utlities.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
  ******************************************************************************/
 #define I2C_CLOCK 255
+
+/* 1:表示时钟芯片为PCF8563 0：表示时钟芯片为RX8010SJ */
+#define PCF8563  0
 
 /*******************************************************************************
  *                 Struct Define Section ('typedef')
@@ -119,7 +122,7 @@ void i2c_get_time(void)
     i2c_stop();
 }
 
-void i2c_set_time()
+void i2c_set_time(void)
 {
     uint8_t i = 0;
     

@@ -13,8 +13,6 @@
  *******************************************************************************
  */
 
-extern uint8_t rx_count;
-extern uint8_t rx_index;
 /* NEED FIX */
 /*******************************************************************************
  *                 Include File Section ('#include')
@@ -23,6 +21,8 @@ extern uint8_t rx_index;
 #include "GlobalAppDefine.h"
 
 #include "timer.h"
+#include "uart.h"
+#include "sensor.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
@@ -39,6 +39,16 @@ extern uint8_t rx_index;
 /*******************************************************************************
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
+bit timer2_second_flag;
+bit timer2_life_hour_flag;
+
+uint16_t timer2_count;
+uint8_t timer2_second_count;
+uint8_t timer2_key_long_press_count;
+
+uint16_t timer2_life_second_count;
+
+bit key_long_press_flag;
 
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
@@ -109,7 +119,7 @@ void Timer2_ISR(void) interrupt 5
     /* 定时器2溢出标志 必须软件清零 */
     TF2 = 0;
 
-    /* XXX 接收超时 */
+    /* 接收超时 */
     if (++rx_count > RXTIMEOUT)
     {
         rx_count = 0;
@@ -124,7 +134,6 @@ void Timer2_ISR(void) interrupt 5
                 rx_finished = true;
             }
         }
-        /* XXX */
         else
         {
             rx_finished = false;
@@ -133,48 +142,49 @@ void Timer2_ISR(void) interrupt 5
     }
 
     /* 时间计数加1 */
-    time_i++;
+    timer2_count++;
     /* 秒计数加1 */
-    Delay1s_Count++;
+    timer2_second_count++;
 
     /* 预热状态下灯闪烁频率 */
-    if (time_i == 20)
+    if (timer2_count == 20)
     {
         if (sensor_preheat == 0)
         {
             /* 电源灯翻转 */
             LED_POWER_TOGGLE;
         }
-        time_i = 0;
-        Time_Count++;
+        timer2_count = 0;
+        sensor_preheat_time_count++;
     }
 
     /* 预热完成 标志位置 Delay_Time_Count = 750 为3分钟*/
-    if (Time_Count == Delay_Time_Count)
+    if (sensor_preheat_time_count == Delay_Time_Count)
     {
         sensor_preheat = 1;
     }
 
-    /* XXX 计时100秒完成 */
-    if (Delay1s_Count == 100)
+    /* 计时100次完成 */
+    if (timer2_second_count == 100)
     {
-        Delay1s_Count = 0;
-        Delay1s_flag = 1;
+        timer2_second_count = 0;
+        timer2_second_flag = 1;
 
         /* 寿命到期计时数 */
-        Life_1s_Count++;
+        timer2_life_second_count++;
 
-        if (keypush_flag)
+
+        if (key_long_press_flag)
         {
-            sen_copy++;
+            timer2_key_long_press_count++;
         }
     }
 
-    /* XXX 1小时标志位 */
-    if (Life_1s_Count == 3600)
+    /* 1小时标志位 */
+    if (timer2_life_second_count == 3600)
     {
-        Life_1h_Flag = 1;
-        Life_1s_Count = 0;
+        timer2_life_hour_flag = 1;
+        timer2_life_second_count = 0;
     }
 }
 

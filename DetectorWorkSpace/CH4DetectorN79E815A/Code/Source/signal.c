@@ -106,10 +106,6 @@ static void signal_beeper(uint8_t interval, uint16_t repeat_time);
 /*******************************************************************************
  *                 Normal Function Define Section ('function')
  ******************************************************************************/
-void Check_BOD()
-{
-    ;
-}
 void device_alarm(enum alarm_type type)
 {
     uint16_t i = 0, k = 0;

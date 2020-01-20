@@ -10,6 +10,12 @@
     "files.associations": {
         "uart.h": "c",
         "i2c.h": "c",
-        "utlities.h": "c"
+        "utlities.h": "c",
+        "delay.h": "c",
+        "device.h": "c",
+        "sensor.h": "c",
+        "adc.h": "c",
+        "signal.h": "c",
+        "n79e81x.h": "c"
     }
 }

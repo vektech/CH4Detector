@@ -24,6 +24,8 @@
 #include "delay.h"
 #include "adc.h"
 #include "uart.h"
+#include "i2c.h"
+#include "utlities.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
@@ -284,10 +286,10 @@ void sersor_demarcation(void)
                     demarcation_result[3] = ch4_3500 >> 8;
 
                     /* YYY 将采样结果数组存入FLASH中 */
-                    WriteData(demarcation_result, 4, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], Life_start_OFFSET_DEMA_CH4_0);
+                    ///WriteData(demarcation_result, 4, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], Life_start_OFFSET_DEMA_CH4_0);
 
                     /* 从I2C时钟芯片中读取时间戳 */
-                    Master_Read_Data();
+                    i2c_get_time();
 
                     /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
                     EBO = 0;
@@ -296,11 +298,11 @@ void sersor_demarcation(void)
                     /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
                     EBO = 1;
 
-                    /* 存储标定记录总数 */
-                    WriteRecordData(DEM_RECORD);
+                    /* YYY 存储标定记录总数 */
+                    ///WriteRecordData(DEM_RECORD);
                     
-                    /* XXX 从Flash中读取 ch4_0 与 ch4_3500 数据 并进行比对 */
-                    ReadData(i2c_time_code, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_CH4_0, 4);
+                    /* YYY 从Flash中读取 ch4_0 与 ch4_3500 数据 并进行比对 */
+                    ///ReadData(i2c_time_code, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_CH4_0, 4);
 
                     if (i2c_time_code[0] != demarcation_result[0])
                         goto ERROR;

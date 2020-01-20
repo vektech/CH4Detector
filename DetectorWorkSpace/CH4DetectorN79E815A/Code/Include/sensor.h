@@ -35,9 +35,9 @@
  *                 Prototype Declare Section
  ******************************************************************************/
 /* 预热标记 */
-extern bit sensor_preheat = false;
+extern bit sensor_preheat;
 /* 预热时间计数 */
-extern uint16_t sensor_preheat_time_count = 0;
+extern uint16_t sensor_preheat_time_count;
 
 void sersor_demarcation(void);
 

@@ -31,10 +31,6 @@ typedef unsigned char         uint8_t;
 typedef unsigned int          uint16_t;
 typedef unsigned long         uint32_t;
 
-typedef unsigned char         uint8_t;
-typedef unsigned int          uint16_t;
-typedef unsigned long         uint32_t;
-
 /* 16 --> 8 x 2 */
 /* v1 is uint16_t */
 #define HIBYTE(v1)              ((uint8_t)((v1)>>8))                      

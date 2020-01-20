@@ -4,7 +4,11 @@
 ".\Objects\STARTUP.obj",
 ".\Objects\utlities.obj",
 ".\Objects\uart.obj",
-".\Objects\device.obj" 
+".\Objects\device.obj",
+".\Objects\adc.obj",
+".\Objects\i2c.obj",
+".\Objects\sensor.obj",
+".\Objects\timer.obj" 
 TO ".\Objects\CH4DetectorN79E815A" 
 PRINT(".\Listings\CH4DetectorN79E815A.m51") RAMSIZE(256) 
 DISABLEWARNING (16) 

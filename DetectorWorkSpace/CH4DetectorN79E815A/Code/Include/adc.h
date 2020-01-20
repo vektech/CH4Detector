@@ -54,7 +54,7 @@
 /*******************************************************************************
  *                 Struct Define Section ('typedef')
  ******************************************************************************/
-typedef enum
+enum E_ADCCNL_SEL
 {
     E_CHANNEL0,
     E_CHANNEL1,
@@ -64,7 +64,7 @@ typedef enum
     E_CHANNEL5,
     E_CHANNEL6,
     E_CHANNEL7,
-} E_ADCCNL_SEL;
+};
 
 /*******************************************************************************
  *                 Prototype Declare Section

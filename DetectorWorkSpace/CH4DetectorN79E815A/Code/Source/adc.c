@@ -192,7 +192,7 @@ uint16_t adc_sensor(void)
     }
 
     /* 返回滤波后的值 */
-    return Adc_Fil_Sensor(temp);
+    return adc_sensor_filter(temp);
 }
 
 uint16_t adc_single_sample(void)
