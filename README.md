@@ -30,3 +30,7 @@
 
 - Base Simplify 
 - Tested
+
+#### Version 1.8 
+
+- New project file
