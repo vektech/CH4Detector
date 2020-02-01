@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 1   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   52          P0.6  调试、标定
   53          P0.7  测试按键
   54          */
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 2   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 2   
 
   55          /*******************************************************************************
   56           *                 Struct Define Section ('typedef')
@@ -126,7 +126,7 @@ line level    source
  114   1      
  115   1          // device_first_power_down = down_flag = 0;
  116   1          // timer2_life_second_count = bReadtime = sensor_preheat = 0;
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 3   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 3   
 
  117   1      
  118   1          // /* WARMUP 设置系统状态 status[1] &= 0x1f */
@@ -190,7 +190,7 @@ line level    source
  176   1          //             {
  177   1          //                 /* XXX 开启I2C 并进行时间写入 */
  178   1          //                 startClock();
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 4   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 4   
 
  179   1          //                 /* 从FLASH中读取标定数据 */
  180   1          //                 ReadData(demarcation_result, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_st
@@ -254,7 +254,7 @@ line level    source
  235   1          //     else
  236   1          //     {
  237   1          //         bReadtime = 0;
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 5   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 5   
 
  238   1          //     }
  239   1      
@@ -318,7 +318,7 @@ line level    source
  297   1          //         {
  298   1          //         /* 0xab开头为写命令 */
  299   1          //         case 0xab:
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 6   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 6   
 
  300   1          //         {
  301   1          //             switch (rxbuf[1])
@@ -382,7 +382,7 @@ line level    source
  358   1          //                         {
  359   1          //                             rxbuf[3] = (status[1] & 0xe0) | ILLEGAL_PARA_EROR;
  360   1          //                             goto WR_CLOCK_EROR;
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 7   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 7   
 
  361   1          //                         }
  362   1      
@@ -446,7 +446,7 @@ line level    source
  420   1          //                     rxbuf[3] = (status[1] & 0xe0) | BYTELOSS_EROR;
  421   1          //                 }
  422   1          //             WR_CLOCK_EROR:
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 8   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 8   
 
  423   1          //                 rxbuf[2] = status[0];
  424   1          //                 rxbuf[COMMAND_LEN_WRITE_CLOCK[1] - 2] = Get_crc(rxbuf, COMMAND_LEN_WRITE_CLOCK[1]);
@@ -510,7 +510,7 @@ line level    source
  480   1          //                 /* 表示出厂日期写入成功 */
  481   1          //                 if ((rxbuf[3] & (~0xe0)) == 0)
  482   1          //                 {
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 9   
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 9   
 
  483   1          //                     LifeCheck[2] = 0x5a;
  484   1          //                     LifeCheck[3] = 0xe7;
@@ -574,7 +574,7 @@ line level    source
  542   1          //                 Master_Read_Data();
  543   1          //                 rxbuf[4] = i2c_time_code[6];
  544   1          //                 rxbuf[5] = i2c_time_code[5];
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 10  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 10  
 
  545   1          //                 rxbuf[6] = i2c_time_code[3];
  546   1          //                 rxbuf[7] = i2c_time_code[2];
@@ -638,7 +638,7 @@ line level    source
  603   1          //                 rxbuf[5] = CH4_Adc_Valu;
  604   1          //                 rxbuf[COMMAND_LEN_RE_CURTAD[1] - 2] = Get_crc(rxbuf, COMMAND_LEN_RE_CURTAD[1]);
  605   1          //                 rxbuf[COMMAND_LEN_RE_CURTAD[1] - 1] = 0x55;
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 11  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 11  
 
  606   1          //                 for (i = 0; i < COMMAND_LEN_RE_CURTAD[1]; i++)
  607   1          //                 {
@@ -702,7 +702,7 @@ line level    source
  662   1          //                     /* 串口输出 延时函数 关键参数 */
  663   1          //                     Delay1ms(5);
  664   1          //                 }
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 12  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 12  
 
  665   1          //                 break;
  666   1          //             }
@@ -766,7 +766,7 @@ line level    source
  721   1          //                 {
  722   1          //                     STATUS1_NOMAL;
  723   1          //                     rxbuf[3] = status[1] & 0xe0;
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 13  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 13  
 
  724   1          //                     sensor_preheat = 1;
  725   1          //                 }
@@ -830,7 +830,7 @@ line level    source
  781   1      
  782   1          //         /* 进行读取的当前时间和记录的生产日期的比较 */
  783   1          //         /* 当前时间的年 大于 生产日期中的年 */
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 14  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 14  
 
  784   1          //         if (i2c_time_code[6] >= dateofmanufacture[0])
  785   1          //         {
@@ -894,7 +894,7 @@ line level    source
              -))
  843   1          //                     {
  844   1          //                         /* Brown-Out Detector 电源电压检测 */
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 15  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 15  
 
  845   1          //                         check_BOD();
  846   1          //                         /* 写寿命到期记录 */
@@ -958,7 +958,7 @@ line level    source
  903   1          //     {
  904   1          //         /* XXX */
  905   1          //         if (key_long_press_flag)
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 16  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 16  
 
  906   1          //         {
  907   1          //             /* 延时去抖 */
@@ -1022,7 +1022,7 @@ line level    source
  965   1          //                         Delay1ms(30);
  966   1          //                     }
  967   1          //                     Alarm_Value++;
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 17  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 17  
 
  968   1          //                 }
  969   1          //             }
@@ -1086,7 +1086,7 @@ line level    source
 1027   1          //             if (Fault_flag == 1)
 1028   1          //             {
 1029   1          //                 Fault_flag = 0;
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 18  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 18  
 
 1030   1          //                 Fault_Back_flag = 1;
 1031   1          //                 /* Brown-Out Detector 电源电压检测 */
@@ -1150,7 +1150,7 @@ line level    source
 1088   1      
 1089   1          //         /* XXX */
 1090   1          //         if (!VALVE_flag)
-C51 COMPILER V9.60.0.0   MAIN                                                              01/31/2020 16:56:44 PAGE 19  
+C51 COMPILER V9.60.0.0   MAIN                                                              02/01/2020 20:17:01 PAGE 19  
 
 1091   1          //         {
 1092   1          //             /* 继电器关 */
