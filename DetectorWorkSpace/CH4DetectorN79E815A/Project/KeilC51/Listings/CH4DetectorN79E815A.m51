@@ -1,4 +1,4 @@
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    02/01/2020  23:14:39  PAGE 1
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    02/01/2020  23:17:19  PAGE 1
 
 
 BL51 BANKED LINKER/LOCATER V6.22.2.0, INVOKED BY:
@@ -57,15 +57,16 @@ LINK MAP OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
             XDATA   002CH     000CH     UNIT         ?XD?_ADC_SENSOR_FILTER?ADC
             XDATA   0038H     000AH     UNIT         ?XD?SENSOR
             XDATA   0042H     0009H     UNIT         ?XD?SERSOR_DEMARCATION?SENSOR
-            XDATA   004BH     0008H     UNIT         _XDATA_GROUP_
-            XDATA   0053H     0007H     UNIT         ?XD?I2C
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 2
+            XDATA   004BH     0007H     UNIT         ?XD?I2C
+            XDATA   0052H     0006H     UNIT         ?XD?TIMER
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 2
 
 
-            XDATA   005AH     0006H     UNIT         ?XD?TIMER
-            XDATA   0060H     0006H     UNIT         ?XD?UTLITIES
-            XDATA   0066H     0005H     UNIT         ?XD?_DEVICE_ALARM?SIGNAL
-            XDATA   006BH     0005H     UNIT         ?XD?_SIGNAL_BEEPER?SIGNAL
+            XDATA   0058H     0006H     UNIT         ?XD?UTLITIES
+            XDATA   005EH     0006H     UNIT         _XDATA_GROUP_
+            XDATA   0064H     0005H     UNIT         ?XD?_DEVICE_ALARM?SIGNAL
+            XDATA   0069H     0005H     UNIT         ?XD?_SIGNAL_BEEPER?SIGNAL
+            XDATA   006EH     0002H     UNIT         ?XD?_DELAY1MS?DELAY
             XDATA   0070H     0001H     UNIT         ?XD?DEVICE
             XDATA   0071H     0001H     UNIT         ?XD?I2C_GET_TIME?I2C
             XDATA   0072H     0001H     UNIT         ?XD?_I2C_READ_DATA?I2C
@@ -106,22 +107,22 @@ LINK MAP OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
             CODE    0F06H     0025H     UNIT         ?PR?_DELAY10US?DELAY
             CODE    0F2BH     0024H     UNIT         ?PR?I2C_DEAL_TIME_CODE?I2C
             CODE    0F4FH     0021H     UNIT         ?PR?_UART_INIT?UART
-            CODE    0F70H     001BH     UNIT         ?PR?MAIN?MAIN
-            CODE    0F8BH     001AH     UNIT         ?PR?I2C_STOP?I2C
-            CODE    0FA5H     0017H     UNIT         ?PR?I2C_START?I2C
-            CODE    0FBCH     0017H     UNIT         ?PR?_I2C_8563_ADDRESS?I2C
-            CODE    0FD3H     000FH     UNIT         ?PR?_BCD2HEX?UTLITIES
-            CODE    0FE2H     000EH     UNIT         ?PR?ADC_INIT?ADC
-            CODE    0FF0H     000AH     UNIT         ?PR?ADC_TRIGGER_CONVERTION?ADC
-            CODE    0FFAH     0008H     UNIT         ?PR?_UART_SEND?UART
-            CODE    1002H     0004H     UNIT         ?CO?MAIN
+            CODE    0F70H     001AH     UNIT         ?PR?I2C_STOP?I2C
+            CODE    0F8AH     0019H     UNIT         ?PR?MAIN?MAIN
+            CODE    0FA3H     0017H     UNIT         ?PR?I2C_START?I2C
+            CODE    0FBAH     0017H     UNIT         ?PR?_I2C_8563_ADDRESS?I2C
+            CODE    0FD1H     000FH     UNIT         ?PR?_BCD2HEX?UTLITIES
+            CODE    0FE0H     000EH     UNIT         ?PR?ADC_INIT?ADC
+            CODE    0FEEH     000AH     UNIT         ?PR?ADC_TRIGGER_CONVERTION?ADC
+            CODE    0FF8H     0008H     UNIT         ?PR?_UART_SEND?UART
+            CODE    1000H     0004H     UNIT         ?CO?MAIN
 
+
+
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 3
 
 
 OVERLAY MAP OF MODULE:   .\Objects\CH4DetectorN79E815A (ADC)
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 3
-
-
 
 
 SEGMENT                                    BIT_GROUP          XDATA_GROUP
@@ -131,27 +132,12 @@ SEGMENT                                    BIT_GROUP          XDATA_GROUP
   +--> ?PR?MAIN?MAIN
   +--> ?C_INITSEG
 
-?PR?MAIN?MAIN                           -----    -----      004BH    0005H
+?PR?MAIN?MAIN                           -----    -----      005EH    0005H
   +--> ?CO?MAIN
-  +--> ?PR?DEVICE_INIT?DEVICE
-
-?PR?DEVICE_INIT?DEVICE                  -----    -----      -----    -----
-  +--> ?PR?_DELAY1MS?DELAY
-  +--> ?PR?_UART_INIT?UART
-  +--> ?PR?TIMER2_INIT?TIMER
-  +--> ?PR?ADC_INIT?ADC
-  +--> ?PR?I2C_INIT?I2C
-
-?PR?_DELAY1MS?DELAY                     -----    -----      0050H    0002H
-  +--> ?PR?CHECK_BOD?DEVICE
-
-?PR?ADC_INIT?ADC                        -----    -----      -----    -----
-  +--> ?PR?_ADC_SET_INPUT_MODE?ADC
-  +--> ?PR?_ADC_CHANNEL_SEL?ADC
 
 *** NEW ROOT ***************************************************
 
-?PR?UART_ISR?UART                       0020H.6  0000H.1    0052H    0001H
+?PR?UART_ISR?UART                       0020H.6  0000H.1    0063H    0001H
 
 
 
@@ -179,23 +165,23 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:07E4H         PUBLIC        _adc_sensor_filter
   C:0046H         PUBLIC        adc_init_interrupt
   C:0026H         PUBLIC        ADC_ISR
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 4
-
-
   D:00B8H         PUBLIC        IP
   B:00F8H.3       PUBLIC        ADCS
   D:00F6H         PUBLIC        P0DIDS
   C:0E01H         PUBLIC        adc_sensor
   D:00D8H         PUBLIC        WDCON0
   D:0087H         PUBLIC        PCON
-  C:0FF0H         PUBLIC        adc_trigger_convertion
+  C:0FEEH         PUBLIC        adc_trigger_convertion
   D:0098H         PUBLIC        SCON
   D:0088H         PUBLIC        TCON
-  C:0FE2H         PUBLIC        adc_init
+  C:0FE0H         PUBLIC        adc_init
   C:001EH         PUBLIC        adc_enable_interrupt
   B:00F8H.0       PUBLIC        AADR0
   B:00F8H.1       PUBLIC        AADR1
   B:00F8H.2       PUBLIC        AADR2
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 4
+
+
   D:00E8H         PUBLIC        EIE
   D:00F8H         PUBLIC        ADCCON0
   D:00E1H         PUBLIC        ADCCON1
@@ -206,12 +192,12 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0EDAH         PUBLIC        adc_single_sample
   D:00D0H         PUBLIC        PSW
   -------         PROC          ADC_INIT
-  C:0FE2H         LINE#         51
-  C:0FE2H         LINE#         52
-  C:0FE2H         LINE#         54
-  C:0FE7H         LINE#         56
-  C:0FECH         LINE#         59
-  C:0FEFH         LINE#         60
+  C:0FE0H         LINE#         51
+  C:0FE0H         LINE#         52
+  C:0FE0H         LINE#         54
+  C:0FE5H         LINE#         56
+  C:0FEAH         LINE#         59
+  C:0FEDH         LINE#         60
   -------         ENDPROC       ADC_INIT
   -------         PROC          _ADC_SET_INPUT_MODE
   D:0007H         SYMBOL        channel
@@ -239,9 +225,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0C06H         LINE#         85
   C:0C09H         LINE#         86
   C:0C09H         LINE#         87
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 5
-
-
   C:0C0BH         LINE#         88
   C:0C0BH         LINE#         89
   C:0C0EH         LINE#         90
@@ -256,6 +239,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0C1BH         LINE#         99
   C:0C1EH         LINE#         100
   C:0C21H         LINE#         101
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 5
+
+
   C:0C24H         LINE#         102
   C:0C25H         LINE#         103
   C:0C25H         LINE#         104
@@ -299,9 +285,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0CD3H         LINE#         142
   C:0CD3H         LINE#         143
   C:0CD5H         LINE#         144
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 6
-
-
   C:0CD7H         LINE#         145
   C:0CD9H         LINE#         146
   C:0CDAH         LINE#         147
@@ -316,6 +299,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0CE7H         LINE#         156
   C:0CE7H         LINE#         157
   C:0CE7H         LINE#         158
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 6
+
+
   -------         ENDPROC       _ADC_CHANNEL_SEL
   -------         PROC          ADC_INIT_INTERRUPT
   C:0046H         LINE#         161
@@ -359,23 +345,23 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0EF2H         LINE#         208
   C:0EF6H         LINE#         210
   C:0F05H         LINE#         212
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 7
-
-
   C:0F05H         LINE#         213
   -------         ENDPROC       ADC_SINGLE_SAMPLE
   -------         PROC          ADC_TRIGGER_CONVERTION
-  C:0FF0H         LINE#         215
-  C:0FF0H         LINE#         216
-  C:0FF0H         LINE#         221
-  C:0FF2H         LINE#         228
-  C:0FF4H         LINE#         235
-  C:0FF7H         LINE#         238
+  C:0FEEH         LINE#         215
+  C:0FEEH         LINE#         216
+  C:0FEEH         LINE#         221
+  C:0FF0H         LINE#         228
+  C:0FF2H         LINE#         235
+  C:0FF5H         LINE#         238
   -------         ENDPROC       ADC_TRIGGER_CONVERTION
   -------         PROC          _ADC_SENSOR_FILTER
   D:0001H         SYMBOL        p
   -------         DO            
   X:002CH         SYMBOL        i
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 7
+
+
   X:002DH         SYMBOL        sum
   X:0031H         SYMBOL        maxtemp
   X:0033H         SYMBOL        mintemp
@@ -419,9 +405,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0000H         SYMBOL        _ICE_DUMMY_
   D:0080H         PUBLIC        P0
   D:0090H         PUBLIC        P1
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 8
-
-
   D:00A0H         PUBLIC        P2
   D:00B0H         PUBLIC        P3
   C:0E74H         PUBLIC        _Delay1ms
@@ -436,6 +419,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   D:008AH         PUBLIC        TL0
   D:00E8H         PUBLIC        EIE
   B:0088H.4       PUBLIC        TR0
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 8
+
+
   B:00C8H.2       PUBLIC        TR2
   D:00F8H         PUBLIC        ADCCON0
   D:00C0H         PUBLIC        I2CON
@@ -464,7 +450,7 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0F2AH         LINE#         111
   -------         ENDPROC       _DELAY10US
   -------         PROC          _DELAY1MS
-  X:0050H         SYMBOL        count
+  X:006EH         SYMBOL        count
   C:0E74H         LINE#         114
   C:0E7CH         LINE#         115
   C:0E7CH         LINE#         117
@@ -479,9 +465,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0E94H         LINE#         137
   C:0E96H         LINE#         138
   C:0EA4H         LINE#         139
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 9
-
-
   C:0EA6H         LINE#         141
   C:0EA8H         LINE#         142
   -------         ENDPROC       _DELAY1MS
@@ -496,6 +479,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   D:00B5H         PUBLIC        P2M1
   D:00B4H         PUBLIC        P1M2
   D:0090H         PUBLIC        P1
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 9
+
+
   D:00B6H         PUBLIC        P2M2
   D:00A0H         PUBLIC        P2
   D:0096H         PUBLIC        P3M1
@@ -539,9 +525,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0CE8H         LINE#         77
   C:0CE8H         LINE#         79
   C:0CEAH         LINE#         86
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 10
-
-
   C:0CEDH         LINE#         88
   C:0CF0H         LINE#         96
   C:0CF3H         LINE#         98
@@ -556,6 +539,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0D0DH         LINE#         131
   C:0D10H         LINE#         134
   C:0D12H         LINE#         137
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 10
+
+
   C:0D14H         LINE#         139
   C:0D16H         LINE#         141
   C:0D18H         LINE#         143
@@ -599,9 +585,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0E43H         LINE#         219
   C:0E56H         LINE#         221
   C:0E5CH         LINE#         222
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 11
-
-
   C:0E66H         LINE#         223
   C:0E66H         LINE#         224
   C:0E69H         LINE#         226
@@ -614,18 +597,21 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0000H         SYMBOL        _ICE_DUMMY_
   D:0080H         PUBLIC        P0
   D:0090H         PUBLIC        P1
-  C:0FBCH         SYMBOL        _i2c_8563_address
+  C:0FBAH         SYMBOL        _i2c_8563_address
   B:00C0H.2       PUBLIC        AA
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 11
+
+
   D:00A0H         PUBLIC        P2
   D:00B0H         PUBLIC        P3
   C:0F2BH         SYMBOL        i2c_deal_time_code
   D:00A8H         PUBLIC        IE
-  X:0053H         PUBLIC        i2c_time_code
-  C:0FA5H         SYMBOL        i2c_start
+  X:004BH         PUBLIC        i2c_time_code
+  C:0FA3H         SYMBOL        i2c_start
   C:0055H         PUBLIC        i2c_init
   D:00B8H         PUBLIC        IP
   B:00C0H.3       PUBLIC        SI
-  C:0F8BH         SYMBOL        i2c_stop
+  C:0F70H         SYMBOL        i2c_stop
   D:00D8H         PUBLIC        WDCON0
   C:0ADDH         PUBLIC        i2c_get_time
   D:0098H         PUBLIC        SCON
@@ -659,9 +645,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0AE2H         LINE#         88
   C:0AE5H         LINE#         103
   C:0AEAH         LINE#         104
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 12
-
-
   C:0AEFH         LINE#         107
   C:0AF2H         LINE#         110
   C:0AF7H         LINE#         111
@@ -676,22 +659,25 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0B59H         LINE#         122
   -------         ENDPROC       I2C_GET_TIME
   -------         PROC          I2C_START
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 12
+
+
   -------         DO            
   D:0007H         SYMBOL        delay_count
   -------         ENDDO         
-  C:0FA5H         LINE#         178
-  C:0FA5H         LINE#         179
-  C:0FA5H         LINE#         180
-  C:0FA7H         LINE#         183
-  C:0FA9H         LINE#         186
-  C:0FAEH         LINE#         187
-  C:0FAEH         LINE#         188
-  C:0FB9H         LINE#         189
-  C:0FB9H         LINE#         190
-  C:0FB9H         LINE#         191
-  C:0FB9H         LINE#         192
-  C:0FB9H         LINE#         195
-  C:0FBBH         LINE#         196
+  C:0FA3H         LINE#         178
+  C:0FA3H         LINE#         179
+  C:0FA3H         LINE#         180
+  C:0FA5H         LINE#         183
+  C:0FA7H         LINE#         186
+  C:0FACH         LINE#         187
+  C:0FACH         LINE#         188
+  C:0FB7H         LINE#         189
+  C:0FB7H         LINE#         190
+  C:0FB7H         LINE#         191
+  C:0FB7H         LINE#         192
+  C:0FB7H         LINE#         195
+  C:0FB9H         LINE#         196
   -------         ENDPROC       I2C_START
   -------         PROC          I2C_REAPEAT_START
   -------         DO            
@@ -717,41 +703,41 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   -------         DO            
   D:0007H         SYMBOL        delay_count
   -------         ENDDO         
-  C:0F8BH         LINE#         222
-  C:0F8BH         LINE#         223
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 13
-
-
-  C:0F8BH         LINE#         224
-  C:0F8DH         LINE#         227
-  C:0F8FH         LINE#         229
-  C:0F91H         LINE#         232
-  C:0F99H         LINE#         233
-  C:0F99H         LINE#         234
-  C:0FA4H         LINE#         235
-  C:0FA4H         LINE#         236
-  C:0FA4H         LINE#         237
-  C:0FA4H         LINE#         238
-  C:0FA4H         LINE#         239
+  C:0F70H         LINE#         222
+  C:0F70H         LINE#         223
+  C:0F70H         LINE#         224
+  C:0F72H         LINE#         227
+  C:0F74H         LINE#         229
+  C:0F76H         LINE#         232
+  C:0F7EH         LINE#         233
+  C:0F7EH         LINE#         234
+  C:0F89H         LINE#         235
+  C:0F89H         LINE#         236
+  C:0F89H         LINE#         237
+  C:0F89H         LINE#         238
+  C:0F89H         LINE#         239
   -------         ENDPROC       I2C_STOP
   -------         PROC          _I2C_8563_ADDRESS
   D:0007H         SYMBOL        sub
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 13
+
+
   -------         DO            
   D:0006H         SYMBOL        delay_count
   -------         ENDDO         
-  C:0FBCH         LINE#         242
-  C:0FBCH         LINE#         243
-  C:0FBCH         LINE#         244
-  C:0FBEH         LINE#         248
-  C:0FC0H         LINE#         250
-  C:0FC2H         LINE#         253
-  C:0FC7H         LINE#         254
-  C:0FC7H         LINE#         255
-  C:0FD2H         LINE#         256
-  C:0FD2H         LINE#         257
-  C:0FD2H         LINE#         258
-  C:0FD2H         LINE#         259
-  C:0FD2H         LINE#         260
+  C:0FBAH         LINE#         242
+  C:0FBAH         LINE#         243
+  C:0FBAH         LINE#         244
+  C:0FBCH         LINE#         248
+  C:0FBEH         LINE#         250
+  C:0FC0H         LINE#         253
+  C:0FC5H         LINE#         254
+  C:0FC5H         LINE#         255
+  C:0FD0H         LINE#         256
+  C:0FD0H         LINE#         257
+  C:0FD0H         LINE#         258
+  C:0FD0H         LINE#         259
+  C:0FD0H         LINE#         260
   -------         ENDPROC       _I2C_8563_ADDRESS
   -------         PROC          _I2C_READ_DATA
   D:0001H         SYMBOL        temp
@@ -779,9 +765,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0D62H         LINE#         317
   C:0D69H         LINE#         318
   C:0D6CH         LINE#         324
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 14
-
-
   C:0D6EH         LINE#         327
   C:0D70H         LINE#         329
   C:0D72H         LINE#         331
@@ -796,6 +779,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   -------         PROC          I2C_DEAL_TIME_CODE
   C:0F2BH         LINE#         341
   C:0F2BH         LINE#         342
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 14
+
+
   C:0F2BH         LINE#         344
   C:0F32H         LINE#         346
   C:0F37H         LINE#         348
@@ -815,11 +801,11 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   D:00B0H         PUBLIC        P3
   D:00A8H         PUBLIC        IE
   D:00B8H         PUBLIC        IP
-  C:0F70H         PUBLIC        main
+  C:0F8AH         PUBLIC        main
   D:00D8H         PUBLIC        WDCON0
   D:0098H         PUBLIC        SCON
   D:0088H         PUBLIC        TCON
-  C:1002H         SYMBOL        _?ix1000
+  C:1000H         SYMBOL        _?ix1000
   D:00E8H         PUBLIC        EIE
   D:00F8H         PUBLIC        ADCCON0
   D:00C0H         PUBLIC        I2CON
@@ -827,21 +813,18 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   D:00D0H         PUBLIC        PSW
   -------         PROC          MAIN
   -------         DO            
-  X:004BH         SYMBOL        life_check
-  X:004FH         SYMBOL        life_check_flag
+  X:005EH         SYMBOL        life_check
+  X:0062H         SYMBOL        life_check_flag
   -------         ENDDO         
-  C:0F70H         LINE#         74
-  C:0F70H         LINE#         75
-  C:0F70H         LINE#         77
-  C:0F83H         LINE#         78
-  C:0F88H         LINE#         81
+  C:0F8AH         LINE#         74
+  C:0F8AH         LINE#         75
+  C:0F8AH         LINE#         77
+  C:0F9DH         LINE#         78
+  C:0FA2H         LINE#         1097
   -------         ENDPROC       MAIN
   -------         ENDMOD        MAIN
 
   -------         MODULE        SENSOR
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 15
-
-
   C:0000H         SYMBOL        _ICE_DUMMY_
   D:0080H         PUBLIC        P0
   D:0090H         PUBLIC        P1
@@ -856,6 +839,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   X:0040H         PUBLIC        ch4_3500
   D:00D8H         PUBLIC        WDCON0
   B:0080H.0       PUBLIC        P00
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 15
+
+
   B:0080H.3       PUBLIC        P03
   B:00A0H.2       PUBLIC        P22
   D:0098H         PUBLIC        SCON
@@ -899,9 +885,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0099H         LINE#         100
   C:009CH         LINE#         103
   C:009EH         LINE#         106
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 16
-
-
   C:00A5H         LINE#         107
   C:00A5H         LINE#         109
   C:00A7H         LINE#         110
@@ -916,6 +899,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:00D3H         LINE#         127
   C:00D3H         LINE#         129
   C:00D5H         LINE#         130
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 16
+
+
   C:00DCH         LINE#         132
   C:00DEH         LINE#         133
   C:00DEH         LINE#         134
@@ -959,9 +945,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:01B8H         LINE#         198
   C:01BAH         LINE#         201
   C:01CFH         LINE#         202
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 17
-
-
   C:01CFH         LINE#         203
   C:01D6H         LINE#         204
   C:01DBH         LINE#         205
@@ -976,6 +959,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:021CH         LINE#         215
   C:0223H         LINE#         216
   C:022AH         LINE#         219
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 17
+
+
   C:0231H         LINE#         220
   C:0231H         LINE#         222
   C:0238H         LINE#         225
@@ -1019,9 +1005,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:031BH         LINE#         295
   C:031DH         LINE#         297
   C:0320H         LINE#         299
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 18
-
-
   C:0322H         LINE#         307
   C:032EH         LINE#         308
   C:032EH         LINE#         309
@@ -1036,6 +1019,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0363H         LINE#         320
   C:036AH         LINE#         321
   C:0372H         LINE#         322
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 18
+
+
   C:0379H         LINE#         323
   C:0382H         LINE#         324
   C:0389H         LINE#         325
@@ -1078,12 +1064,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   -------         PROC          _DEVICE_ALARM
   D:0007H         SYMBOL        type
   -------         DO            
-  X:0066H         SYMBOL        i
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 19
-
-
-  X:0068H         SYMBOL        k
-  X:006AH         SYMBOL        j
+  X:0064H         SYMBOL        i
+  X:0066H         SYMBOL        k
+  X:0068H         SYMBOL        j
   -------         ENDDO         
   C:062DH         LINE#         109
   C:062DH         LINE#         110
@@ -1096,6 +1079,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0644H         LINE#         121
   C:0644H         LINE#         123
   C:0646H         LINE#         124
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 19
+
+
   C:0646H         LINE#         126
   C:0663H         LINE#         127
   C:0663H         LINE#         128
@@ -1139,9 +1125,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:073BH         LINE#         196
   C:073DH         LINE#         197
   C:073EH         LINE#         198
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 20
-
-
   C:073EH         LINE#         199
   C:073EH         LINE#         200
   C:073EH         LINE#         202
@@ -1156,6 +1139,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0761H         LINE#         221
   C:077FH         LINE#         222
   C:077FH         LINE#         223
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 20
+
+
   C:077FH         LINE#         224
   C:077FH         LINE#         225
   C:077FH         LINE#         227
@@ -1180,10 +1166,10 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:07E3H         LINE#         256
   -------         ENDPROC       _DEVICE_ALARM
   -------         PROC          _SIGNAL_BEEPER
-  X:006BH         SYMBOL        interval
-  X:006CH         SYMBOL        repeat_time
+  X:0069H         SYMBOL        interval
+  X:006AH         SYMBOL        repeat_time
   -------         DO            
-  X:006EH         SYMBOL        i
+  X:006CH         SYMBOL        i
   -------         ENDDO         
   C:0C2FH         LINE#         261
   C:0C3AH         LINE#         262
@@ -1199,9 +1185,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0C6FH         LINE#         279
   C:0C7DH         LINE#         280
   C:0C92H         LINE#         283
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 21
-
-
   C:0C96H         LINE#         284
   -------         ENDPROC       _SIGNAL_BEEPER
   -------         ENDMOD        SIGNAL
@@ -1216,6 +1199,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   D:0082H         SYMBOL        DPL
   N:0000H         SYMBOL        IBPSTACK
   N:0100H         SYMBOL        IBPSTACKTOP
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 21
+
+
   N:0080H         SYMBOL        IDATALEN
   C:0A3DH         SYMBOL        IDATALOOP
   N:0000H         SYMBOL        PBPSTACK
@@ -1259,9 +1245,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   -------         MODULE        TIMER
   C:0000H         SYMBOL        _ICE_DUMMY_
   D:0080H         PUBLIC        P0
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 22
-
-
   D:0090H         PUBLIC        P1
   D:00CAH         PUBLIC        RCOMP2L
   D:00A0H         PUBLIC        P2
@@ -1271,14 +1254,17 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   D:00B8H         PUBLIC        IP
   B:0098H.0       PUBLIC        RI
   D:00D8H         PUBLIC        WDCON0
-  X:005AH         PUBLIC        timer2_key_long_press_count
+  X:0052H         PUBLIC        timer2_key_long_press_count
   B:0080H.3       PUBLIC        P03
   B:0020H.0       PUBLIC        timer2_second_flag
   D:0098H         PUBLIC        SCON
   D:0088H         PUBLIC        TCON
-  X:005BH         PUBLIC        timer2_second_count
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 22
+
+
+  X:0053H         PUBLIC        timer2_second_count
   B:00C8H.0       PUBLIC        CP_RL2
-  X:005CH         PUBLIC        timer2_life_second_count
+  X:0054H         PUBLIC        timer2_life_second_count
   B:00C8H.7       PUBLIC        TF2
   D:00CDH         PUBLIC        TH2
   D:00CCH         PUBLIC        TL2
@@ -1286,7 +1272,7 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   B:00C8H.2       PUBLIC        TR2
   D:00F8H         PUBLIC        ADCCON0
   D:00C0H         PUBLIC        I2CON
-  X:005EH         PUBLIC        timer2_count
+  X:0056H         PUBLIC        timer2_count
   D:00C9H         PUBLIC        T2MOD
   D:00C8H         PUBLIC        T2CON
   B:0020H.1       PUBLIC        key_long_press_flag
@@ -1319,9 +1305,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:09A0H         LINE#         132
   C:09A5H         LINE#         134
   C:09A7H         LINE#         135
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 23
-
-
   C:09A7H         LINE#         136
   C:09A9H         LINE#         138
   C:09A9H         LINE#         139
@@ -1336,6 +1319,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:09D5H         LINE#         153
   C:09D5H         LINE#         155
   C:09D7H         LINE#         156
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 23
+
+
   C:09D7H         LINE#         157
   C:09DEH         LINE#         158
   C:09ECH         LINE#         159
@@ -1379,13 +1365,10 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   D:0099H         PUBLIC        SBUF
   D:0087H         PUBLIC        PCON
   D:0098H         PUBLIC        SCON
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 24
-
-
   D:0089H         PUBLIC        TMOD
   D:0088H         PUBLIC        TCON
   D:00E0H         PUBLIC        ACC
-  C:0FFAH         PUBLIC        _uart_send
+  C:0FF8H         PUBLIC        _uart_send
   B:0098H.2       PUBLIC        RB8
   D:008DH         PUBLIC        TH1
   B:0098H.3       PUBLIC        TB8
@@ -1396,6 +1379,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   B:00C8H.2       PUBLIC        TR2
   D:00F8H         PUBLIC        ADCCON0
   D:00C0H         PUBLIC        I2CON
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 24
+
+
   X:0015H         PUBLIC        rx_index
   D:00C8H         PUBLIC        T2CON
   X:0016H         PUBLIC        rx_count
@@ -1413,16 +1399,16 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   -------         ENDPROC       _UART_INIT
   -------         PROC          _UART_SEND
   D:0007H         SYMBOL        byte
-  C:0FFAH         LINE#         108
-  C:0FFAH         LINE#         109
-  C:0FFAH         LINE#         114
-  C:0FFBH         LINE#         116
-  C:0FFFH         LINE#         129
-  C:1001H         LINE#         130
+  C:0FF8H         LINE#         108
+  C:0FF8H         LINE#         109
+  C:0FF8H         LINE#         114
+  C:0FF9H         LINE#         116
+  C:0FFDH         LINE#         129
+  C:0FFFH         LINE#         130
   -------         ENDPROC       _UART_SEND
   -------         PROC          UART_ISR
   -------         DO            
-  X:0052H         SYMBOL        i
+  X:0063H         SYMBOL        i
   B:0020H.6       SYMBOL        parity_bit
   -------         ENDDO         
   C:0B5CH         LINE#         133
@@ -1439,9 +1425,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0B7CH         LINE#         161
   C:0B84H         LINE#         162
   C:0B84H         LINE#         164
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 25
-
-
   C:0B98H         LINE#         166
   C:0BA5H         LINE#         167
   C:0BA5H         LINE#         169
@@ -1456,13 +1439,16 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:0BB9H         LINE#         201
   C:0BBBH         LINE#         202
   -------         ENDPROC       UART_ISR
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 25
+
+
   -------         ENDMOD        UART
 
   -------         MODULE        UTLITIES
   C:0000H         SYMBOL        _ICE_DUMMY_
   C:0EA9H         PUBLIC        timecodeTotimecopy
-  C:0FD3H         PUBLIC        _bcd2hex
-  X:0060H         PUBLIC        timeCOPY
+  C:0FD1H         PUBLIC        _bcd2hex
+  X:0058H         PUBLIC        timeCOPY
   -------         PROC          TIMECODETOTIMECOPY
   C:0EA9H         LINE#         47
   C:0EA9H         LINE#         48
@@ -1476,10 +1462,10 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   -------         ENDPROC       TIMECODETOTIMECOPY
   -------         PROC          _BCD2HEX
   D:0007H         SYMBOL        temp
-  C:0FD3H         LINE#         74
-  C:0FD3H         LINE#         75
-  C:0FD3H         LINE#         76
-  C:0FE1H         LINE#         77
+  C:0FD1H         LINE#         74
+  C:0FD1H         LINE#         75
+  C:0FD1H         LINE#         76
+  C:0FDFH         LINE#         77
   -------         ENDPROC       _BCD2HEX
   -------         ENDMOD        UTLITIES
 
@@ -1499,9 +1485,6 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   C:04ACH         PUBLIC        ?C?ILDPTR
   -------         ENDMOD        ?C?ILDPTR
 
-BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:14:39  PAGE 26
-
-
   -------         MODULE        ?C?ILDOPTR
   C:04D7H         PUBLIC        ?C?ILDOPTR
   -------         ENDMOD        ?C?ILDOPTR
@@ -1516,6 +1499,9 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
 
   -------         MODULE        ?C?LSTXDATA
   C:05F0H         PUBLIC        ?C?LSTXDATA
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  02/01/2020  23:17:19  PAGE 26
+
+
   -------         ENDMOD        ?C?LSTXDATA
 
   -------         MODULE        ?C?LSTKXDATA
@@ -1523,7 +1509,10 @@ SYMBOL TABLE OF MODULE:  .\Objects\CH4DetectorN79E815A (ADC)
   -------         ENDMOD        ?C?LSTKXDATA
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DEVICE_INIT?DEVICE
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?SERSOR_DEMARCATION?SENSOR
 
-Program Size: data=9.7 xdata=115 code=4101
-LINK/LOCATE RUN COMPLETE.  1 WARNING(S),  0 ERROR(S)
+Program Size: data=9.7 xdata=115 code=4099
+LINK/LOCATE RUN COMPLETE.  2 WARNING(S),  0 ERROR(S)

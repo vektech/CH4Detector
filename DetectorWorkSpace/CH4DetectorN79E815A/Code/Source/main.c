@@ -78,7 +78,7 @@ void main(void)
     uint8_t life_check_flag = 0;
 
     /* 设备初始化 */
-    device_init();
+    // device_init();
     
     /* 设备标定 */
     // sersor_demarcation();

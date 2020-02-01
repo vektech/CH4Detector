@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   TIMER                                                             02/01/2020 23:14:38 PAGE 1   
+C51 COMPILER V9.60.0.0   TIMER                                                             02/01/2020 23:17:19 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE TIMER
@@ -62,7 +62,7 @@ line level    source
   52          
   53          /*******************************************************************************
   54           *                 File Static Variable Define Section ('static variable')
-C51 COMPILER V9.60.0.0   TIMER                                                             02/01/2020 23:14:38 PAGE 2   
+C51 COMPILER V9.60.0.0   TIMER                                                             02/01/2020 23:17:19 PAGE 2   
 
   55           ******************************************************************************/
   56          
@@ -126,7 +126,7 @@ line level    source
  112   1          TR2 = 1;
  113   1      }
  114          
-C51 COMPILER V9.60.0.0   TIMER                                                             02/01/2020 23:14:38 PAGE 3   
+C51 COMPILER V9.60.0.0   TIMER                                                             02/01/2020 23:17:19 PAGE 3   
 
  115          /* 定时器T2 做为预热灯闪烁控制定时器和间隔5秒发一次数据定时器 定时器T1 做为串口波特率加载用定时器 */
  116          /* TIMER2 中断服务函数 Vecotr @ 0x2B 中断一次12ms */
@@ -190,7 +190,7 @@ line level    source
  174   2              timer2_life_second_count++;
  175   2      
  176   2      
-C51 COMPILER V9.60.0.0   TIMER                                                             02/01/2020 23:14:38 PAGE 4   
+C51 COMPILER V9.60.0.0   TIMER                                                             02/01/2020 23:17:19 PAGE 4   
 
  177   2              if (key_long_press_flag)
  178   2              {
