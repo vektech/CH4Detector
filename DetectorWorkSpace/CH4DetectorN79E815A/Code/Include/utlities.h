@@ -36,7 +36,7 @@
  *                 Prototype Declare Section
  ******************************************************************************/
 void timecodeTotimecopy(void);
-void timecopyTotimecode(void);
+// void timecopyTotimecode(void);
 
 /* 16½øÖÆ×ªBCDÂë */
 // uint8_t hex2bcd(uint8_t temp);
