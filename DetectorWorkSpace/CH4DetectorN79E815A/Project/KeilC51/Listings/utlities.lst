@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   UTLITIES                                                          02/01/2020 22:44:47 PAGE 1   
+C51 COMPILER V9.60.0.0   UTLITIES                                                          02/01/2020 23:09:39 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE UTLITIES
@@ -62,7 +62,7 @@ line level    source
   52   1          timeCOPY[3] = i2c_time_code[3];
   53   1          timeCOPY[4] = i2c_time_code[5];
   54   1          timeCOPY[5] = i2c_time_code[6];
-C51 COMPILER V9.60.0.0   UTLITIES                                                          02/01/2020 22:44:47 PAGE 2   
+C51 COMPILER V9.60.0.0   UTLITIES                                                          02/01/2020 23:09:39 PAGE 2   
 
   55   1      }
   56          

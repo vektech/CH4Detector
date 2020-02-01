@@ -56,7 +56,7 @@ static void i2c_reapeat_start(void);
 static void i2c_read_data(uint8_t *temp, uint8_t u8_data);
 static void i2c_deal_time_code(void);
 static void i2c_stop(void);
-static void i2c_write_data(uint8_t *time, uint8_t length);
+// static void i2c_write_data(uint8_t *time, uint8_t length);
 
 
 /*******************************************************************************
