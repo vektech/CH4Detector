@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:17:01 PAGE 1   
+C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:45:29 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SENSOR
@@ -62,7 +62,7 @@ line level    source
   52          uint16_t ch4_0 = 0;
   53          /* 甲烷 3500点AD值 */
   54          uint16_t ch4_3500 = 712;
-C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:17:01 PAGE 2   
+C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:45:29 PAGE 2   
 
   55          /* 标定AD值存储数组 */
   56          uint8_t demarcation_result[4] = 0;
@@ -126,7 +126,7 @@ line level    source
  114   4      
  115   4                      /* 通过长按键测试电磁阀和继电器 */
  116   4                      /* 获取P0.7 的值 */
-C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:17:01 PAGE 3   
+C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:45:29 PAGE 3   
 
  117   4                      demarcate_key = P07 & 0x01;
  118   4                      /* P0.7 按键按下 */
@@ -190,7 +190,7 @@ line level    source
  176   7                                  LED_FAULT_ON;
  177   7                                  Delay1ms(500);
  178   7      
-C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:17:01 PAGE 4   
+C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:45:29 PAGE 4   
 
  179   7                                  /* 故障灯关 */
  180   7                                  LED_FAULT_OFF;
@@ -254,7 +254,7 @@ line level    source
  238   5                          Delay1ms(5);
  239   5                          uart_send(0x3f);
  240   5                          Delay1ms(5);
-C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:17:01 PAGE 5   
+C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:45:29 PAGE 5   
 
  241   5                          uart_send(adc_value >> 8);
  242   5                          Delay1ms(5);
@@ -318,7 +318,7 @@ line level    source
  299   5                          EBO = 1;
  300   5      
  301   5                          /* YYY 存储标定记录总数 */
-C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:17:01 PAGE 6   
+C51 COMPILER V9.60.0.0   SENSOR                                                            02/01/2020 20:45:29 PAGE 6   
 
  302   5                          ///WriteRecordData(DEM_RECORD);
  303   5                          

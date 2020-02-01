@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   UART                                                              02/01/2020 20:17:02 PAGE 1   
+C51 COMPILER V9.60.0.0   UART                                                              02/01/2020 20:45:29 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE UART
@@ -62,7 +62,7 @@ line level    source
   52           ******************************************************************************/
   53          /* ---- Use timer1 as baudrate generator ---- */
   54          void uart_init(uint32_t bandrate)
-C51 COMPILER V9.60.0.0   UART                                                              02/01/2020 20:17:02 PAGE 2   
+C51 COMPILER V9.60.0.0   UART                                                              02/01/2020 20:45:29 PAGE 2   
 
   55          {
   56   1          /* SCON = 11010010B 串口控制
@@ -126,7 +126,7 @@ line level    source
  111   1      #if (UART_PARITY_SET == EVEN_PARITY)
  112   1          /* 将发送的数据放至ACC中 */
  113   1          /* PSW 中的 P位 为奇偶标志 累加结果为奇数时为1 偶数时为0 */
-C51 COMPILER V9.60.0.0   UART                                                              02/01/2020 20:17:02 PAGE 3   
+C51 COMPILER V9.60.0.0   UART                                                              02/01/2020 20:45:29 PAGE 3   
 
  114   1          ACC = byte;
  115   1          /* 偶校验 TB8 存储要发送的校验位 */
@@ -190,7 +190,7 @@ line level    source
  173   3              }
  174   2      #else
                       /* 奇校验 */
-C51 COMPILER V9.60.0.0   UART                                                              02/01/2020 20:17:02 PAGE 4   
+C51 COMPILER V9.60.0.0   UART                                                              02/01/2020 20:45:29 PAGE 4   
 
                       if (RB8 == (~parity_bit))
                       {
