@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:09:38 PAGE 1   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:14:38 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE I2C
@@ -62,7 +62,7 @@ line level    source
   52           ******************************************************************************/
   53          static void i2c_start(void);
   54          static void i2c_8563_address(uint8_t sub);
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:09:38 PAGE 2   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:14:38 PAGE 2   
 
   55          static void i2c_reapeat_start(void);
   56          static void i2c_read_data(uint8_t *temp, uint8_t u8_data);
@@ -126,7 +126,7 @@ line level    source
  113   1          i2c_time_code[4] = i2c_time_code[3] - i2c_time_code[4];
  114   1          i2c_time_code[3] = i2c_time_code[3] - i2c_time_code[4];
  115   1          i2c_deal_time_code();
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:09:38 PAGE 3   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:14:38 PAGE 3   
 
  116   1      #endif
  117   1      
@@ -190,7 +190,7 @@ line level    source
  175          /*******************************************************************************
  176           *                 File Static Function Define Section ('static function')
  177           ******************************************************************************/
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:09:38 PAGE 4   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:14:38 PAGE 4   
 
  178          static void i2c_start(void)
  179          {
@@ -254,7 +254,7 @@ line level    source
  237   3              }
  238   2          }
  239   1      }
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:09:38 PAGE 5   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:14:38 PAGE 5   
 
  240          
  241          /* 写寄存器地址 */
@@ -318,7 +318,7 @@ line level    source
  297   1          {
  298   2              /* I2CON[2] -> AA
  299   2                  - 如果AA标志置位 当I2C设备为接收器时 在应答时钟脉冲期间将返回ACK。
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:09:38 PAGE 6   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:14:38 PAGE 6   
 
  300   2                  - 如果AA被清零 当I2C设备是接收器时 在应答时钟脉冲期间将返回NACK (SDA上为高电平)
  301   2                  */
@@ -382,7 +382,7 @@ line level    source
  359          /*******************************************************************************
  360           *                 End of File ('EOF')
  361           ******************************************************************************/
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:09:38 PAGE 7   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 23:14:38 PAGE 7   
 
 
 

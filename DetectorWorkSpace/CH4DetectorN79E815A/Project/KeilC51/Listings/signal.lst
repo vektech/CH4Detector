@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:09:39 PAGE 1   
+C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:14:38 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SIGNAL
@@ -62,7 +62,7 @@ line level    source
   52                                              LED_FAULT_ON;  /* 故障灯开 */ \
   53                                              LED_ALARM_ON;  /* 报警灯开 */ \
   54                                              LED_LIFE_ON;   /* 寿命灯开 */ \
-C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:09:39 PAGE 2   
+C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:14:38 PAGE 2   
 
   55                                          } while(0)
   56          #define DEMARCATION_LED_OFF     do                               \
@@ -126,7 +126,7 @@ line level    source
  114   1          /* check rx_index */
  115   1          if (!rx_index)
  116   1          {
-C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:09:39 PAGE 3   
+C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:14:38 PAGE 3   
 
  117   2              /* rx_index = 0 中止定时器2 清该位将中止定时器2并将当前计数保存在TH2和TL2 */
  118   2              TR2 = 0;
@@ -190,7 +190,7 @@ line level    source
  176   3                  for (j = 0; j < 3; j++)
  177   3                  {
  178   4                      /* 标定系列灯开 */
-C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:09:39 PAGE 4   
+C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:14:38 PAGE 4   
 
  179   4                      DEMARCATION_LED_ON;
  180   4      
@@ -254,7 +254,7 @@ line level    source
  238   3      
  239   3                  /* 故障灯关 */
  240   3                  EXPIRED_LED_OFF;
-C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:09:39 PAGE 5   
+C51 COMPILER V9.60.0.0   SIGNAL                                                            02/01/2020 23:14:38 PAGE 5   
 
  241   3                  
  242   3                  /* 打开定时器2 */
