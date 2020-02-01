@@ -54,21 +54,21 @@ void timecodeTotimecopy(void)
     timeCOPY[5] = i2c_time_code[6];
 }
 
-void timecopyTotimecode(void)
-{
-    i2c_time_code[6] = timeCOPY[5];
-    i2c_time_code[5] = timeCOPY[4];
-    i2c_time_code[3] = timeCOPY[3];
-    i2c_time_code[2] = timeCOPY[2];
-    i2c_time_code[1] = timeCOPY[1];
-    i2c_time_code[0] = timeCOPY[0];
-}
+// void timecopyTotimecode(void)
+// {
+//     i2c_time_code[6] = timeCOPY[5];
+//     i2c_time_code[5] = timeCOPY[4];
+//     i2c_time_code[3] = timeCOPY[3];
+//     i2c_time_code[2] = timeCOPY[2];
+//     i2c_time_code[1] = timeCOPY[1];
+//     i2c_time_code[0] = timeCOPY[0];
+// }
 
-/* 16进制转BCD码 */
-uint8_t hex2bcd(uint8_t temp)
-{
-    return temp % 10 + (temp / 10) * 16;
-}
+// /* 16进制转BCD码 */
+// uint8_t hex2bcd(uint8_t temp)
+// {
+//     return temp % 10 + (temp / 10) * 16;
+// }
 
 /* BCD转16进制 BCD:0~99 */
 uint8_t bcd2hex(uint8_t temp)
@@ -76,14 +76,14 @@ uint8_t bcd2hex(uint8_t temp)
     return (temp / 16) * 10 + temp % 16;
 }
 
-uint8_t Get_crc(uint8_t *Pdata, uint8_t num)
-{
-    uint8_t i = 0;
-    uint8_t sum = 0;
-    for (i = 0; i < num - 2; i++)
-        sum += *(Pdata + i);
-    return sum;
-}
+// uint8_t Get_crc(uint8_t *Pdata, uint8_t num)
+// {
+//     uint8_t i = 0;
+//     uint8_t sum = 0;
+//     for (i = 0; i < num - 2; i++)
+//         sum += *(Pdata + i);
+//     return sum;
+// }
 
 /*******************************************************************************
  *                 File Static Function Define Section ('static function')

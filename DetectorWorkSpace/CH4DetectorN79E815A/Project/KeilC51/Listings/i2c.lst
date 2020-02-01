@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 20:45:29 PAGE 1   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 22:44:46 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE I2C
@@ -62,7 +62,7 @@ line level    source
   52           ******************************************************************************/
   53          static void i2c_start(void);
   54          static void i2c_8563_address(uint8_t sub);
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 20:45:29 PAGE 2   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 22:44:46 PAGE 2   
 
   55          static void i2c_reapeat_start(void);
   56          static void i2c_read_data(uint8_t *temp, uint8_t u8_data);
@@ -126,7 +126,7 @@ line level    source
  113   1          i2c_time_code[4] = i2c_time_code[3] - i2c_time_code[4];
  114   1          i2c_time_code[3] = i2c_time_code[3] - i2c_time_code[4];
  115   1          i2c_deal_time_code();
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 20:45:29 PAGE 3   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 22:44:46 PAGE 3   
 
  116   1      #endif
  117   1      
@@ -137,60 +137,60 @@ line level    source
  122   1          i2c_stop();
  123   1      }
  124          
- 125          void i2c_set_time(void)
- 126          {
- 127   1          uint8_t i = 0;
- 128   1          
- 129   1          i2c_start();
- 130   1      #if PCF8563 == 1
-                  /* 8563 ∂¡°¢–¥µÿ÷∑ */
-                  i2c_8563_address(0xA2);
-                  i2c_8563_address(0x02);
-              
-                  /* 8563 –¥»Î ±º‰ ˝æ› */
-                  i2c_write_data(i2c_time_code, 7);
-              #else
- 138   1          /* 8563 ∂¡°¢–¥µÿ÷∑ */
- 139   1          i2c_8563_address(0x64);
- 140   1          i2c_8563_address(0x10);
- 141   1      
- 142   1          i = i2c_time_code[3];
- 143   1          i2c_time_code[3] = i2c_time_code[4];
- 144   1          i2c_time_code[4] = i;
- 145   1          /* 8563 –¥»Î ±º‰ ˝æ› */
- 146   1          i2c_write_data(i2c_time_code, 7);
- 147   1          i = i2c_time_code[3];
- 148   1          i2c_time_code[3] = i2c_time_code[4];
- 149   1          i2c_time_code[4] = i;
- 150   1      #endif
- 151   1          i2c_stop();
- 152   1      }
+ 125          // void i2c_set_time(void)
+ 126          // {
+ 127          //     uint8_t i = 0;
+ 128              
+ 129          //     i2c_start();
+ 130          // #if PCF8563 == 1
+ 131          //     /* 8563 ∂¡°¢–¥µÿ÷∑ */
+ 132          //     i2c_8563_address(0xA2);
+ 133          //     i2c_8563_address(0x02);
+ 134          
+ 135          //     /* 8563 –¥»Î ±º‰ ˝æ› */
+ 136          //     i2c_write_data(i2c_time_code, 7);
+ 137          // #else
+ 138          //     /* 8563 ∂¡°¢–¥µÿ÷∑ */
+ 139          //     i2c_8563_address(0x64);
+ 140          //     i2c_8563_address(0x10);
+ 141          
+ 142          //     i = i2c_time_code[3];
+ 143          //     i2c_time_code[3] = i2c_time_code[4];
+ 144          //     i2c_time_code[4] = i;
+ 145          //     /* 8563 –¥»Î ±º‰ ˝æ› */
+ 146          //     i2c_write_data(i2c_time_code, 7);
+ 147          //     i = i2c_time_code[3];
+ 148          //     i2c_time_code[3] = i2c_time_code[4];
+ 149          //     i2c_time_code[4] = i;
+ 150          // #endif
+ 151          //     i2c_stop();
+ 152          // }
  153          
- 154          void i2c_start_rtc(void)
- 155          {
- 156   1          i2c_start();
- 157   1      #if PCF8563 == 1
-                  /* 8563 ∂¡°¢–¥µÿ÷∑ */
-                  i2c_8563_address(0xA2);
-                  i2c_8563_address(0x00);
-              
-                  i2c_time_code[0] = 0;
-                  i2c_write_data(i2c_time_code, 1);
-              #else
- 165   1          /* 8563 ∂¡°¢–¥µÿ÷∑ */
- 166   1          i2c_8563_address(0x64);
- 167   1          i2c_8563_address(0x1f);
- 168   1      
- 169   1          i2c_time_code[0] = 0;
- 170   1          i2c_write_data(i2c_time_code, 1);
- 171   1      #endif
- 172   1          i2c_stop();
- 173   1      }
+ 154          // void i2c_start_rtc(void)
+ 155          // {
+ 156          //     i2c_start();
+ 157          // #if PCF8563 == 1
+ 158          //     /* 8563 ∂¡°¢–¥µÿ÷∑ */
+ 159          //     i2c_8563_address(0xA2);
+ 160          //     i2c_8563_address(0x00);
+ 161          
+ 162          //     i2c_time_code[0] = 0;
+ 163          //     i2c_write_data(i2c_time_code, 1);
+ 164          // #else
+ 165          //     /* 8563 ∂¡°¢–¥µÿ÷∑ */
+ 166          //     i2c_8563_address(0x64);
+ 167          //     i2c_8563_address(0x1f);
+ 168          
+ 169          //     i2c_time_code[0] = 0;
+ 170          //     i2c_write_data(i2c_time_code, 1);
+ 171          // #endif
+ 172          //     i2c_stop();
+ 173          // }
  174          
  175          /*******************************************************************************
  176           *                 File Static Function Define Section ('static function')
  177           ******************************************************************************/
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 20:45:29 PAGE 4   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 22:44:46 PAGE 4   
 
  178          static void i2c_start(void)
  179          {
@@ -254,7 +254,7 @@ line level    source
  237   3              }
  238   2          }
  239   1      }
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 20:45:29 PAGE 5   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 22:44:46 PAGE 5   
 
  240          
  241          /* –¥ºƒ¥Ê∆˜µÿ÷∑ */
@@ -279,34 +279,34 @@ line level    source
  259   2          }
  260   1      }
  261          
- 262          static void i2c_write_data(uint8_t *time, uint8_t length)
- 263          {
- 264   1          uint8_t *ptemp = time;
- 265   1          uint8_t i = 0;
- 266   1          uint8_t delay_count;
- 267   1      
- 268   1          for (i = 0; i < length; i++)
- 269   1          {
- 270   2              /* I2C  ˝æ›ºƒ¥Ê∆˜ ÷ª“™SIŒ™¬ﬂº≠1 I2DAT÷–µƒ ˝æ›±£≥÷≤ª±‰ ‘⁄I2C∑¢ÀÕΩ” ’π˝≥Ã÷– ∂¡ªÚ–¥I2DATµƒΩ·π˚∂º «≤ª»
-             -∑∂®µƒ */
- 271   2              I2DAT = *ptemp;
- 272   2              /* ¥Æ––÷–∂œ±Í÷æSI«Â¡„ ¥Æ––¥´ ‰‘›Õ£ */
- 273   2              SI = 0;
- 274   2      
- 275   2              delay_count = 0;
- 276   2              /* Õ®π˝≤‚ ‘µ√÷™£¨µ»¥˝ ±º‰Œ™cnnt=0x69°£∑¥ª„±‡µ√÷™£∫∏√––”Ôæ‰π≤7Ãı÷∏¡Ó°£◊‹÷∏¡Ó ˝=735.=33uS@22M */
- 277   2              /* ºÏ≤‚¥Æ––÷–∂œ±Í÷æSI «∑Ò÷√Œª ÷√Œª∫ÛÃ¯≥ˆ—≠ª∑ Õ®π˝≤‚ ‘µ√÷™ µ»¥˝ ±º‰Œ™cnnt=0x0e */
- 278   2              while (!(I2CON & SET_BIT3))
- 279   2              {
- 280   3                  if (++delay_count > 250)
- 281   3                  {
- 282   4                      break;
- 283   4                  }
- 284   3              }
- 285   2      
- 286   2              ptemp++;
- 287   2          }
- 288   1      }
+ 262          // static void i2c_write_data(uint8_t *time, uint8_t length)
+ 263          // {
+ 264          //     uint8_t *ptemp = time;
+ 265          //     uint8_t i = 0;
+ 266          //     uint8_t delay_count;
+ 267          
+ 268          //     for (i = 0; i < length; i++)
+ 269          //     {
+ 270          //         /* I2C  ˝æ›ºƒ¥Ê∆˜ ÷ª“™SIŒ™¬ﬂº≠1 I2DAT÷–µƒ ˝æ›±£≥÷≤ª±‰ ‘⁄I2C∑¢ÀÕΩ” ’π˝≥Ã÷– ∂¡ªÚ–¥I2DATµƒΩ·π˚∂º «
+             -≤ª»∑∂®µƒ */
+ 271          //         I2DAT = *ptemp;
+ 272          //         /* ¥Æ––÷–∂œ±Í÷æSI«Â¡„ ¥Æ––¥´ ‰‘›Õ£ */
+ 273          //         SI = 0;
+ 274          
+ 275          //         delay_count = 0;
+ 276          //         /* Õ®π˝≤‚ ‘µ√÷™£¨µ»¥˝ ±º‰Œ™cnnt=0x69°£∑¥ª„±‡µ√÷™£∫∏√––”Ôæ‰π≤7Ãı÷∏¡Ó°£◊‹÷∏¡Ó ˝=735.=33uS@22M */
+ 277          //         /* ºÏ≤‚¥Æ––÷–∂œ±Í÷æSI «∑Ò÷√Œª ÷√Œª∫ÛÃ¯≥ˆ—≠ª∑ Õ®π˝≤‚ ‘µ√÷™ µ»¥˝ ±º‰Œ™cnnt=0x0e */
+ 278          //         while (!(I2CON & SET_BIT3))
+ 279          //         {
+ 280          //             if (++delay_count > 250)
+ 281          //             {
+ 282          //                 break;
+ 283          //             }
+ 284          //         }
+ 285          
+ 286          //         ptemp++;
+ 287          //     }
+ 288          // }
  289          
  290          /* ¥”I2C÷–∂¡»°πÃ∂®≥§∂» ˝æ›∑≈»Îª∫≥Â ˝◊È */
  291          static void i2c_read_data(uint8_t *temp, uint8_t length)
@@ -318,7 +318,7 @@ line level    source
  297   1          {
  298   2              /* I2CON[2] -> AA
  299   2                  - »Áπ˚AA±Í÷æ÷√Œª µ±I2C…Ë±∏Œ™Ω” ’∆˜ ± ‘⁄”¶¥ ±÷”¬ˆ≥Â∆⁄º‰Ω´∑µªÿACK°£
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 20:45:29 PAGE 6   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 22:44:46 PAGE 6   
 
  300   2                  - »Áπ˚AA±ª«Â¡„ µ±I2C…Ë±∏ «Ω” ’∆˜ ± ‘⁄”¶¥ ±÷”¬ˆ≥Â∆⁄º‰Ω´∑µªÿNACK (SDA…œŒ™∏ﬂµÁ∆Ω)
  301   2                  */
@@ -382,14 +382,14 @@ line level    source
  359          /*******************************************************************************
  360           *                 End of File ('EOF')
  361           ******************************************************************************/
-C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 20:45:29 PAGE 7   
+C51 COMPILER V9.60.0.0   I2C                                                               02/01/2020 22:44:46 PAGE 7   
 
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    478    ----
+   CODE SIZE        =    345    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =      7       3
+   XDATA SIZE       =      7       2
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
