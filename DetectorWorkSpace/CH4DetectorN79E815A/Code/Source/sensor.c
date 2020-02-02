@@ -85,41 +85,44 @@ void sersor_demarcation(void)
     if (demarcate_key == 0x00)
     {
         /* 延时去抖 */
-        Delay1ms(50);
+        delay_1ms(50);
         /* 中止定时器2->关闭电源灯闪烁 清该位将中止定时器2并将当前计数保存在TH2和TL2 */
         TR2 = 0;
         /* 再次获取P0.6 的值 */
         demarcate_key = P06 & 0x01;
-        /* 确认调试键按下 */
+        /* 确认调试键按下 进入标定状态 */
         if (demarcate_key == 0x00)
         {
             /* 标定状态的声光提示 闪亮，响一声 */
             device_alarm(Alarm_Demarcation);
             
             /* 选择ADC0 即P0.1作为ADC采样端口 打开ADC中断使能 */
+            /* YYY 是否可以只使用 adc_init_interrupt() 而不需要 adc_init() */
             adc_init_interrupt();
 
             /* 设备预热标记为已预热 */
             sensor_preheat = true;
             
-            /* 等待 255 * 2 = 510s XXX 预热 */
+            /* ---- 1.传感器预热 ---- */
+            /* 等待 255 * 2 = 510s */
             for (i = 0; i < 225; i++)
             {
                 /* 电源灯开 */
                 LED_POWER_ON;
-                Delay1ms(1500);
+                delay_1ms(1500);
+
                 /* 电源灯关 */
                 LED_POWER_OFF;
-                Delay1ms(500);
+                delay_1ms(500);
 
-                /* 通过长按键测试电磁阀和继电器 */
+                /* 通过按键 测试电磁阀和继电器 */
                 /* 获取P0.7 的值 */
                 demarcate_key = P07 & 0x01;
                 /* P0.7 按键按下 */
                 if (demarcate_key == 0x00)
                 {
                     /* 延时去抖 */
-                    Delay1ms(30);
+                    delay_1ms(30);
                     /* 再次获取P0.7 的值 */
                     demarcate_key = P07 & 0x01;
                     /* 确认P0.7 按键按下 */
@@ -127,7 +130,9 @@ void sersor_demarcation(void)
                     {
                         /* 电磁阀开 */
                         VALVE_ON;
-                        Delay1ms(1500);
+
+                        delay_1ms(1500);
+
                         /* 继电器开 */
                         DELAY_ON;
                     }
@@ -148,42 +153,45 @@ void sersor_demarcation(void)
 
             /* 串口输出该次采样的值 */
             uart_send(0x1f);
-            Delay1ms(5);
+            delay_1ms(5);
             uart_send(0x1f);
-            Delay1ms(5);
+            delay_1ms(5);
             uart_send(ch4_0 >> 8);
-            Delay1ms(5);
+            delay_1ms(5);
             uart_send(ch4_0);
-            Delay1ms(5);
+            delay_1ms(5);
 
             /* 再次得到ADC采样并滤波之后的值 */
             adc_value = adc_sensor();
 
+            /* YYY此处程序结构可以改善 不需要循环全部内容 */
             while (1)
-            {
+            { 
                 /* 得到ADC采样并滤波之后的值 */
                 adc_value = adc_sensor();
                 
-                /* 采样值点 合理性判断 AD超出范围 0.2V-1.27V 则故障灯亮 */
+                /* ---- 2.传感器基线判断 ---- */
+                /* 传感器基线合理性判断 AD超出范围 0.2V-1.27V 则故障灯亮 */
                 if ((adc_value < 41) || (adc_value > 260))
                 {
-                    Delay1ms(1000);
+                    delay_1ms(1000);
                     if ((adc_value < 41) || (adc_value > 260))
                     {
                         while (1)
                         {   
                             /* 故障灯开 */
                             LED_FAULT_ON;
-                            Delay1ms(500);
+                            delay_1ms(500);
 
                             /* 故障灯关 */
                             LED_FAULT_OFF;
-                            Delay1ms(500);
+                            delay_1ms(500);
                         }
                     }
                 }
 
-                /* 仅当ADC采样值小于410时执行 当采样值大于410时 退出该循环 此举在等待气体浓度上升 */
+                /* ---- 3.根据采集的AD值 等待气体浓度上升 ---- */
+                /* 仅当ADC采样值小于410时执行 当采样值大于410时 退出该循环 此举是在等待气体浓度上升至410以上 */
                 do
                 {
                     /* 再次得到ADC采样并滤波之后的值 */
@@ -202,31 +210,32 @@ void sersor_demarcation(void)
                     {
                         delay_count = 0;
                         uart_send(0x2f);
-                        Delay1ms(5);
+                        delay_1ms(5);
                         uart_send(0x2f);
-                        Delay1ms(5);
+                        delay_1ms(5);
                         uart_send(adc_value >> 8);
-                        Delay1ms(5);
+                        delay_1ms(5);
                         uart_send(adc_value);
-                        Delay1ms(5);
+                        delay_1ms(5);
                     }
                 } while (adc_value < 410);
 
-                Delay1ms(250);
-                Delay1ms(250);
+                delay_1ms(250);
+                delay_1ms(250);
 
+                /* ---- 4.等待气体浓度上升 未进行采集 ---- */
                 /* Wait 120s 此举在等待气体浓度上升 */
                 for (i = 0; i <= 300; i++)
                 {
                     /* <2> 电源灯常亮 报警故障两颗灯闪烁 */
-                    Delay1ms(500);
+                    delay_1ms(500);
 
                     /* 报警灯开 */
                     LED_ALARM_ON;
                     /* 故障灯开 */
                     LED_FAULT_ON;
 
-                    Delay1ms(1500);
+                    delay_1ms(1500);
 
                     /* 报警灯关 */
                     LED_ALARM_OFF;
@@ -235,22 +244,23 @@ void sersor_demarcation(void)
 
                     /* 串口输出该次采样的值 */
                     uart_send(0x3f);
-                    Delay1ms(5);
+                    delay_1ms(5);
                     uart_send(0x3f);
-                    Delay1ms(5);
+                    delay_1ms(5);
                     uart_send(adc_value >> 8);
-                    Delay1ms(5);
+                    delay_1ms(5);
                     uart_send(adc_value);
-                    Delay1ms(5);
+                    delay_1ms(5);
                 }
 
                 /* 暂存得到ADC采样并滤波之后的值 */
                 temp_data = adc_sensor();
 
-                /* 采样值 合理性判断 AD超出范围 ADC_result < 410 or  ADC_result > 950 */
+                /* ---- 5.进行报警阈值记录 ---- */
+                /* 不合理 AD超出范围 ADC_result < 410 or  ADC_result > 950 */
                 if ((temp_data < 410) || (temp_data > 950))
                 {
-                    Delay1ms(1000);
+                    delay_1ms(1000);
 
                     /* 再次得到ADC采样并滤波之后的值 */
                     temp_data = adc_sensor();
@@ -265,7 +275,7 @@ void sersor_demarcation(void)
                         }
                     }
                 }
-                /* 采样值 合理性判断 AD在范围内 410 <= ADC_result <= 950 则标定成功 */
+                /* 合理 AD在范围内 410 <= ADC_result <= 950 则标定成功 */
                 else
                 {
                     /* <3> 电源灯常亮 报警故障两颗关闭 */
@@ -294,7 +304,7 @@ void sersor_demarcation(void)
                     /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
                     EBO = 0;
                     /* 复制从时钟芯片获取的时间戳 */
-                    timecodeTotimecopy();
+                    format_to_device_time();
                     /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
                     EBO = 1;
 
@@ -315,13 +325,13 @@ void sersor_demarcation(void)
                     
                     /* 发送标定的报警点数据 ch4_3500 */
                     uart_send(0x4f);
-                    Delay1ms(5);
+                    delay_1ms(5);
                     uart_send(0x4f);
-                    Delay1ms(5);
+                    delay_1ms(5);
                     uart_send(ch4_3500 >> 8);
-                    Delay1ms(5);
+                    delay_1ms(5);
                     uart_send(ch4_3500);
-                    Delay1ms(5);
+                    delay_1ms(5);
                 }
 
                 /* <4> 标定完成 电源 报警灯常亮 故障灯关闭 */

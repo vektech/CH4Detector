@@ -115,7 +115,7 @@ void device_init(void)
     /* P0.0 = 0 电磁阀关 */
     VALVE_OFF;
 
-    Delay1ms(3000);
+    delay_1ms(3000);
 
     /* P2.2 = 0 继电器关 */
     DELAY_OFF;
@@ -142,7 +142,7 @@ void device_init(void)
     /* 中断优先级寄存器高字节 PBODH = 1 设置BOD检测中断高优先级为最高优先级 */
     IPH |= 0X20;
 
-    Delay1ms(1000);
+    delay_1ms(1000);
 
     /* 9600 Baud Rate @ 22.1184MHz */
     uart_init(9600);

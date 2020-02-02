@@ -77,7 +77,7 @@
 /*******************************************************************************
  *                 Normal Function Define Section ('function')
  ******************************************************************************/
-void Delay10us(uint16_t count)
+void delay_10us(uint16_t count)
 {
     /* 打开定时器0 */
     TR0 = 1;
@@ -111,7 +111,7 @@ void Delay10us(uint16_t count)
 }
 
 /* Delay with BOD */
-void Delay1ms(uint16_t count)
+void delay_1ms(uint16_t count)
 {
     /* Brown-Out Detector 电源电压检测 */
     check_BOD();
@@ -142,7 +142,7 @@ void Delay1ms(uint16_t count)
 }
 
 // /* Delay without BOD */
-// void Delay1ms_No_BOD(uint16_t count)
+// void delay_1ms_No_BOD(uint16_t count)
 // {
 //     /* 打开定时器0 */
 //     TR0 = 1;

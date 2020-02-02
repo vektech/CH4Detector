@@ -35,9 +35,9 @@
 /*******************************************************************************
  *                 Prototype Declare Section
  ******************************************************************************/
-void Delay10us(uint16_t count);
-void Delay1ms (uint16_t count);
-// void Delay1ms_No_BOD(uint16_t count);
+void delay_10us(uint16_t count);
+void delay_1ms (uint16_t count);
+// void delay_1ms_No_BOD(uint16_t count);
 
 #endif /* _DELAY_H_ */
 /*******************************************************************************

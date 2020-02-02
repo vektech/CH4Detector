@@ -35,7 +35,7 @@
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
 
-uint8_t timeCOPY[6];
+uint8_t time_data[6];
 
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
@@ -44,25 +44,25 @@ uint8_t timeCOPY[6];
 /*******************************************************************************
  *                 Normal Function Define Section ('function')
  ******************************************************************************/
-void timecodeTotimecopy(void)
+void format_to_device_time(void)
 {
-    timeCOPY[0] = i2c_time_code[0];
-    timeCOPY[1] = i2c_time_code[1];
-    timeCOPY[2] = i2c_time_code[2];
-    timeCOPY[3] = i2c_time_code[3];
-    timeCOPY[4] = i2c_time_code[5];
-    timeCOPY[5] = i2c_time_code[6];
+    time_data[0] = i2c_time_code[0];
+    time_data[1] = i2c_time_code[1];
+    time_data[2] = i2c_time_code[2];
+    time_data[3] = i2c_time_code[3];
+    time_data[4] = i2c_time_code[5];
+    time_data[5] = i2c_time_code[6];
 }
 
-// void timecopyTotimecode(void)
-// {
-//     i2c_time_code[6] = timeCOPY[5];
-//     i2c_time_code[5] = timeCOPY[4];
-//     i2c_time_code[3] = timeCOPY[3];
-//     i2c_time_code[2] = timeCOPY[2];
-//     i2c_time_code[1] = timeCOPY[1];
-//     i2c_time_code[0] = timeCOPY[0];
-// }
+void format_to_RTC_time(void)
+{
+    i2c_time_code[6] = time_data[5];
+    i2c_time_code[5] = time_data[4];
+    i2c_time_code[3] = time_data[3];
+    i2c_time_code[2] = time_data[2];
+    i2c_time_code[1] = time_data[1];
+    i2c_time_code[0] = time_data[0];
+}
 
 // /* 16½øÖÆ×ªBCDÂë */
 // uint8_t hex2bcd(uint8_t temp)

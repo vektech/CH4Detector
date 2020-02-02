@@ -161,7 +161,7 @@ void device_alarm(enum alarm_type type)
                 /* 延时 1600 * 70 = 112000us */
                 for (k = 0; k < 1600; k++)
                 {
-                    Delay10us(7);
+                    delay_10us(7);
                     /* Brown-Out Detector 电源电压检测 */
                     check_BOD();
                 }
@@ -187,7 +187,7 @@ void device_alarm(enum alarm_type type)
                 /* 等待 200 * 70 = 14000us */
                 for (k = 0; k < 200; k++)
                 {
-                    Delay10us(7);
+                    delay_10us(7);
                     /* Brown-Out Detector 电源电压检测 */
                     check_BOD();
                 }
@@ -215,7 +215,7 @@ void device_alarm(enum alarm_type type)
 
             for (k = 0; k < 1800; k++)
             {
-                Delay10us(10);
+                delay_10us(10);
                 /* Brown-Out Detector 电源电压检测 */
                 check_BOD();
             }
@@ -231,7 +231,7 @@ void device_alarm(enum alarm_type type)
 
             for (k = 0; k < 1800; k++)
             {
-                Delay10us(10);
+                delay_10us(10);
                 /* Brown-Out Detector 电源电压检测 */
                 check_BOD();
             }
@@ -244,7 +244,7 @@ void device_alarm(enum alarm_type type)
 
             for (k = 0; k < 1800; k++)
             {
-                Delay10us(10);
+                delay_10us(10);
                 /* Brown-Out Detector 电源电压检测 */
                 check_BOD();
             }
@@ -268,14 +268,14 @@ static void signal_beeper(uint8_t interval, uint16_t repeat_time)
         check_BOD();
         /* 蜂鸣器状态0 */
         SOUND_STATE0;
-        Delay10us(interval);
+        delay_10us(interval);
         i++;
 
         /*  Brown-Out Detector 电源电压检测 */
         check_BOD();
         /* 蜂鸣器状态1 */
         SOUND_STATE1;
-        Delay10us(interval);
+        delay_10us(interval);
         i++;
     } while (i < repeat_time);
 

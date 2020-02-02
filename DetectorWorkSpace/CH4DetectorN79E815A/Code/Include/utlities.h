@@ -35,8 +35,8 @@
 /*******************************************************************************
  *                 Prototype Declare Section
  ******************************************************************************/
-void timecodeTotimecopy(void);
-// void timecopyTotimecode(void);
+void format_to_device_time(void);
+void format_to_RTC_time(void);
 
 /* 16½øÖÆ×ªBCDÂë */
 // uint8_t hex2bcd(uint8_t temp);

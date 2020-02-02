@@ -124,7 +124,7 @@ void main(void)
     // if (Test_key == 0x00)
     // {   
     //     /* 延时去抖 */
-    //     Delay1ms(50);
+    //     delay_1ms(50);
     //     /* 测试按键按下时长计算 */
     //     while ((P07 & 0x01) == 0x00)
     //     {
@@ -219,14 +219,14 @@ void main(void)
     //             if (i2c_time_code[6] < 15 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
     //             {
     //                 /* XXX 将 timeCOPY 转换为 i2c_time_code */
-    //                 timecopyTotimecode();
+    //                 format_to_RTC_time();
     //             }
     //             else
     //             {
     //                 /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
     //                 EBO = 0;
     //                 /* XXX 复制从时钟芯片获取的时间戳 将 i2c_time_code 转换为 timeCOPY */
-    //                 timecodeTotimecopy();
+    //                 format_to_device_time();
     //                 /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
     //                 EBO = 1;
     //             }
@@ -325,7 +325,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
 
     //                 break;
@@ -374,7 +374,7 @@ void main(void)
     //                         /* 写入数据 */
     //                         Master_Write_Data();
 
-    //                         Delay1ms(100);
+    //                         delay_1ms(100);
     //                         Master_Read_Data();
     //                         /* 月：表示写入时间不成功 */
     //                         if (i2c_time_code[5] != rxbuf[3] && (i2c_time_code[5] != (rxbuf[3] + 1)))
@@ -427,7 +427,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出  延时函数，关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
 
     //                 /* 表示时钟写入成功 没有发生错误 */
@@ -475,7 +475,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 /* 表示出厂日期写入成功 */
     //                 if ((rxbuf[3] & (~0xe0)) == 0)
@@ -497,7 +497,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -552,7 +552,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -582,7 +582,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -607,7 +607,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -636,7 +636,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -660,7 +660,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -688,7 +688,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -703,7 +703,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -734,7 +734,7 @@ void main(void)
     //                 {
     //                     uart_send(rxbuf[i]);
     //                     /* 串口输出 延时函数 关键参数 */
-    //                     Delay1ms(5);
+    //                     delay_1ms(5);
     //                 }
     //                 break;
     //             }
@@ -865,7 +865,7 @@ void main(void)
     //     if (Test_key == 0x00)
     //     {
     //         /* 延时去抖 */
-    //         Delay1ms(30);
+    //         delay_1ms(30);
     //         /* 确认测试键按下 */
     //         if (Test_key == 0x00)
     //         {
@@ -885,11 +885,11 @@ void main(void)
 
     //                     /* 电磁阀开 */
     //                     VALVE_ON;
-    //                     Delay1ms(30);
+    //                     delay_1ms(30);
 
     //                     /* 电磁阀关 */
     //                     VALVE_OFF;
-    //                     Delay1ms(30);
+    //                     delay_1ms(30);
     //                 }
     //                 /* 继电器开 */
     //                 DELAY_ON;
@@ -905,7 +905,7 @@ void main(void)
     //         if (key_long_press_flag)
     //         {
     //             /* 延时去抖 */
-    //             Delay1ms(30);
+    //             delay_1ms(30);
     //             /* 确认测试键未按下 */
     //             if (Test_key != 0x00)
     //             {
@@ -958,11 +958,11 @@ void main(void)
     //                     {
     //                         /* 电磁阀开 */
     //                         VALVE_ON;
-    //                         Delay1ms(30);
+    //                         delay_1ms(30);
 
     //                         /* 电磁阀关 */
     //                         VALVE_OFF;
-    //                         Delay1ms(30);
+    //                         delay_1ms(30);
     //                     }
     //                     Alarm_Value++;
     //                 }
