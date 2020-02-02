@@ -25,6 +25,7 @@
 #include "sensor.h"
 #include "device.h"
 #include "signal.h"
+#include "timer.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
@@ -63,7 +64,13 @@ P0.7  测试按键
 /*******************************************************************************
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
+/* 设备状态字组 */
+uint8_t device_status[2]={0};
 
+#define STATUS1_WARMUP   device_status[1] &= 0x1f
+#define STATUS1_NOMAL    device_status[1] =(device_status[1] & 0x1f)|0X20
+#define STATUS1_ALARM    device_status[1] =(device_status[1] & 0x1f)|0X40
+#define STATUS1_FAULT    device_status[1] =(device_status[1] & 0x1f)|0X60
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
  ******************************************************************************/
@@ -75,7 +82,13 @@ void main(void)
 {
     /* 传感器寿命到期检测标志 */
     uint8_t life_check[4] = {0x00, 0x00, 0x00, 0x00};
-    uint8_t life_check_flag = 0;
+    uint8_t life_check_flag = false;
+    
+    /* 自检按键 */
+    uint8_t selfchek_key;
+
+    /* 时间更新标志 */
+    bit device_time_renew_flag = false;
 
     /* 设备初始化 */
     device_init();
@@ -83,66 +96,48 @@ void main(void)
     /* 设备标定 */
     sersor_demarcation();
 
-    /* XXX 上电状态位为0 进行一次上电记录 */
-    // if (device_first_power_on == false)
-    // {
-    //     device_first_power_on = true;
-    //     /* 进行上电记录 */
-    //     WriteRecordData(UPPOWER_RECORD);
-    // }
+    /* 上电状态位为false 进行一次上电记录 */
+    if (device_first_power_on == false)
+    {
+        device_first_power_on = true;
+        /* YYY 进行上电记录 */
+        // WriteRecordData(UPPOWER_RECORD);
+    }
 
-    // /* 关闭全局中断 */
-    // EA = 0;
-    // /* 关键SFR读写保护 */
-    // TA = 0xAA;
-    // TA = 0x55;
-    // /* PMCR电源检测控制寄存器设置 PMCR = 1100 0000B 
-    //     - BODEN[7]       = 1B 使能欠压检测
-    //     - BOV[6]         = 1B 结合CBOV 设置欠压检测为3.8V
-    //     - Reserved3[5]   = 0B
-    //     - BORST[4]       = 0B 当VDD下降或上升至VBOD 禁止欠压检测复位 当VDD下降至VBOD以下 芯片将置位BOF 
-    //     - BOF[3]         = 0B 欠压检测标志位 当VDD下降或上升至VBOD置位
-    //     - Reserved2[2]   = 0B 必须为0
-    //     - Reserved1[1:0] = 00B 
-    //     */
-    // PMCR = 0xc0;
+    device_power_down_count = 0;
+    timer2_life_second_count = 0;
+    device_time_renew_flag = sensor_preheat_flag = false;
 
-    // /* 开启全局中断 */
-    // EA = 1;
-    // /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
-    // EBO = 1;
+    /* WARMUP 设置系统状态 device_status[1] &= 0x1f */
+    STATUS1_WARMUP;
 
-    // device_first_power_down = down_flag = 0;
-    // timer2_life_second_count = bReadtime = sensor_preheat = 0;
+    /* 开机长按测试键3s后 取消预热 */
+    /* 读取按键 P0.7 的值 检查自检功能是否触发 */
+    selfchek_key = P07 & 0x01;
+    /* 测试键按下 */
+    if (selfchek_key == 0x00)
+    {   
+        /* 延时去抖 */
+        delay_1ms(50);
+        /* 测试按键按下时长计算 */
+        while ((P07 & 0x01) == 0x00)
+        {   
+            /* 根据定时器 按键按下大于一秒 */
+            if (timer2_life_second_count > 1)
+            {
+                /* NOMAL 设置系统状态 device_status[1] = (device_status[1] & 0x1f) | 0X20 */
+                STATUS1_NOMAL;
+                sensor_preheat_flag = 1;
 
-    // /* WARMUP 设置系统状态 status[1] &= 0x1f */
-    // STATUS1_WARMUP;
+                /* 控制四颗灯闪烁和蜂鸣器鸣响 */
+                device_alarm(Alarm_Selfcheck);
+                break;
+            }
+        }
+    }
 
-    // /* 读取按键 P0.7 的值 检查自检功能是否触发 */
-    // Test_key = P07 & 0x01;
-    // /* 测试键按下 */
-    // if (Test_key == 0x00)
-    // {   
-    //     /* 延时去抖 */
-    //     delay_1ms(50);
-    //     /* 测试按键按下时长计算 */
-    //     while ((P07 & 0x01) == 0x00)
-    //     {
-    //         /* XXX */
-    //         if (timer2_life_second_count > 1)
-    //         {
-    //             /* NOMAL 设置系统状态 status[1] = (status[1] & 0x1f) | 0X20 */
-    //             STATUS1_NOMAL;
-    //             sensor_preheat = 1;
-
-    //             /* 控制四颗灯闪烁和蜂鸣器鸣响 */
-    //             Light_Flash();
-    //             break;
-    //         }
-    //     }
-    // }
-    // /* XXX */
-    // timer2_life_second_count = 0;
+    /* 定时器秒计数归零 */
+    timer2_life_second_count = 0;
 
     // /* ---- 时钟检测 ---- */
     // /* 从Flash存储地址(RECORD_FIRST_ADDRESS[LIFE_RECORD] + 30) 中读取寿命到期信息 */
@@ -161,7 +156,7 @@ void main(void)
     //         LED_LIFE_ON;
 
     //     /* XXX 预热完成 */
-    //     if (sensor_preheat)
+    //     if (sensor_preheat_flag)
     //     {
     //         /* 电源灯开 */
     //         LED_POWER_ON;
@@ -208,9 +203,9 @@ void main(void)
     //     if (!(timer2_life_second_count % 2))
     //     {
     //         /* XXX 没有从I2C中读取时间 */
-    //         if (!bReadtime)
+    //         if (!device_time_renew_flag)
     //         {
-    //             bReadtime = 1;
+    //             device_time_renew_flag = 1;
     //             /* Brown-Out Detector 电源电压检测 */
     //             check_BOD();
     //             /* 读取当前时间 存入Time_Code */
@@ -234,7 +229,7 @@ void main(void)
     //     }
     //     else
     //     {
-    //         bReadtime = 0;
+    //         device_time_renew_flag = 0;
     //     }
 
     //     /* Brown-Out Detector 电源电压检测 */
@@ -312,13 +307,13 @@ void main(void)
     //                         check_BOD();
     //                     }
 
-    //                     rxbuf[3] = status[1] & 0xe0;
+    //                     rxbuf[3] = device_status[1] & 0xe0;
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                 }
-    //                 rxbuf[2] = status[0];
+    //                 rxbuf[2] = device_status[0];
     //                 rxbuf[COMMAND_LEN_EASE_REC[1] - 2] = Get_crc(rxbuf, COMMAND_LEN_EASE_REC[1]);
     //                 rxbuf[COMMAND_LEN_EASE_REC[1] - 1] = 0x55;
     //                 for (i = 0; i < COMMAND_LEN_EASE_REC[1]; i++)
@@ -340,23 +335,23 @@ void main(void)
     //                     {
     //                         if (rxbuf[2] < 15)
     //                         {
-    //                             rxbuf[3] = (status[1] & 0xe0) | ILLEGAL_PARA_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
     //                             goto WR_CLOCK_EROR;
     //                         }
     //                         if (rxbuf[3] > 12 || (!rxbuf[3]))
     //                         {
-    //                             rxbuf[3] = (status[1] & 0xe0) | ILLEGAL_PARA_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
     //                             goto WR_CLOCK_EROR;
     //                         }
     //                         if (rxbuf[4] > 31 || (!rxbuf[4]))
     //                         {
-    //                             rxbuf[3] = (status[1] & 0xe0) | ILLEGAL_PARA_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
     //                             goto WR_CLOCK_EROR;
     //                         }
 
     //                         if ((rxbuf[5] > 23) || (rxbuf[6] > 59) || (rxbuf[7] > 59))
     //                         {
-    //                             rxbuf[3] = (status[1] & 0xe0) | ILLEGAL_PARA_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
     //                             goto WR_CLOCK_EROR;
     //                         }
 
@@ -379,48 +374,48 @@ void main(void)
     //                         /* 月：表示写入时间不成功 */
     //                         if (i2c_time_code[5] != rxbuf[3] && (i2c_time_code[5] != (rxbuf[3] + 1)))
     //                         {
-    //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                             ;
     //                         }
     //                         else
     //                         {
-    //                             rxbuf[3] = (status[1] & 0xe0);
+    //                             rxbuf[3] = (device_status[1] & 0xe0);
     //                         }
     //                         /* 年：表示写入时间不成功 */
     //                         if (i2c_time_code[6] != rxbuf[2] && (i2c_time_code[6] != (rxbuf[2] + 1)))
     //                         {
-    //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                         }
     //                         /* 日：表示写入时间不成功 */
     //                         if (i2c_time_code[3] != rxbuf[4] && (i2c_time_code[3] != (rxbuf[4] + 1)))
     //                         {
-    //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                         }
     //                         /* 时：表示写入时间不成功 */
     //                         if (i2c_time_code[2] != rxbuf[5] && (i2c_time_code[2] != (rxbuf[5] + 1)))
     //                         {
     //                             if (!((rxbuf[5] == 23) && (i2c_time_code[2] == 0)))
-    //                                 rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                                 rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                         }
     //                         /* 分：表示写入时间不成功 */
     //                         if (i2c_time_code[1] != rxbuf[6] && (i2c_time_code[1] != (rxbuf[6] + 1)))
     //                         {
     //                             if (!((rxbuf[6] == 59) && (i2c_time_code[1] == 0)))
-    //                                 rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                                 rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                         }
     //                     }
     //                     else
     //                     {
-    //                         rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                         rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                         ;
     //                     }
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[3] = (status[1] & 0xe0) | BYTELOSS_EROR;
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | BYTELOSS_EROR;
     //                 }
     //             WR_CLOCK_EROR:
-    //                 rxbuf[2] = status[0];
+    //                 rxbuf[2] = device_status[0];
     //                 rxbuf[COMMAND_LEN_WRITE_CLOCK[1] - 2] = Get_crc(rxbuf, COMMAND_LEN_WRITE_CLOCK[1]);
     //                 rxbuf[COMMAND_LEN_WRITE_CLOCK[1] - 1] = 0x55;
     //                 for (i = 0; i < COMMAND_LEN_WRITE_CLOCK[1]; i++)
@@ -450,24 +445,24 @@ void main(void)
     //                         WriteData(&rxbuf[2], 5, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 0);
     //                         ReadData(&rxbuf[7], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
     //                         if (rxbuf[8] != rxbuf[3])
-    //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                         else
-    //                             rxbuf[3] = (status[1] & 0xe0);
+    //                             rxbuf[3] = (device_status[1] & 0xe0);
     //                         if (rxbuf[7] != rxbuf[2])
-    //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                         if (rxbuf[9] != rxbuf[4])
-    //                             rxbuf[3] = (status[1] & 0xe0) | Unknown_EROR;
+    //                             rxbuf[3] = (device_status[1] & 0xe0) | Unknown_EROR;
     //                     }
     //                     else
     //                     {
-    //                         rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                         rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                     }
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[3] = (status[1] & 0xe0) | BYTELOSS_EROR;
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | BYTELOSS_EROR;
     //                 }
-    //                 rxbuf[2] = status[0];
+    //                 rxbuf[2] = device_status[0];
     //                 rxbuf[COMMAND_LEN_WR_DATEOFPRODUCTION[1] - 2] = Get_crc(rxbuf, COMMAND_LEN_WR_DATEOFPRODUCTION[1]);
     //                 rxbuf[COMMAND_LEN_WR_DATEOFPRODUCTION[1] - 1] = 0x55;
 
@@ -489,8 +484,8 @@ void main(void)
     //             }
     //             default:
     //             {
-    //                 rxbuf[2] = status[0];
-    //                 rxbuf[3] = (status[1] & 0xe0) | COMMAND_EROR;
+    //                 rxbuf[2] = device_status[0];
+    //                 rxbuf[3] = (device_status[1] & 0xe0) | COMMAND_EROR;
     //                 rxbuf[4] = Get_crc(rxbuf, 6);
     //                 rxbuf[5] = 0x55;
     //                 for (i = 0; i < 6; i++)
@@ -532,13 +527,13 @@ void main(void)
     //             {
     //                 if (Get_crc(rxbuf, COMMAND_LEN_RE_CLOCK[0]) == rxbuf[COMMAND_LEN_RE_CLOCK[0] - 2])
     //                 {
-    //                     rxbuf[3] = status[1] & 0xe0;
+    //                     rxbuf[3] = device_status[1] & 0xe0;
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                 }
-    //                 rxbuf[2] = status[0];
+    //                 rxbuf[2] = device_status[0];
     //                 Master_Read_Data();
     //                 rxbuf[4] = i2c_time_code[6];
     //                 rxbuf[5] = i2c_time_code[5];
@@ -562,13 +557,13 @@ void main(void)
     //             {
     //                 if (Get_crc(rxbuf, COMMAND_LEN_RE_MODEL[0]) == rxbuf[COMMAND_LEN_RE_MODEL[0] - 2])
     //                 {
-    //                     rxbuf[3] = status[1] & 0xe0;
+    //                     rxbuf[3] = device_status[1] & 0xe0;
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                 }
-    //                 rxbuf[2] = status[0];
+    //                 rxbuf[2] = device_status[0];
 
     //                 rxbuf[4] = 0x01;
     //                 rxbuf[5] = 0;
@@ -591,13 +586,13 @@ void main(void)
     //             {
     //                 if (Get_crc(rxbuf, COMMAND_LEN_RE_CURTAD[0]) == rxbuf[COMMAND_LEN_RE_CURTAD[0] - 2])
     //                 {
-    //                     rxbuf[3] = status[1] & 0xe0;
+    //                     rxbuf[3] = device_status[1] & 0xe0;
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                 }
-    //                 rxbuf[2] = status[0];
+    //                 rxbuf[2] = device_status[0];
 
     //                 rxbuf[4] = CH4_Adc_Valu >> 8;
     //                 rxbuf[5] = CH4_Adc_Valu;
@@ -616,13 +611,13 @@ void main(void)
     //             {
     //                 if (Get_crc(rxbuf, COMMAND_LEN_RE_DEMA[0]) == rxbuf[COMMAND_LEN_RE_DEMA[0] - 2])
     //                 {
-    //                     rxbuf[3] = status[1] & 0xe0;
+    //                     rxbuf[3] = device_status[1] & 0xe0;
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                 }
-    //                 rxbuf[2] = status[0];
+    //                 rxbuf[2] = device_status[0];
     //                 ReadData(&rxbuf[4], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_CH4_0, 4);
     //                 rxbuf[8] = rxbuf[4];
     //                 rxbuf[4] = rxbuf[5];
@@ -645,13 +640,13 @@ void main(void)
     //             {
     //                 if (Get_crc(rxbuf, COMMAND_LEN_RE_DATEOFPRODUCTION[0]) == rxbuf[COMMAND_LEN_RE_DATEOFPRODUCTION[0] - 2])
     //                 {
-    //                     rxbuf[2] = status[0];
-    //                     rxbuf[3] = status[1] & 0xe0;
+    //                     rxbuf[2] = device_status[0];
+    //                     rxbuf[3] = device_status[1] & 0xe0;
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[2] = status[0];
-    //                     rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                     rxbuf[2] = device_status[0];
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                 }
     //                 ReadData(&rxbuf[4], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
     //                 rxbuf[COMMAND_LEN_RE_DATEOFPRODUCTION[1] - 2] = Get_crc(rxbuf, COMMAND_LEN_RE_DATEOFPRODUCTION[1]);
@@ -669,13 +664,13 @@ void main(void)
     //             {
     //                 if (Get_crc(rxbuf, COMMAND_LEN_RE_SERIALNUM[0]) == rxbuf[COMMAND_LEN_RE_SERIALNUM[0] - 2])
     //                 {
-    //                     rxbuf[2] = status[0];
-    //                     rxbuf[3] = status[1] & 0xe0;
+    //                     rxbuf[2] = device_status[0];
+    //                     rxbuf[3] = device_status[1] & 0xe0;
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[2] = status[0];
-    //                     rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                     rxbuf[2] = device_status[0];
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                 }
 
     //                 for (i = 0; i < 8; i++)
@@ -695,8 +690,8 @@ void main(void)
     //             default:
     //             {
 
-    //                 rxbuf[2] = status[0];
-    //                 rxbuf[3] = (status[1] & 0xe0) | COMMAND_EROR;
+    //                 rxbuf[2] = device_status[0];
+    //                 rxbuf[3] = (device_status[1] & 0xe0) | COMMAND_EROR;
     //                 rxbuf[4] = Get_crc(rxbuf, 6);
     //                 rxbuf[5] = 0x55;
     //                 for (i = 0; i < 6; i++)
@@ -720,14 +715,14 @@ void main(void)
     //                 if (Get_crc(rxbuf, COMMAND_LEN_CANCEL_WARMUP[0]) == rxbuf[COMMAND_LEN_CANCEL_WARMUP[0] - 2])
     //                 {
     //                     STATUS1_NOMAL;
-    //                     rxbuf[3] = status[1] & 0xe0;
-    //                     sensor_preheat = 1;
+    //                     rxbuf[3] = device_status[1] & 0xe0;
+    //                     sensor_preheat_flag = 1;
     //                 }
     //                 else
     //                 {
-    //                     rxbuf[3] = (status[1] & 0xe0) | CHECKSUM_EROR;
+    //                     rxbuf[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
     //                 }
-    //                 rxbuf[2] = status[0];
+    //                 rxbuf[2] = device_status[0];
     //                 rxbuf[COMMAND_LEN_CANCEL_WARMUP[1] - 2] = Get_crc(rxbuf, COMMAND_LEN_CANCEL_WARMUP[1]);
     //                 rxbuf[COMMAND_LEN_CANCEL_WARMUP[1] - 1] = 0x55;
     //                 for (i = 0; i < COMMAND_LEN_CANCEL_WARMUP[1]; i++)
@@ -911,7 +906,7 @@ void main(void)
     //             {
     //                 key_long_press_flag = 0;
     //                 VALVE_flag = 0;
-    //                 if (!sensor_preheat)
+    //                 if (!sensor_preheat_flag)
     //                 {   
     //                     /* 继电器关 */
     //                     DELAY_OFF;
@@ -926,7 +921,7 @@ void main(void)
     //         /* Brown-Out Detector 电源电压检测 */
     //         check_BOD();
     //         /* 预热完成 */
-    //         if (sensor_preheat)
+    //         if (sensor_preheat_flag)
     //         {
     //             /* 设置为报警状态 */
     //             STATUS1_ALARM;
@@ -996,7 +991,7 @@ void main(void)
     //         check_BOD();
 
     //         /* 预热完成 */
-    //         if (sensor_preheat)
+    //         if (sensor_preheat_flag)
     //         {
     //             /* 设置系统状态为故障状态 */
     //             STATUS1_FAULT;

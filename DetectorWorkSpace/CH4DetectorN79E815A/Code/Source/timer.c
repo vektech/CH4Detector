@@ -149,7 +149,7 @@ void Timer2_ISR(void) interrupt 5
     /* 预热状态下灯闪烁频率 */
     if (timer2_count == 20)
     {
-        if (sensor_preheat == 0)
+        if (sensor_preheat_flag == 0)
         {
             /* 电源灯翻转 */
             LED_POWER_TOGGLE;
@@ -161,7 +161,7 @@ void Timer2_ISR(void) interrupt 5
     /* 预热完成 标志位置 Delay_Time_Count = 750 为3分钟*/
     if (sensor_preheat_time_count == Delay_Time_Count)
     {
-        sensor_preheat = 1;
+        sensor_preheat_flag = 1;
     }
 
     /* 计时100次完成 */

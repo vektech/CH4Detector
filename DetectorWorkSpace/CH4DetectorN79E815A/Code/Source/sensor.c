@@ -43,7 +43,7 @@
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
 /* 预热标记 */
-bit sensor_preheat = false;
+bit sensor_preheat_flag = false;
 
 /* 预热时间计数 */
 uint16_t sensor_preheat_time_count = 0;
@@ -101,7 +101,7 @@ void sersor_demarcation(void)
             adc_init_interrupt();
 
             /* 设备预热标记为已预热 */
-            sensor_preheat = true;
+            sensor_preheat_flag = true;
             
             /* ---- 1.传感器预热 ---- */
             /* 等待 255 * 2 = 510s */

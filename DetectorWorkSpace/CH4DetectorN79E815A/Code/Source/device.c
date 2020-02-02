@@ -59,7 +59,6 @@ bit EA_save_bit;
 /*******************************************************************************
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
-/* Bit for flags */
 /* 设备第一次上电标志 */
 bit device_first_power_on = false;
 
@@ -130,9 +129,25 @@ void device_init(void)
         */
     AUXR1 = UAER_PORT_SELECT;
 
+    /* 关键SFR读写保护 */
+    TA = 0xAA;
+    TA = 0x55;
+    /* PMCR电源检测控制寄存器设置 PMCR = 1100 0000B 
+        - BODEN[7]       = 1B 使能欠压检测
+        - BOV[6]         = 1B 结合CBOV 设置欠压检测为3.8V
+        - Reserved3[5]   = 0B
+        - BORST[4]       = 0B 当VDD下降或上升至VBOD 禁止欠压检测复位 当VDD下降至VBOD以下 芯片将置位BOF 
+        - BOF[3]         = 0B 欠压检测标志位 当VDD下降或上升至VBOD置位
+        - Reserved2[2]   = 0B 必须为0
+        - Reserved1[1:0] = 00B 
+        */
+    PMCR = 0xc0;
+
     /* 全局中断使能位 1 = 打开所有中断 */
     EA = 1;
 
+    /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
+    EBO = 1;
     /* 使能串口中断 1 = 设定TI(SCON.1)或RI(SCON.0)*/
     ES = 1;
     /* 定时器2运行控制 1 = 打开定时器2 */
@@ -186,7 +201,7 @@ void check_BOD(void)
         /* 掉电计数复位 */
         device_power_down_count = 0;
         /* 预热标记复位 */
-        sensor_preheat = false;
+        sensor_preheat_flag = false;
         /* 预热时间清零 */
         sensor_preheat_time_count = 0;
 

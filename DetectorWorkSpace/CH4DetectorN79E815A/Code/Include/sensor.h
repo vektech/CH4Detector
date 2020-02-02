@@ -35,7 +35,7 @@
  *                 Prototype Declare Section
  ******************************************************************************/
 /* 预热标记 */
-extern bit sensor_preheat;
+extern bit sensor_preheat_flag;
 /* 预热时间计数 */
 extern uint16_t sensor_preheat_time_count;
 

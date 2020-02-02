@@ -149,13 +149,13 @@ void device_alarm(enum alarm_type type)
             /* 控制四颗灯闪烁和蜂鸣器鸣响 该行为重复三次 */
             for (j = 0; j < 3; j++)
             {
-                /* 自检系列灯开 */
+                /* 自检相关灯开 */
                 SELFCHECK_LED_ON;
 
                 /* 蜂鸣器报警 */
                 signal_beeper(7, 1000);
 
-                /* 自检系列灯关 */
+                /* 自检相关灯关 */
                 SELFCHECK_LED_OFF;
 
                 /* 延时 1600 * 70 = 112000us */
@@ -172,16 +172,16 @@ void device_alarm(enum alarm_type type)
         }
         case Alarm_Demarcation:
         {
-            /* 控制四颗灯闪烁和蜂鸣器鸣响 该行为重复三次 */
+            /* 控制四颗灯闪烁和蜂鸣器鸣响 该行为重复三次 蜂鸣器鸣响的频率不同 */
             for (j = 0; j < 3; j++)
             {
-                /* 标定系列灯开 */
+                /* 标定相关灯开 */
                 DEMARCATION_LED_ON;
 
                 /* 蜂鸣器报警 */
                 signal_beeper(50, 150);
 
-                /* 标定系列灯关 */
+                /* 标定相关灯关 */
                 DEMARCATION_LED_OFF;
 
                 /* 等待 200 * 70 = 14000us */
