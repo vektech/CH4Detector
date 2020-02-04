@@ -34,3 +34,7 @@
 #### Version 1.8 
 
 - New project file
+
+#### Version 1.9
+
+- Reorganized part of Main function 
