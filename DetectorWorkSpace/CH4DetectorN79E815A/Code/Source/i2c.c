@@ -151,26 +151,26 @@ void i2c_get_time(void)
 //     i2c_stop();
 // }
 
-// void i2c_start_rtc(void)
-// {
-//     i2c_start();
-// #if PCF8563 == 1
-//     /* 8563 ∂¡°¢–¥µÿ÷∑ */
-//     i2c_8563_address(0xA2);
-//     i2c_8563_address(0x00);
+void i2c_start_rtc(void)
+{
+    i2c_start();
+#if PCF8563 == 1
+    /* 8563 ∂¡°¢–¥µÿ÷∑ */
+    i2c_8563_address(0xA2);
+    i2c_8563_address(0x00);
 
-//     i2c_time_code[0] = 0;
-//     i2c_write_data(i2c_time_code, 1);
-// #else
-//     /* 8563 ∂¡°¢–¥µÿ÷∑ */
-//     i2c_8563_address(0x64);
-//     i2c_8563_address(0x1f);
+    i2c_time_code[0] = 0;
+    i2c_write_data(i2c_time_code, 1);
+#else
+    /* 8563 ∂¡°¢–¥µÿ÷∑ */
+    i2c_8563_address(0x64);
+    i2c_8563_address(0x1f);
 
-//     i2c_time_code[0] = 0;
-//     i2c_write_data(i2c_time_code, 1);
-// #endif
-//     i2c_stop();
-// }
+    i2c_time_code[0] = 0;
+    i2c_write_data(i2c_time_code, 1);
+#endif
+    i2c_stop();
+}
 
 /*******************************************************************************
  *                 File Static Function Define Section ('static function')

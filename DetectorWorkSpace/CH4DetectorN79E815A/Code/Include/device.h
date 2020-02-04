@@ -39,6 +39,8 @@
 extern bit device_first_power_on;
 /* 设备掉电计数 */
 extern uint8_t device_power_down_count;
+/* 全局中断存储位 */
+extern bit EA_save_bit;
 
 void device_init(void);
 void check_BOD(void);

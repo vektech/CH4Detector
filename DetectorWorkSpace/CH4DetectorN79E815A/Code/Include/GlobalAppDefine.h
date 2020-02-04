@@ -57,7 +57,7 @@
 #define LED_LIFE_OFF (P26 = 1)    
 /* 传感器寿命灯开 */
 #define LED_LIFE_ON (P26 = 0) 
-/* 传感器寿命灯开 */
+/* 传感器寿命翻转 */
 #define LED_LIFE_TOGGLE (P26 = ~P26)
 
 /* -------- 蜂鸣器相关宏定义 -------- */
@@ -213,8 +213,8 @@
 #define copy_Adress        127 * 128                     
 
 /*  */
-#define Life_start_OFFSET_DEMA_CH4_0    10
-#define Life_start_OFFSET_DEMA_CH4_3500 12
+#define Life_start_OFFSET_DEMA_sensor_ch4_0    10
+#define Life_start_OFFSET_DEMA_sensor_ch4_3500 12
 
 /*******************************************************************************
  *                 Struct Define Section ('typedef')

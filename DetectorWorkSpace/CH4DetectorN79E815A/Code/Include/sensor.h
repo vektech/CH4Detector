@@ -34,6 +34,13 @@
 /*******************************************************************************
  *                 Prototype Declare Section
  ******************************************************************************/
+/* 甲烷 零点AD值 */
+extern uint16_t sensor_ch4_0 = 0;
+/* 甲烷 3500点AD值 */
+extern uint16_t sensor_ch4_3500 = 712;
+/* 标定AD值存储数组 */
+extern uint8_t sensor_demarcation_result[4] = 0;
+
 /* 预热标记 */
 extern bit sensor_preheat_flag;
 /* 预热时间计数 */

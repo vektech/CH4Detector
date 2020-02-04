@@ -49,11 +49,11 @@ bit sensor_preheat_flag = false;
 uint16_t sensor_preheat_time_count = 0;
 
 /* 甲烷 零点AD值 */
-uint16_t ch4_0 = 0;
+uint16_t sensor_ch4_0 = 0;
 /* 甲烷 3500点AD值 */
-uint16_t ch4_3500 = 712;
+uint16_t sensor_ch4_3500 = 712;
 /* 标定AD值存储数组 */
-uint8_t demarcation_result[4] = 0;
+uint8_t sensor_demarcation_result[4] = 0;
 
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
@@ -148,23 +148,23 @@ void sersor_demarcation(void)
 
             /* 得到ADC采样并滤波之后的值 */
             adc_value = adc_sensor();
-            /* 将该采样值存储到ch4_0中 ch4_0为0传感器0点的值 */
-            ch4_0 = adc_value;
+            /* 将该采样值存储到sensor_ch4_0中 sensor_ch4_0为0传感器0点的值 */
+            sensor_ch4_0 = adc_value;
 
             /* 串口输出该次采样的值 */
             uart_send(0x1f);
             delay_1ms(5);
             uart_send(0x1f);
             delay_1ms(5);
-            uart_send(ch4_0 >> 8);
+            uart_send(sensor_ch4_0 >> 8);
             delay_1ms(5);
-            uart_send(ch4_0);
+            uart_send(sensor_ch4_0);
             delay_1ms(5);
 
             /* 再次得到ADC采样并滤波之后的值 */
             adc_value = adc_sensor();
 
-            /* YYY此处程序结构可以改善 不需要循环全部内容 */
+            /* YYY 此处程序结构可以改善 不需要循环全部内容 */
             while (1)
             { 
                 /* 得到ADC采样并滤波之后的值 */
@@ -286,17 +286,17 @@ void sersor_demarcation(void)
                     /* 暂存 得到ADC采样并滤波之后的值 */
                     temp_data = adc_sensor();
 
-                    /* 将暂存的ADC采样值 存入ch4_3500中 ch4_3500为传感器 3500 XXX 的值 */
-                    ch4_3500 = temp_data;
+                    /* 将暂存的ADC采样值 存入sensor_ch4_3500中 sensor_ch4_3500为传感器 3500 XXX 的值 */
+                    sensor_ch4_3500 = temp_data;
 
                     /* 将零点和3500点的ADC采样数据存入数组中 */
-                    demarcation_result[0] = ch4_0;
-                    demarcation_result[1] = ch4_0 >> 8;
-                    demarcation_result[2] = ch4_3500;
-                    demarcation_result[3] = ch4_3500 >> 8;
+                    sensor_demarcation_result[0] = sensor_ch4_0;
+                    sensor_demarcation_result[1] = sensor_ch4_0 >> 8;
+                    sensor_demarcation_result[2] = sensor_ch4_3500;
+                    sensor_demarcation_result[3] = sensor_ch4_3500 >> 8;
 
                     /* YYY 将采样结果数组存入FLASH中 */
-                    ///WriteData(demarcation_result, 4, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], Life_start_OFFSET_DEMA_CH4_0);
+                    ///WriteData(sensor_demarcation_result, 4, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], Life_start_OFFSET_DEMA_sensor_ch4_0);
 
                     /* 从I2C时钟芯片中读取时间戳 */
                     i2c_get_time();
@@ -311,26 +311,26 @@ void sersor_demarcation(void)
                     /* YYY 存储标定记录总数 */
                     ///WriteRecordData(DEM_RECORD);
                     
-                    /* YYY 从Flash中读取 ch4_0 与 ch4_3500 数据 并进行比对 */
-                    ///ReadData(i2c_time_code, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_CH4_0, 4);
+                    /* YYY 从Flash中读取 sensor_ch4_0 与 sensor_ch4_3500 数据 并进行比对 */
+                    ///ReadData(i2c_time_code, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_sensor_ch4_0, 4);
 
-                    if (i2c_time_code[0] != demarcation_result[0])
+                    if (i2c_time_code[0] != sensor_demarcation_result[0])
                         goto ERROR;
-                    if (i2c_time_code[1] != demarcation_result[1])
+                    if (i2c_time_code[1] != sensor_demarcation_result[1])
                         goto ERROR;
-                    if (i2c_time_code[2] != demarcation_result[2])
+                    if (i2c_time_code[2] != sensor_demarcation_result[2])
                         goto ERROR;
-                    if (i2c_time_code[3] != demarcation_result[3])
+                    if (i2c_time_code[3] != sensor_demarcation_result[3])
                         goto ERROR;
                     
-                    /* 发送标定的报警点数据 ch4_3500 */
+                    /* 发送标定的报警点数据 sensor_ch4_3500 */
                     uart_send(0x4f);
                     delay_1ms(5);
                     uart_send(0x4f);
                     delay_1ms(5);
-                    uart_send(ch4_3500 >> 8);
+                    uart_send(sensor_ch4_3500 >> 8);
                     delay_1ms(5);
-                    uart_send(ch4_3500);
+                    uart_send(sensor_ch4_3500);
                     delay_1ms(5);
                 }
 

@@ -30,8 +30,6 @@
 /*******************************************************************************
  *                 Macro Define Section ('#define')
  ******************************************************************************/
-bit EA_save_bit;
-
 #define set_BOF   \
     EA_save_bit = EA;      \
     EA = 0;       \
@@ -64,6 +62,9 @@ bit device_first_power_on = false;
 
 /* 设备掉电计数 */
 uint8_t device_power_down_count = 0;
+
+/* 全局中断存储位 */
+bit EA_save_bit;
 
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
@@ -205,7 +206,8 @@ void check_BOD(void)
         /* 预热时间清零 */
         sensor_preheat_time_count = 0;
 
-        while (1) //软件复位
+        /* 软件复位 */
+        while (1)
         {
             /* 关闭全局中断 */
             EA = 0;

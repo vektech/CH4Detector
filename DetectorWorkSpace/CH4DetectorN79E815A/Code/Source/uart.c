@@ -160,7 +160,7 @@ void UART_ISR(void) interrupt 4
         /* 偶校验 */
         if (RB8 == (parity_bit))
         {
-            /* 读SBUF 存入rxbuf中 */
+            /* 读SBUF 存入uart_buffer中 */
             uart_buffer[rx_index++] = SBUF;
             /* Rx 存储空间将满 */
             if (rx_index >= (sizeof(uart_buffer) - 1))
@@ -175,7 +175,7 @@ void UART_ISR(void) interrupt 4
         /* 奇校验 */
         if (RB8 == (~parity_bit))
         {
-            /* 读SBUF 存入rxbuf中 */
+            /* 读SBUF 存入uart_buffer中 */
             uart_buffer[rx_index++] = SBUF;
             /* Rx 存储空间满 XXX 为何和前项不同 */
             if (rx_index >= sizeof(uart_buffer))
