@@ -74,6 +74,28 @@ uint8_t device_status[2]={0};
 #define STATUS1_NOMAL    device_status[1] =(device_status[1] & 0x1f)|0X20
 #define STATUS1_ALARM    device_status[1] =(device_status[1] & 0x1f)|0X40
 #define STATUS1_FAULT    device_status[1] =(device_status[1] & 0x1f)|0X60
+
+#define NORMAL 0
+#define Unknown_EROR 1
+#define CHECKSUM_EROR 2
+#define BYTELOSS_EROR 3
+#define ILLEGAL_PARA_EROR 4
+#define COMMAND_EROR 5
+
+/* YYY 0x3af0 处的数据 */
+code uint8_t SERIAL_ADD[8] _at_ 0x3af0;
+
+code uint8_t COMMAND_LEN_EASE_REC[2]={4,6};
+code uint8_t COMMAND_LEN_WRITE_CLOCK[2]={10,6};
+code uint8_t COMMAND_LEN_WR_DATEOFPRODUCTION[2]={9,6};
+code uint8_t COMMAND_LEN_RE_DATEOFPRODUCTION[2]={4,11};
+code uint8_t COMMAND_LEN_RE_SERIALNUM[2]={4,14};
+code uint8_t COMMAND_LEN_RE_CLOCK[2]={4,12};
+code uint8_t COMMAND_LEN_RE_MODEL[2]={4,12};
+code uint8_t COMMAND_LEN_RE_CURTAD[2]={4,8};
+code uint8_t COMMAND_LEN_RE_DEMA[2]={4,10};
+code uint8_t COMMAND_LEN_CANCEL_WARMUP[2]={4,6};
+
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
  ******************************************************************************/
@@ -179,11 +201,11 @@ void main(void)
 
     /* ---- 时钟检测 ---- */
     /* YYY 从Flash存储地址(RECORD_FIRST_ADDRESS[LIFE_RECORD] + 30) 中读取寿命到期信息 */
-    // ReadData(LifeCheck, RECORD_FIRST_ADDRESS[LIFE_RECORD] + 30, 4);
+    // ReadData(life_check, RECORD_FIRST_ADDRESS[LIFE_RECORD] + 30, 4);
     /* YYY life_check_flag表示 线上设置了时钟 */
-    // if (LifeCheck[0] == 0xa5 && (LifeCheck[1] == 0x36))
+    // if (life_check[0] == 0xa5 && (life_check[1] == 0x36))
     // {
-    //     if (LifeCheck[2] == 0x5a && (LifeCheck[3] == 0xe7))
+    //     if (life_check[2] == 0x5a && (life_check[3] == 0xe7))
     //     {
                 /* YYY */
                 life_check_flag = true;
@@ -630,526 +652,536 @@ void main(void)
             }
         }
 
-        // while (1)
-        // {
-        //     device_alarm(Alarm_Selfcheck);
-        //     uart_send(0xAA);
-        //     delay_1ms(3000);
-        // }
-
-        // /* YYY 已在设备初始化中进行了 ADC初始化 所以此处注释掉 */
-        // // adc_init();
-
         /* ---- UART 通讯程序段 ----*/
         /* UART接收完成 */
-        // if (rx_finished)
-        // {   
-        //     /* 取第一个字节的最高一位 如果为0B 表示是工装板发来的命令 */
-        //     if (!(uart_buffer[0] & 0x80))
-        //     {
-        //         if (rx_index >= 9)
-        //         {
-        //             if (Get_crc(uart_buffer, rx_index) == uart_buffer[rx_index - 2])
-        //             {
-        //                 for (i = 0; i < 5; i++)
-        //                 {
-        //                     if (SERIAL_ADD[i + 3] != uart_buffer[i + 1])
-        //                         break;
-        //                 }
-        //                 /* 表示地址对上了 */
-        //                 if (i == 5)
-        //                 {
-        //                     for (i = 6; i < rx_index; i++)
-        //                     {
-        //                         /* 把地址信息从接收帧中去掉 */
-        //                         uart_buffer[i - 5] = uart_buffer[i];
-        //                     }
-        //                     /* 把地址的字节数减去 */
-        //                     rx_index -= 5;
-        //                     /* 把命令恢复 */ 
-        //                     uart_buffer[0] |= 0x80;
-        //                     /* 重新计算crc */
-        //                     uart_buffer[rx_index - 2] = Get_crc(uart_buffer, rx_index);
-        //                 }
-        //                 else
-        //                 {
-        //                     uart_buffer[0] = 0x00;
-        //                 }
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[0] = 0x00;
-        //             }
-        //         }
-        //         else
-        //         {
-        //             uart_buffer[0] = 0x00;
-        //         }
-        //     }
+        if (rx_finished)
+        {   
+            /* YYY 取第一个字节的最高一位 如果为0B 表示是工装板发来的命令 */
+            // if (!(uart_buffer[0] & 0x80))
+            // {
+            //     if (rx_index >= 9)
+            //     {
+            //         if (get_crc(uart_buffer, rx_index) == uart_buffer[rx_index - 2])
+            //         {
+            //             for (i = 0; i < 5; i++)
+            //             {
+            //                 if (SERIAL_ADD[i + 3] != uart_buffer[i + 1])
+            //                     break;
+            //             }
+            //             /* 表示地址对上了 */
+            //             if (i == 5)
+            //             {
+            //                 for (i = 6; i < rx_index; i++)
+            //                 {
+            //                     /* 把地址信息从接收帧中去掉 */
+            //                     uart_buffer[i - 5] = uart_buffer[i];
+            //                 }
+            //                 /* 把地址的字节数减去 */
+            //                 rx_index -= 5;
+            //                 /* 把命令恢复 */ 
+            //                 uart_buffer[0] |= 0x80;
+            //                 /* 重新计算crc */
+            //                 uart_buffer[rx_index - 2] = get_crc(uart_buffer, rx_index);
+            //             }
+            //             else
+            //             {
+            //                 uart_buffer[0] = 0x00;
+            //             }
+            //         }
+            //         else
+            //         {
+            //             uart_buffer[0] = 0x00;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         uart_buffer[0] = 0x00;
+            //     }
+            // }
 
-        //     switch (uart_buffer[0])
-        //     {
-        //     /* 0xab开头为写命令 */
-        //     case 0xab:
-        //     {
-        //         switch (uart_buffer[1])
-        //         {
-        //         /* 擦除EEP */
-        //         case 0x00:
-        //         {
-        //             if (Get_crc(uart_buffer, COMMAND_LEN_EASE_REC[0]) == uart_buffer[COMMAND_LEN_EASE_REC[0] - 2])
-        //             {
-        //                 for (i = 1; i <= 8; i++)
-        //                 {
-        //                     ease_page(RECORD_FIRST_ADDRESS[i]);
-        //                     /* Brown-Out Detector 电源电压检测 */
-        //                     check_BOD();
-        //                 }
+            switch (uart_buffer[0])
+            {
+                /* 0xab开头为写命令 */
+                case 0xab:
+                {
+                    switch (uart_buffer[1])
+                    {
+                        /* 擦除EEP */
+                        case 0x00:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_EASE_REC[0]) == uart_buffer[COMMAND_LEN_EASE_REC[0] - 2])
+                            {
+                                for (i = 1; i <= 8; i++)
+                                {
+                                    /* YYY 按页擦除 */
+                                    // ease_page(RECORD_FIRST_ADDRESS[i]);
+                                    /* Brown-Out Detector 电源电压检测 */
+                                    check_BOD();
+                                }
 
-        //                 uart_buffer[3] = device_status[1] & 0xe0;
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //             }
-        //             uart_buffer[2] = device_status[0];
-        //             uart_buffer[COMMAND_LEN_EASE_REC[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_EASE_REC[1]);
-        //             uart_buffer[COMMAND_LEN_EASE_REC[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_EASE_REC[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                            }
+                            uart_buffer[2] = device_status[0];
+                            uart_buffer[COMMAND_LEN_EASE_REC[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_EASE_REC[1]);
+                            uart_buffer[COMMAND_LEN_EASE_REC[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_EASE_REC[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
 
-        //             break;
-        //         }
-        //         /* 写时钟指令 */
-        //         case 0x01:
-        //         {
-        //             /* 写时钟指令 */
-        //             if ((rx_index >= COMMAND_LEN_WRITE_CLOCK[0]))
-        //             {
-        //                 if (Get_crc(uart_buffer, COMMAND_LEN_WRITE_CLOCK[0]) == uart_buffer[COMMAND_LEN_WRITE_CLOCK[0] - 2])
-        //                 {
-        //                     if (uart_buffer[2] < 15)
-        //                     {
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
-        //                         goto WR_CLOCK_EROR;
-        //                     }
-        //                     if (uart_buffer[3] > 12 || (!uart_buffer[3]))
-        //                     {
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
-        //                         goto WR_CLOCK_EROR;
-        //                     }
-        //                     if (uart_buffer[4] > 31 || (!uart_buffer[4]))
-        //                     {
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
-        //                         goto WR_CLOCK_EROR;
-        //                     }
+                            break;
+                        }
+                        /* 写时钟指令 */
+                        case 0x01:
+                        {
+                            /* 写时钟指令 */
+                            if ((rx_index >= COMMAND_LEN_WRITE_CLOCK[0]))
+                            {
+                                if (get_crc(uart_buffer, COMMAND_LEN_WRITE_CLOCK[0]) == uart_buffer[COMMAND_LEN_WRITE_CLOCK[0] - 2])
+                                {
+                                    if (uart_buffer[2] < 15)
+                                    {
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
+                                        goto WR_CLOCK_EROR;
+                                    }
+                                    if (uart_buffer[3] > 12 || (!uart_buffer[3]))
+                                    {
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
+                                        goto WR_CLOCK_EROR;
+                                    }
+                                    if (uart_buffer[4] > 31 || (!uart_buffer[4]))
+                                    {
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
+                                        goto WR_CLOCK_EROR;
+                                    }
 
-        //                     if ((uart_buffer[5] > 23) || (uart_buffer[6] > 59) || (uart_buffer[7] > 59))
-        //                     {
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
-        //                         goto WR_CLOCK_EROR;
-        //                     }
+                                    if ((uart_buffer[5] > 23) || (uart_buffer[6] > 59) || (uart_buffer[7] > 59))
+                                    {
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
+                                        goto WR_CLOCK_EROR;
+                                    }
 
-        //                     for (i = 2; i < 8; i++)
-        //                     {
-        //                         /* 十六进制转为BCD码 */
-        //                         i2c_time_code[8 - i] = hex2bcd(uart_buffer[i]);
-        //                     }
-        //                     i2c_time_code[0] = i2c_time_code[1];
-        //                     i2c_time_code[1] = i2c_time_code[2];
-        //                     i2c_time_code[2] = i2c_time_code[3];
-        //                     i2c_time_code[3] = i2c_time_code[4];
-        //                     i2c_time_code[4] = 0;
+                                    for (i = 2; i < 8; i++)
+                                    {
+                                        /* 十六进制转为BCD码 */
+                                        i2c_time_code[8 - i] = hex2bcd(uart_buffer[i]);
+                                    }
+                                    i2c_time_code[0] = i2c_time_code[1];
+                                    i2c_time_code[1] = i2c_time_code[2];
+                                    i2c_time_code[2] = i2c_time_code[3];
+                                    i2c_time_code[3] = i2c_time_code[4];
+                                    i2c_time_code[4] = 0;
 
-        //                     /* 写入数据 */
-        //                     Master_Write_Data();
+                                    /* 写入数据 */
+                                    i2c_set_time();
 
-        //                     delay_1ms(100);
-        //                     i2c_get_time();
-        //                     /* 月：表示写入时间不成功 */
-        //                     if (i2c_time_code[5] != uart_buffer[3] && (i2c_time_code[5] != (uart_buffer[3] + 1)))
-        //                     {
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //                         ;
-        //                     }
-        //                     else
-        //                     {
-        //                         uart_buffer[3] = (device_status[1] & 0xe0);
-        //                     }
-        //                     /* 年：表示写入时间不成功 */
-        //                     if (i2c_time_code[6] != uart_buffer[2] && (i2c_time_code[6] != (uart_buffer[2] + 1)))
-        //                     {
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //                     }
-        //                     /* 日：表示写入时间不成功 */
-        //                     if (i2c_time_code[3] != uart_buffer[4] && (i2c_time_code[3] != (uart_buffer[4] + 1)))
-        //                     {
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //                     }
-        //                     /* 时：表示写入时间不成功 */
-        //                     if (i2c_time_code[2] != uart_buffer[5] && (i2c_time_code[2] != (uart_buffer[5] + 1)))
-        //                     {
-        //                         if (!((uart_buffer[5] == 23) && (i2c_time_code[2] == 0)))
-        //                             uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //                     }
-        //                     /* 分：表示写入时间不成功 */
-        //                     if (i2c_time_code[1] != uart_buffer[6] && (i2c_time_code[1] != (uart_buffer[6] + 1)))
-        //                     {
-        //                         if (!((uart_buffer[6] == 59) && (i2c_time_code[1] == 0)))
-        //                             uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //                     }
-        //                 }
-        //                 else
-        //                 {
-        //                     uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //                     ;
-        //                 }
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | BYTELOSS_EROR;
-        //             }
-        //         WR_CLOCK_EROR:
-        //             uart_buffer[2] = device_status[0];
-        //             uart_buffer[COMMAND_LEN_WRITE_CLOCK[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_WRITE_CLOCK[1]);
-        //             uart_buffer[COMMAND_LEN_WRITE_CLOCK[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_WRITE_CLOCK[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出  延时函数，关键参数 */
-        //                 delay_1ms(5);
-        //             }
+                                    delay_1ms(100);
+                                    i2c_get_time();
+                                    /* 月：表示写入时间不成功 */
+                                    if (i2c_time_code[5] != uart_buffer[3] && (i2c_time_code[5] != (uart_buffer[3] + 1)))
+                                    {
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                        ;
+                                    }
+                                    else
+                                    {
+                                        uart_buffer[3] = (device_status[1] & 0xe0);
+                                    }
+                                    /* 年：表示写入时间不成功 */
+                                    if (i2c_time_code[6] != uart_buffer[2] && (i2c_time_code[6] != (uart_buffer[2] + 1)))
+                                    {
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    }
+                                    /* 日：表示写入时间不成功 */
+                                    if (i2c_time_code[3] != uart_buffer[4] && (i2c_time_code[3] != (uart_buffer[4] + 1)))
+                                    {
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    }
+                                    /* 时：表示写入时间不成功 */
+                                    if (i2c_time_code[2] != uart_buffer[5] && (i2c_time_code[2] != (uart_buffer[5] + 1)))
+                                    {
+                                        if (!((uart_buffer[5] == 23) && (i2c_time_code[2] == 0)))
+                                            uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    }
+                                    /* 分：表示写入时间不成功 */
+                                    if (i2c_time_code[1] != uart_buffer[6] && (i2c_time_code[1] != (uart_buffer[6] + 1)))
+                                    {
+                                        if (!((uart_buffer[6] == 59) && (i2c_time_code[1] == 0)))
+                                            uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    }
+                                }
+                                else
+                                {
+                                    uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                                    ;
+                                }
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | BYTELOSS_EROR;
+                            }
+                        WR_CLOCK_EROR:
+                            uart_buffer[2] = device_status[0];
+                            uart_buffer[COMMAND_LEN_WRITE_CLOCK[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_WRITE_CLOCK[1]);
+                            uart_buffer[COMMAND_LEN_WRITE_CLOCK[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_WRITE_CLOCK[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出  延时函数，关键参数 */
+                                delay_1ms(5);
+                            }
 
-        //             /* 表示时钟写入成功 没有发生错误 */
-        //             if ((uart_buffer[3] & (~0xe0)) == 0)
-        //             {
-        //                 LifeCheck[0] = 0xa5;
-        //                 LifeCheck[1] = 0x36;
-        //                 life_check_flag = 1;
-        //                 WriteData(LifeCheck, 4, RECORD_FIRST_ADDRESS[LIFE_RECORD], 30);
-        //             }
-        //             break;
-        //         }
-        //         /* 写传感器寿命的超始时间 即出厂日期 */
-        //         case 0x02:
-        //         {
-        //             if ((rx_index >= COMMAND_LEN_WR_DATEOFPRODUCTION[0])) 
-        //             {
-        //                 if (Get_crc(uart_buffer, COMMAND_LEN_WR_DATEOFPRODUCTION[0]) == uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[0] - 2]) //
-        //                 {
-        //                     WriteData(&uart_buffer[2], 5, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 0);
-        //                     ReadData(&uart_buffer[7], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
-        //                     if (uart_buffer[8] != uart_buffer[3])
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //                     else
-        //                         uart_buffer[3] = (device_status[1] & 0xe0);
-        //                     if (uart_buffer[7] != uart_buffer[2])
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //                     if (uart_buffer[9] != uart_buffer[4])
-        //                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-        //                 }
-        //                 else
-        //                 {
-        //                     uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //                 }
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | BYTELOSS_EROR;
-        //             }
-        //             uart_buffer[2] = device_status[0];
-        //             uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_WR_DATEOFPRODUCTION[1]);
-        //             uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[1] - 1] = 0x55;
+                            /* 表示时钟写入成功 没有发生错误 */
+                            if ((uart_buffer[3] & (~0xe0)) == 0)
+                            {
+                                life_check[0] = 0xa5;
+                                life_check[1] = 0x36;
+                                life_check_flag = 1;
+                                /* YYY */
+                                // WriteData(life_check, 4, RECORD_FIRST_ADDRESS[LIFE_RECORD], 30);
+                            }
+                            break;
+                        }
+                        /* 写传感器寿命的超时时间 即出厂日期 */
+                        case 0x02:
+                        {
+                            if ((rx_index >= COMMAND_LEN_WR_DATEOFPRODUCTION[0])) 
+                            {
+                                if (get_crc(uart_buffer, COMMAND_LEN_WR_DATEOFPRODUCTION[0]) == uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[0] - 2]) //
+                                {
+                                    /* YYY */
+                                    // WriteData(&uart_buffer[2], 5, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 0);
+                                    // ReadData(&uart_buffer[7], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
+                                    if (uart_buffer[8] != uart_buffer[3])
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    else
+                                        uart_buffer[3] = (device_status[1] & 0xe0);
+                                    if (uart_buffer[7] != uart_buffer[2])
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    if (uart_buffer[9] != uart_buffer[4])
+                                        uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                }
+                                else
+                                {
+                                    uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                                }
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | BYTELOSS_EROR;
+                            }
+                            uart_buffer[2] = device_status[0];
+                            uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_WR_DATEOFPRODUCTION[1]);
+                            uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[1] - 1] = 0x55;
 
-        //             for (i = 0; i < COMMAND_LEN_WR_DATEOFPRODUCTION[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             /* 表示出厂日期写入成功 */
-        //             if ((uart_buffer[3] & (~0xe0)) == 0)
-        //             {
-        //                 LifeCheck[2] = 0x5a;
-        //                 LifeCheck[3] = 0xe7;
-        //                 life_check_flag = 1;
-        //                 WriteData(LifeCheck, 4, RECORD_FIRST_ADDRESS[LIFE_RECORD], 30);
-        //             }
-        //             break;
-        //         }
-        //         default:
-        //         {
-        //             uart_buffer[2] = device_status[0];
-        //             uart_buffer[3] = (device_status[1] & 0xe0) | COMMAND_EROR;
-        //             uart_buffer[4] = Get_crc(uart_buffer, 6);
-        //             uart_buffer[5] = 0x55;
-        //             for (i = 0; i < 6; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
-        //         }
-        //         break;
-        //     }
-        //     /* 0xaa开头为 国标规定的协议 读命令 */
-        //     case 0xaa:
-        //     {
-        //         /* 检测查询的记录类型 应小于0x09 */
-        //         if (uart_buffer[2] <= GBCOMMANDMAX)
-        //         {
-        //             /* 所查询的索引号小于该类型的记录总数 */
-        //             if ((uart_buffer[1] <= RecordLEN[uart_buffer[2]]))
-        //             {
-        //                 /* 若检查校验和通过 */
-        //                 if ((rx_index >= (READFrameLEN - 1)) && uart_buffer[4] == Get_crc(uart_buffer, READFrameLEN))
-        //                 {
-        //                     ReadRecordData(uart_buffer[2], uart_buffer[1]);
-        //                 }
-        //             }
-        //         }
-        //         break;
-        //     }
-        //     /* 0xac开头 为读命令 */
-        //     case 0xac:
-        //     {
-        //         switch (uart_buffer[1])
-        //         {
-        //         /* 读时间 带秒 */
-        //         case 0x01:
-        //         {
-        //             if (Get_crc(uart_buffer, COMMAND_LEN_RE_CLOCK[0]) == uart_buffer[COMMAND_LEN_RE_CLOCK[0] - 2])
-        //             {
-        //                 uart_buffer[3] = device_status[1] & 0xe0;
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //             }
-        //             uart_buffer[2] = device_status[0];
-        //             i2c_get_time();
-        //             uart_buffer[4] = i2c_time_code[6];
-        //             uart_buffer[5] = i2c_time_code[5];
-        //             uart_buffer[6] = i2c_time_code[3];
-        //             uart_buffer[7] = i2c_time_code[2];
-        //             uart_buffer[8] = i2c_time_code[1];
-        //             uart_buffer[9] = i2c_time_code[0];
-        //             uart_buffer[COMMAND_LEN_RE_CLOCK[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_RE_CLOCK[1]);
-        //             uart_buffer[COMMAND_LEN_RE_CLOCK[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_RE_CLOCK[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
+                            for (i = 0; i < COMMAND_LEN_WR_DATEOFPRODUCTION[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            /* 表示出厂日期写入成功 */
+                            if ((uart_buffer[3] & (~0xe0)) == 0)
+                            {
+                                life_check[2] = 0x5a;
+                                life_check[3] = 0xe7;
+                                life_check_flag = 1;
+                                /* YYY */
+                                // WriteData(life_check, 4, RECORD_FIRST_ADDRESS[LIFE_RECORD], 30);
+                            }
+                            break;
+                        }
+                        default:
+                        {
+                            uart_buffer[2] = device_status[0];
+                            uart_buffer[3] = (device_status[1] & 0xe0) | COMMAND_EROR;
+                            uart_buffer[4] = get_crc(uart_buffer, 6);
+                            uart_buffer[5] = 0x55;
+                            for (i = 0; i < 6; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+                /* 0xaa开头为 国标规定的协议 读命令 */
+                case 0xaa:
+                {
+                    /* 检测查询的记录类型 应小于0x09 */
+                    if (uart_buffer[2] <= GB_COMMAND_MAX)
+                    {
+                        uart_send(0xAA);
+                        delay_1ms(5);
+                        uart_send(0xBB);
+                        delay_1ms(5);
+                        uart_send(0xCC);
+                        delay_1ms(5);
+                        uart_send(0xDD);
+                        delay_1ms(5);
+                        // /* 所查询的索引号小于该类型的记录总数 */
+                        // if ((uart_buffer[1] <= RecordLEN[uart_buffer[2]]))
+                        // {
+                        //     /* 若检查校验和通过 */
+                        //     if ((rx_index >= (READFrameLEN - 1)) && uart_buffer[4] == get_crc(uart_buffer, READFrameLEN))
+                        //     {
+                        //         ReadRecordData(uart_buffer[2], uart_buffer[1]);
+                        //     }
+                        // }
+                    }
+                    break;
+                }
+                /* 0xac开头 为读命令 */
+                case 0xac:
+                {
+                    switch (uart_buffer[1])
+                    {
+                        /* 读时间 带秒 */
+                        case 0x01:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_RE_CLOCK[0]) == uart_buffer[COMMAND_LEN_RE_CLOCK[0] - 2])
+                            {
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
+                            uart_buffer[2] = device_status[0];
+                            i2c_get_time();
+                            uart_buffer[4] = i2c_time_code[6];
+                            uart_buffer[5] = i2c_time_code[5];
+                            uart_buffer[6] = i2c_time_code[3];
+                            uart_buffer[7] = i2c_time_code[2];
+                            uart_buffer[8] = i2c_time_code[1];
+                            uart_buffer[9] = i2c_time_code[0];
+                            uart_buffer[COMMAND_LEN_RE_CLOCK[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_CLOCK[1]);
+                            uart_buffer[COMMAND_LEN_RE_CLOCK[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_RE_CLOCK[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
 
-        //         /* 读模组型号等信息 */
-        //         case 0x02:
-        //         {
-        //             if (Get_crc(uart_buffer, COMMAND_LEN_RE_MODEL[0]) == uart_buffer[COMMAND_LEN_RE_MODEL[0] - 2])
-        //             {
-        //                 uart_buffer[3] = device_status[1] & 0xe0;
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //             }
-        //             uart_buffer[2] = device_status[0];
+                        /* 读模组型号等信息 */
+                        case 0x02:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_RE_MODEL[0]) == uart_buffer[COMMAND_LEN_RE_MODEL[0] - 2])
+                            {
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
+                            uart_buffer[2] = device_status[0];
 
-        //             uart_buffer[4] = 0x01;
-        //             uart_buffer[5] = 0;
-        //             uart_buffer[6] = 0;
-        //             uart_buffer[7] = 0;
-        //             uart_buffer[8] = 0;
-        //             uart_buffer[9] = 0;
-        //             uart_buffer[COMMAND_LEN_RE_MODEL[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_RE_MODEL[1]);
-        //             uart_buffer[COMMAND_LEN_RE_MODEL[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_RE_MODEL[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
-        //         /* 读AD */
-        //         case 0x03:
-        //         {
-        //             if (Get_crc(uart_buffer, COMMAND_LEN_RE_CURTAD[0]) == uart_buffer[COMMAND_LEN_RE_CURTAD[0] - 2])
-        //             {
-        //                 uart_buffer[3] = device_status[1] & 0xe0;
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //             }
-        //             uart_buffer[2] = device_status[0];
+                            uart_buffer[4] = 0x01;
+                            uart_buffer[5] = 0;
+                            uart_buffer[6] = 0;
+                            uart_buffer[7] = 0;
+                            uart_buffer[8] = 0;
+                            uart_buffer[9] = 0;
+                            uart_buffer[COMMAND_LEN_RE_MODEL[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_MODEL[1]);
+                            uart_buffer[COMMAND_LEN_RE_MODEL[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_RE_MODEL[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
+                        
+                        /* 读AD */
+                        case 0x03:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_RE_CURTAD[0]) == uart_buffer[COMMAND_LEN_RE_CURTAD[0] - 2])
+                            {
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
+                            uart_buffer[2] = device_status[0];
 
-        //             uart_buffer[4] = ch4_adc_value >> 8;
-        //             uart_buffer[5] = ch4_adc_value;
-        //             uart_buffer[COMMAND_LEN_RE_CURTAD[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_RE_CURTAD[1]);
-        //             uart_buffer[COMMAND_LEN_RE_CURTAD[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_RE_CURTAD[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
-        //         /* 读标定相关信息 */
-        //         case 0x04:
-        //         {
-        //             if (Get_crc(uart_buffer, COMMAND_LEN_RE_DEMA[0]) == uart_buffer[COMMAND_LEN_RE_DEMA[0] - 2])
-        //             {
-        //                 uart_buffer[3] = device_status[1] & 0xe0;
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //             }
-        //             uart_buffer[2] = device_status[0];
-        //             ReadData(&uart_buffer[4], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_sensor_ch4_0, 4);
-        //             uart_buffer[8] = uart_buffer[4];
-        //             uart_buffer[4] = uart_buffer[5];
-        //             uart_buffer[5] = uart_buffer[8];
-        //             uart_buffer[8] = uart_buffer[6];
-        //             uart_buffer[6] = uart_buffer[7];
-        //             uart_buffer[7] = uart_buffer[8];
-        //             uart_buffer[COMMAND_LEN_RE_DEMA[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_RE_DEMA[1]);
-        //             uart_buffer[COMMAND_LEN_RE_DEMA[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_RE_DEMA[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
-        //         /* 读传感器寿命的超始时间 即出厂日期 */
-        //         case 0x05:
-        //         {
-        //             if (Get_crc(uart_buffer, COMMAND_LEN_RE_DATEOFPRODUCTION[0]) == uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[0] - 2])
-        //             {
-        //                 uart_buffer[2] = device_status[0];
-        //                 uart_buffer[3] = device_status[1] & 0xe0;
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[2] = device_status[0];
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //             }
-        //             ReadData(&uart_buffer[4], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
-        //             uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_RE_DATEOFPRODUCTION[1]);
-        //             uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_RE_DATEOFPRODUCTION[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
-        //         /* 读序列号 */
-        //         case 0x06:
-        //         {
-        //             if (Get_crc(uart_buffer, COMMAND_LEN_RE_SERIALNUM[0]) == uart_buffer[COMMAND_LEN_RE_SERIALNUM[0] - 2])
-        //             {
-        //                 uart_buffer[2] = device_status[0];
-        //                 uart_buffer[3] = device_status[1] & 0xe0;
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[2] = device_status[0];
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //             }
+                            uart_buffer[4] = ch4_adc_value >> 8;
+                            uart_buffer[5] = ch4_adc_value;
+                            uart_buffer[COMMAND_LEN_RE_CURTAD[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_CURTAD[1]);
+                            uart_buffer[COMMAND_LEN_RE_CURTAD[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_RE_CURTAD[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
 
-        //             for (i = 0; i < 8; i++)
-        //             {
-        //                 uart_buffer[4 + i] = SERIAL_ADD[i];
-        //             }
-        //             uart_buffer[COMMAND_LEN_RE_SERIALNUM[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_RE_SERIALNUM[1]);
-        //             uart_buffer[COMMAND_LEN_RE_SERIALNUM[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_RE_SERIALNUM[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
-        //         default:
-        //         {
+                        /* 读标定相关信息 */
+                        case 0x04:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_RE_DEMA[0]) == uart_buffer[COMMAND_LEN_RE_DEMA[0] - 2])
+                            {
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
+                            uart_buffer[2] = device_status[0];
+                            /* YYY */
+                            // ReadData(&uart_buffer[4], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_sensor_ch4_0, 4);
+                            uart_buffer[8] = uart_buffer[4];
+                            uart_buffer[4] = uart_buffer[5];
+                            uart_buffer[5] = uart_buffer[8];
+                            uart_buffer[8] = uart_buffer[6];
+                            uart_buffer[6] = uart_buffer[7];
+                            uart_buffer[7] = uart_buffer[8];
+                            uart_buffer[COMMAND_LEN_RE_DEMA[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_DEMA[1]);
+                            uart_buffer[COMMAND_LEN_RE_DEMA[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_RE_DEMA[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
 
-        //             uart_buffer[2] = device_status[0];
-        //             uart_buffer[3] = (device_status[1] & 0xe0) | COMMAND_EROR;
-        //             uart_buffer[4] = Get_crc(uart_buffer, 6);
-        //             uart_buffer[5] = 0x55;
-        //             for (i = 0; i < 6; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
-        //         }
-        //         break;
-        //     }
-        //     case 0xad:
-        //     {
-        //         switch (uart_buffer[1])
-        //         {
-        //         /* 取消预热 */
-        //         case 0x01:
-        //         {
-        //             if (Get_crc(uart_buffer, COMMAND_LEN_CANCEL_WARMUP[0]) == uart_buffer[COMMAND_LEN_CANCEL_WARMUP[0] - 2])
-        //             {
-        //                 STATUS1_NOMAL;
-        //                 uart_buffer[3] = device_status[1] & 0xe0;
-        //                 sensor_preheat_flag = 1;
-        //             }
-        //             else
-        //             {
-        //                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-        //             }
-        //             uart_buffer[2] = device_status[0];
-        //             uart_buffer[COMMAND_LEN_CANCEL_WARMUP[1] - 2] = Get_crc(uart_buffer, COMMAND_LEN_CANCEL_WARMUP[1]);
-        //             uart_buffer[COMMAND_LEN_CANCEL_WARMUP[1] - 1] = 0x55;
-        //             for (i = 0; i < COMMAND_LEN_CANCEL_WARMUP[1]; i++)
-        //             {
-        //                 uart_send(uart_buffer[i]);
-        //                 /* 串口输出 延时函数 关键参数 */
-        //                 delay_1ms(5);
-        //             }
-        //             break;
-        //         }
-        //         default:
-        //         {
-        //             break;
-        //         }
-        //         }
-        //         break;
-        //     }
-        //     default:
-        //     {
-        //         break;
-        //     }
-        //     }
-        //     rx_index = 0;
-        //     rx_finished = 0;
+                        /* 读传感器寿命的超始时间 即出厂日期 */
+                        case 0x05:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_RE_DATEOFPRODUCTION[0]) == uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[0] - 2])
+                            {
+                                uart_buffer[2] = device_status[0];
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                            }
+                            else
+                            {
+                                uart_buffer[2] = device_status[0];
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
+                            /* YYY */
+                            // ReadData(&uart_buffer[4], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
+                            uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_DATEOFPRODUCTION[1]);
+                            uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_RE_DATEOFPRODUCTION[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
 
-        //     /* 使能UART0接收 */
-        //     UART0_RX_ENABLE;
-        // }
+                        /* 读序列号 */
+                        case 0x06:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_RE_SERIALNUM[0]) == uart_buffer[COMMAND_LEN_RE_SERIALNUM[0] - 2])
+                            {
+                                uart_buffer[2] = device_status[0];
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                            }
+                            else
+                            {
+                                uart_buffer[2] = device_status[0];
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
+
+                            for (i = 0; i < 8; i++)
+                            {
+                                uart_buffer[4 + i] = SERIAL_ADD[i];
+                            }
+                            uart_buffer[COMMAND_LEN_RE_SERIALNUM[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_SERIALNUM[1]);
+                            uart_buffer[COMMAND_LEN_RE_SERIALNUM[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_RE_SERIALNUM[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
+                        
+                        default:
+                        {
+
+                            uart_buffer[2] = device_status[0];
+                            uart_buffer[3] = (device_status[1] & 0xe0) | COMMAND_EROR;
+                            uart_buffer[4] = get_crc(uart_buffer, 6);
+                            uart_buffer[5] = 0x55;
+                            for (i = 0; i < 6; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+                /* 0xad开头 为XXX命令 */
+                case 0xad:
+                {
+                    switch (uart_buffer[1])
+                    {
+                        /* 取消预热 */
+                        case 0x01:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_CANCEL_WARMUP[0]) == uart_buffer[COMMAND_LEN_CANCEL_WARMUP[0] - 2])
+                            {
+                                STATUS1_NOMAL;
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                                sensor_preheat_flag = 1;
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
+                            uart_buffer[2] = device_status[0];
+                            uart_buffer[COMMAND_LEN_CANCEL_WARMUP[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_CANCEL_WARMUP[1]);
+                            uart_buffer[COMMAND_LEN_CANCEL_WARMUP[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_CANCEL_WARMUP[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            rx_index = 0;
+            rx_finished = 0;
+
+            /* 使能UART0接收 */
+            UART0_RX_ENABLE;
+        }
     }
 }
 

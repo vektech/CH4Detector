@@ -39,11 +39,11 @@ void format_to_device_time(void);
 void format_to_RTC_time(void);
 
 /* 16进制转BCD码 */
-// uint8_t hex2bcd(uint8_t temp);
+uint8_t hex2bcd(uint8_t temp);
 /* BCD转16进制 BCD:0~99 */
 uint8_t bcd2hex(uint8_t temp);
 
-// uint8_t Get_crc(uint8_t *Pdata, uint8_t num);
+uint8_t get_crc(uint8_t *p, uint8_t num);
 
 
 #endif /* _UTLITIES_H_ */

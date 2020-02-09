@@ -168,7 +168,7 @@ void UART_ISR(void) interrupt 4
                 /* UART0 关闭接收功能 */
                 UART0_RX_DISABLE;
                 /* 接收完成 */
-                rx_finished = 1;
+                rx_finished = true;
             }
         }
 #else
@@ -183,7 +183,7 @@ void UART_ISR(void) interrupt 4
                 /* UART0 关闭接收功能 */
                 UART0_RX_DISABLE;
                 /* 接收完成 */
-                rx_finished = 1;
+                rx_finished = true;
             }
         }
 #endif

@@ -162,7 +162,7 @@
 /* XXX */
 #define READFrameLEN 6
 /*  */
-#define GBCOMMANDMAX 9
+#define GB_COMMAND_MAX 9
 
 /* 所有存储项中的最大的那项记录条数 */
 #define RecordLENMAX 20    

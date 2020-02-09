@@ -122,34 +122,34 @@ void i2c_get_time(void)
     i2c_stop();
 }
 
-// void i2c_set_time(void)
-// {
-//     uint8_t i = 0;
+void i2c_set_time(void)
+{
+    uint8_t i = 0;
     
-//     i2c_start();
-// #if PCF8563 == 1
-//     /* 8563 读、写地址 */
-//     i2c_8563_address(0xA2);
-//     i2c_8563_address(0x02);
+    i2c_start();
+#if PCF8563 == 1
+    /* 8563 读、写地址 */
+    i2c_8563_address(0xA2);
+    i2c_8563_address(0x02);
 
-//     /* 8563 写入时间数据 */
-//     i2c_write_data(i2c_time_code, 7);
-// #else
-//     /* 8563 读、写地址 */
-//     i2c_8563_address(0x64);
-//     i2c_8563_address(0x10);
+    /* 8563 写入时间数据 */
+    i2c_write_data(i2c_time_code, 7);
+#else
+    /* 8563 读、写地址 */
+    i2c_8563_address(0x64);
+    i2c_8563_address(0x10);
 
-//     i = i2c_time_code[3];
-//     i2c_time_code[3] = i2c_time_code[4];
-//     i2c_time_code[4] = i;
-//     /* 8563 写入时间数据 */
-//     i2c_write_data(i2c_time_code, 7);
-//     i = i2c_time_code[3];
-//     i2c_time_code[3] = i2c_time_code[4];
-//     i2c_time_code[4] = i;
-// #endif
-//     i2c_stop();
-// }
+    i = i2c_time_code[3];
+    i2c_time_code[3] = i2c_time_code[4];
+    i2c_time_code[4] = i;
+    /* 8563 写入时间数据 */
+    i2c_write_data(i2c_time_code, 7);
+    i = i2c_time_code[3];
+    i2c_time_code[3] = i2c_time_code[4];
+    i2c_time_code[4] = i;
+#endif
+    i2c_stop();
+}
 
 void i2c_start_rtc(void)
 {
