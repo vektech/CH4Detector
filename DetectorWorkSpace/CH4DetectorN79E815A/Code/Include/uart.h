@@ -41,7 +41,7 @@ extern uint8_t rx_index;
 extern uint8_t rx_count;
 
 extern uint8_t rx_finished;
-extern uint8_t uart_buffer[20] = {0x00};
+extern uint8_t uart_buffer[20];
 
 void uart_init(uint32_t bandrate);
 void uart_send(uint8_t byte);

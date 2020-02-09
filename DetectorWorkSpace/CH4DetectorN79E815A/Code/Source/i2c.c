@@ -56,7 +56,7 @@ static void i2c_reapeat_start(void);
 static void i2c_read_data(uint8_t *temp, uint8_t u8_data);
 static void i2c_deal_time_code(void);
 static void i2c_stop(void);
-// static void i2c_write_data(uint8_t *time, uint8_t length);
+static void i2c_write_data(uint8_t *time, uint8_t length);
 
 
 /*******************************************************************************
@@ -259,33 +259,33 @@ static void i2c_8563_address(uint8_t sub)
     }
 }
 
-// static void i2c_write_data(uint8_t *time, uint8_t length)
-// {
-//     uint8_t *ptemp = time;
-//     uint8_t i = 0;
-//     uint8_t delay_count;
+static void i2c_write_data(uint8_t *time, uint8_t length)
+{
+    uint8_t *ptemp = time;
+    uint8_t i = 0;
+    uint8_t delay_count;
 
-//     for (i = 0; i < length; i++)
-//     {
-//         /* I2C 数据寄存器 只要SI为逻辑1 I2DAT中的数据保持不变 在I2C发送接收过程中 读或写I2DAT的结果都是不确定的 */
-//         I2DAT = *ptemp;
-//         /* 串行中断标志SI清零 串行传输暂停 */
-//         SI = 0;
+    for (i = 0; i < length; i++)
+    {
+        /* I2C 数据寄存器 只要SI为逻辑1 I2DAT中的数据保持不变 在I2C发送接收过程中 读或写I2DAT的结果都是不确定的 */
+        I2DAT = *ptemp;
+        /* 串行中断标志SI清零 串行传输暂停 */
+        SI = 0;
 
-//         delay_count = 0;
-//         /* 通过测试得知，等待时间为cnnt=0x69。反汇编得知：该行语句共7条指令。总指令数=735.=33uS@22M */
-//         /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x0e */
-//         while (!(I2CON & SET_BIT3))
-//         {
-//             if (++delay_count > 250)
-//             {
-//                 break;
-//             }
-//         }
+        delay_count = 0;
+        /* 通过测试得知，等待时间为cnnt=0x69。反汇编得知：该行语句共7条指令。总指令数=735.=33uS@22M */
+        /* 检测串行中断标志SI是否置位 置位后跳出循环 通过测试得知 等待时间为cnnt=0x0e */
+        while (!(I2CON & SET_BIT3))
+        {
+            if (++delay_count > 250)
+            {
+                break;
+            }
+        }
 
-//         ptemp++;
-//     }
-// }
+        ptemp++;
+    }
+}
 
 /* 从I2C中读取固定长度数据放入缓冲数组 */
 static void i2c_read_data(uint8_t *temp, uint8_t length)
