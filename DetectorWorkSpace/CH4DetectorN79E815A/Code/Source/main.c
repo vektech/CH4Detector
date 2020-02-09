@@ -28,6 +28,7 @@
 #include "timer.h"
 #include "i2c.h"
 #include "utlities.h"
+#include "adc.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
@@ -82,10 +83,21 @@ uint8_t device_status[2]={0};
  ******************************************************************************/
 void main(void)
 {
+    uint8_t production_date[5] = {0};
+
     /* 传感器寿命到期检测标志 */
     uint8_t life_check[4] = {0x00, 0x00, 0x00, 0x00};
     uint8_t life_check_flag = false;
     
+    /* 写传感器寿命到期记录标志 */
+    bit write_expired_record_flag = false;
+
+    /* 写传感器报警恢复记录标志 */
+    bit write_no_exceeded_record_flag = false;
+
+    /* 写传感器故障恢复记录标志 */
+    bit write_no_fault_record_flag = false;
+
     /* 自检按键 */
     uint8_t selfcheck_key;
 
@@ -97,8 +109,22 @@ void main(void)
 
     /* 时间更新标志 */
     bit device_time_renew_flag = false;
-    /* 报警阈值设定标记 */
+    /* 报警阈值设定标志 */
     bit device_threshold_flag = false;
+
+    /* ch4 高过阈值的报警标志 */
+    bit exceeded_flag = false;
+
+    /* ch4 高过阈值的次数 */
+    uint8_t exceeded_count = 0;
+    /* ch4 高过阈值时阀操作计数 */
+    uint8_t exceeded_valve_count = 0;
+
+    /* ch4 低于最低值的次数 故障标志 */
+    bit fault_flag = false;
+
+    /* ch4 低于最低值的次数 故障计数 */
+    uint8_t fault_count = 0;
 
     /* 设备掉电计数 */
     device_power_down_count = 0;
@@ -273,10 +299,10 @@ void main(void)
                 /* 这里等于6 通过实际测试出延时时间为11s 国标规定测试键按下后 在7~30s内 应触发继电器 阀 */
                 if (timer2_key_long_press_count >= 6)
                 {
-                    /* 阀检测 */
-                    if (!device_value_state)
+                    /* 阀检测 当阀关闭时 */
+                    if (!device_valve_state)
                     {
-                        device_value_state = true;
+                        device_valve_state = true;
 
                         /* 电磁阀开 */
                         VALVE_ON;
@@ -307,7 +333,7 @@ void main(void)
                     /* 测试键长按标志清除 */
                     key_long_press_flag = false;
                     /* 阀状态标志清除 */
-                    device_value_state = false;
+                    device_valve_state = false;
                     /* 传感器未预热完成 */
                     if (!sensor_preheat_flag)
                     {   
@@ -315,6 +341,289 @@ void main(void)
                         DELAY_OFF;
                     }
                 }
+            }
+        }
+
+        /* 1小时时间到就进行一次寿命比较 */
+        if (timer2_life_hour_flag == true)
+        {
+            timer2_life_hour_flag = false;
+
+            /* Brown-Out Detector 电源电压检测 */
+            check_BOD();
+            /* 读取当前时间 存入Time_Code */
+            i2c_get_time();
+
+            /* YYY 从Flash中读取生产日期 */
+            // ReadData(production_date, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
+            /* 读取生产日期失败 则设置默认生产日期为 15年12月31日23时59分 */
+            if (production_date[0] >= 255 || (production_date[1] >= 255) || (production_date[2] >= 255))
+            {
+                production_date[0] = 15;
+                production_date[1] = 12;
+                production_date[2] = 31;
+                production_date[3] = 23;
+                production_date[4] = 59;
+            }
+
+            /* 进行读取的当前时间和记录的生产日期的比较 */
+            /* 当前时间的年 大于 生产日期中的年 */
+            if (i2c_time_code[6] >= production_date[0])
+            {
+                /* 计算年差 */
+                production_date[0] = i2c_time_code[6] - production_date[0];
+                /* 年差 已经到达五年 如 2020 - 2015 = 5 */
+                if (production_date[0] == SENSOR_LIFE)
+                {
+                    /* 当前时间的月 大于 生产日期中的月 2020.6 > 2015.5 */
+                    if (i2c_time_code[5] > production_date[1])
+                    {
+                        /* 已使用年数 加1 变为6 */
+                        production_date[0]++;
+                    }
+                    /* 当前时间的月 等于 生产日期中的月 2020.5 = 2015.5 */
+                    if (i2c_time_code[5] == production_date[1])
+                    {
+                        /* 当前时间的日 大于 生产日期中的日 2020.5.6 > 2015.5.5 */
+                        if (i2c_time_code[3] > production_date[2])
+                        {
+                            /* 已使用年数 加1 变为6 */
+                            production_date[0]++;
+                        }
+                        /* 当前时间的日 等于 生产日期中的日 2020.5.5 = 2015.5.5 */
+                        if (i2c_time_code[3] == production_date[2])
+                        {
+                            /* 以此类推比较时 */
+                            if (i2c_time_code[2] > production_date[3])
+                            {
+                                /* 已使用年数 加1 变为6 */
+                                production_date[0]++;
+                            }
+                            /* 时相等 */
+                            if (i2c_time_code[2] == production_date[3])
+                            {
+                                /* 以此类推比较分 */
+                                if (i2c_time_code[1] > production_date[4])
+                                {
+                                    /* 已使用年数 加1 变为6 */
+                                    production_date[0]++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /* 使用寿命超时 5年时间到 */
+                if (production_date[0] > SENSOR_LIFE)
+                {
+                    /* 传感器寿命灯开 */
+                    LED_LIFE_ON;
+                    
+                    /* 写失效记录标志 */
+                    if (write_expired_record_flag == false)
+                    {
+                        write_expired_record_flag = true;
+
+                        // /* YYY 从FLASH中读取 寿命到期存储地址 的第一个字节 1代表失效，0代表未失效 */
+                        // ReadData(production_date, RECORD_FIRST_ADDRESS[LIFE_RECORD], 1);
+                        // /* YYY 该字节为0 或者 大于应存的到期记录1条 */
+                        // if (production_date[0] == 0 || (production_date[0] > RecordLEN[LIFE_RECORD]))
+                        // {
+                        //     /* Brown-Out Detector 电源电压检测 */
+                        //     check_BOD();
+                        //     /* 写寿命到期记录 */
+                        //     WriteRecordData(LIFE_RECORD);
+                        // }
+                    }
+                }
+                else
+                {
+                    if (life_check_flag == true)
+                    {
+                        /* 传感器寿命灯关 */
+                        LED_LIFE_OFF;
+                    }
+                }
+            }
+        }
+
+        /* 得到ADC采样并滤波之后的值 */
+        ch4_adc_value = adc_sensor();
+
+        /* 得到ADC采样并滤波之后的值 超过 sensor_ch4_3500 的报警阈值 报警状态处理 */
+        if (ch4_adc_value >= sensor_ch4_3500)
+        {
+            /* Brown-Out Detector 电源电压检测 */
+            check_BOD();
+            /* 预热完成 */
+            if (sensor_preheat_flag)
+            {
+                /* 设置为报警状态 */
+                STATUS1_ALARM;
+                /* 设置P0.0为推挽输出模式 */
+                P0M1 = 0x00;
+                P0M2 = 0x01;
+
+                /* 每当定时器计时一秒 */
+                if (timer2_second_flag == true)
+                {
+                    timer2_second_flag = false;
+                    /* ch4 高过阈值的次数 */
+                    exceeded_count++;
+
+                    /* ch4 高过阈值的次数等于 3 */
+                    if (exceeded_count == 3)
+                    {
+                        exceeded_flag = true;
+                    }
+
+                    /* 报警次数大于 5 */
+                    if (exceeded_count > 5)
+                    {
+                        exceeded_count = 5;
+                        /* 继电器开 */
+                        DELAY_ON;
+                        /* 阀操作执行的次数为8的倍数 */
+                        if (!(exceeded_valve_count % 8))
+                        {
+                            /* 电磁阀开 */
+                            VALVE_ON;
+                            delay_1ms(30);
+
+                            /* 电磁阀关 */
+                            VALVE_OFF;
+                            delay_1ms(30);
+                        }
+                        exceeded_valve_count++;
+                    }
+                }
+
+                /* ch4 高过阈值的报警标志置位 */
+                if (exceeded_flag == true)
+                {
+                    exceeded_flag = false;
+                    /* 写传感器恢复记录标志为真 如果传感器恢复则可以写恢复记录 */
+                    write_no_exceeded_record_flag = true;
+                    /* Brown-Out Detector 电源电压检测 */
+                    check_BOD();
+                    /* YYY 向FLASH中 写报警记录 */
+                    // WriteRecordData(ALARM_RECORD);
+                }
+
+                /* 报警次数大于3等于 */
+                if (exceeded_count >= 3)
+                {
+                    /* 发出报警声光信号 */
+                    device_alarm(Alarm_CH4_Exceeded);
+                }
+            }
+        }
+        /* 得到ADC采样并滤波之后的值 小于 Short_Fault_L 的故障阈值 故障状态处理 */
+        else if (ch4_adc_value <= Short_Fault_L)
+        {
+            /* Brown-Out Detector 电源电压检测 */
+            check_BOD();
+
+            /* 预热完成 */
+            if (sensor_preheat_flag)
+            {
+                /* 设置系统状态为故障状态 */
+                STATUS1_FAULT;
+
+                exceeded_count = 0;
+                exceeded_valve_count = 0;
+
+                /* 报警灯关 */
+                LED_ALARM_OFF;
+                /* 继电器关 */
+                DELAY_OFF;
+
+                /* 进行故障计数 */
+                fault_count++;
+                if (fault_count == 1)
+                {
+                    fault_flag = true;
+                }
+                if (fault_count > 2)
+                {
+                    fault_count = 2;
+                }
+
+                /* 故障声光信号 */
+                device_alarm(Alarm_Fault);
+
+                /* ch4 低于最小值的故障标志置位 */
+                if (fault_flag == true)
+                {
+                    fault_flag = false;
+                    /* 写传感器故障恢复记录标志为真 如果传感器从故障恢复则可以写恢复记录 */
+                    write_no_fault_record_flag = 1;
+                    /* Brown-Out Detector 电源电压检测 */
+                    check_BOD();
+                    /* YYY 向FLASH中 写故障记录 */
+                    // WriteRecordData(FAULT_RECORD);
+                }
+            }
+        }
+        /* 得到ADC采样并滤波之后的值 大于 Short_Fault_L 的故障阈值 小于 sensor_ch4_3500 的报警阈值 正常状态处理 */
+        else
+        {   
+            /* 如果预热完成 */
+            if (sensor_preheat_flag)
+            {
+                STATUS1_NOMAL;
+            }
+            /* Brown-Out Detector 电源电压检测 */
+            check_BOD();
+
+            /* ch4 超过阈值报警相关标志和计数清零 */
+            exceeded_flag = false;
+            exceeded_count = 0;
+            exceeded_valve_count = 0;
+
+            /* ch4 低于最低值故障报警相关标志和计数清零 */
+            fault_flag = 0;
+            fault_count = 0;
+
+            /* 未写传感器报警恢复记录 */
+            if (write_no_exceeded_record_flag == true)
+            {
+                write_no_exceeded_record_flag = false;
+                /* Brown-Out Detector 电源电压检测 */
+                check_BOD();
+                /* YYY 向FLASH中 写报警恢复记录 */
+                // WriteRecordData(ALARM_BACK_RECORD);
+            }
+
+            /* 未写传感器故障恢复记录 */
+            if (write_no_fault_record_flag == 1)
+            {
+                write_no_fault_record_flag = 0;
+                fault_flag = 0;
+
+                /* Brown-Out Detector 电源电压检测 */
+                check_BOD();
+                /* YYY向FLASH中 写故障恢复记录 */
+                // WriteRecordData(FAULT_BACK_RECORD);
+            }
+
+            /* 报警灯关 */
+            LED_ALARM_OFF;
+            /* 故障灯关 */
+            LED_FAULT_OFF;
+
+            /* 蜂鸣器1关 */
+            SOUND1_OFF;
+            /* 蜂鸣器2关 */
+            SOUND2_OFF;
+            /* 电磁阀关 */
+            VALVE_OFF;
+
+            /* 当阀状态为关闭时 */
+            if (!device_valve_state)
+            {
+                /* 继电器关 */
+                DELAY_OFF;
             }
         }
 
@@ -331,11 +640,8 @@ void main(void)
         // /* YYY 已在设备初始化中进行了 ADC初始化 所以此处注释掉 */
         // // adc_init();
 
-        // /* 得到ADC采样并滤波之后的值 */
-        // ch4_adc_value = adc_sensor();
-
-        // /* ---- UART 通讯程序段 ----*/
-        // /* UART接收完成 */
+        /* ---- UART 通讯程序段 ----*/
+        /* UART接收完成 */
         // if (rx_finished)
         // {   
         //     /* 取第一个字节的最高一位 如果为0B 表示是工装板发来的命令 */
@@ -843,282 +1149,6 @@ void main(void)
 
         //     /* 使能UART0接收 */
         //     UART0_RX_ENABLE;
-        // }
-
-        // /* 1小时时间到就进行一次寿命比较 */
-        // if (timer2_life_hour_flag == 1)
-        // {
-        //     timer2_life_hour_flag = 0;
-
-        //     /* Brown-Out Detector 电源电压检测 */
-        //     check_BOD();
-        //     /* 读取当前时间 存入Time_Code */
-        //     i2c_get_time();
-
-        //     /* XXX 从Flash中读取生产日期 */
-        //     ReadData(dateofmanufacture, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
-        //     /* 读取生产日期失败 则设置默认生产日期为 15年12月31日23时59分 */
-        //     if (dateofmanufacture[0] >= 255 || (dateofmanufacture[1] >= 255) || (dateofmanufacture[2] >= 255))
-        //     {
-        //         dateofmanufacture[0] = 15;
-        //         dateofmanufacture[1] = 12;
-        //         dateofmanufacture[2] = 31;
-        //         dateofmanufacture[3] = 23;
-        //         dateofmanufacture[4] = 59;
-        //     }
-
-        //     /* 进行读取的当前时间和记录的生产日期的比较 */
-        //     /* 当前时间的年 大于 生产日期中的年 */
-        //     if (i2c_time_code[6] >= dateofmanufacture[0])
-        //     {
-        //         /* 计算年差 */
-        //         dateofmanufacture[0] = i2c_time_code[6] - dateofmanufacture[0];
-        //         /* 年差 已经到达五年 如 2020 - 2015 = 5 */
-        //         if (dateofmanufacture[0] == SENSOR_LIFE)
-        //         {
-        //             /* 当前时间的月 大于 生产日期中的月 2020.6 > 2015.5 */
-        //             if (i2c_time_code[5] > dateofmanufacture[1])
-        //             {
-        //                 /* 已使用年数 加1 变为6 */
-        //                 dateofmanufacture[0]++;
-        //             }
-        //             /* 当前时间的月 等于 生产日期中的月 2020.5 = 2015.5 */
-        //             if (i2c_time_code[5] == dateofmanufacture[1])
-        //             {
-        //                 /* 当前时间的日 大于 生产日期中的日 2020.5.6 > 2015.5.5 */
-        //                 if (i2c_time_code[3] > dateofmanufacture[2])
-        //                 {
-        //                     /* 已使用年数 加1 变为6 */
-        //                     dateofmanufacture[0]++;
-        //                 }
-        //                 /* 当前时间的日 等于 生产日期中的日 2020.5.5 = 2015.5.5 */
-        //                 if (i2c_time_code[3] == dateofmanufacture[2])
-        //                 {
-        //                     /* 以此类推比较时 */
-        //                     if (i2c_time_code[2] > dateofmanufacture[3])
-        //                     {
-        //                         /* 已使用年数 加1 变为6 */
-        //                         dateofmanufacture[0]++;
-        //                     }
-        //                     /* 时相等 */
-        //                     if (i2c_time_code[2] == dateofmanufacture[3])
-        //                     {
-        //                         /* 以此类推比较分 */
-        //                         if (i2c_time_code[1] > dateofmanufacture[4])
-        //                         {
-        //                             /* 已使用年数 加1 变为6 */
-        //                             dateofmanufacture[0]++;
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
-
-        //         /* 使用寿命超时 5年时间到 */
-        //         if (dateofmanufacture[0] > SENSOR_LIFE)
-        //         {
-        //             /* 传感器寿命灯开 */
-        //             LED_LIFE_ON;
-        //             /* XXX */
-        //             if (Life_Write_Flag == 0)
-        //             {
-        //                 Life_Write_Flag = 1;
-
-        //                 /* XXX 从FLASH中读取 寿命到期存储地址 的第一个字节 1代表失效，0代表未失效 */
-        //                 ReadData(dateofmanufacture, RECORD_FIRST_ADDRESS[LIFE_RECORD], 1);
-        //                 /* XXX 该字节为0 或者 大于应存的到期记录1条 */
-        //                 if (dateofmanufacture[0] == 0 || (dateofmanufacture[0] > RecordLEN[LIFE_RECORD]))
-        //                 {
-        //                     /* Brown-Out Detector 电源电压检测 */
-        //                     check_BOD();
-        //                     /* 写寿命到期记录 */
-        //                     WriteRecordData(LIFE_RECORD);
-        //                 }
-        //             }
-        //         }
-        //         else
-        //         {
-        //             if (life_check_flag == 1)
-        //             {
-        //                 /* 传感器寿命灯关 */
-        //                 LED_LIFE_OFF;
-        //             }
-        //         }
-        //     }
-        // }
-
-        // /* 得到ADC采样并滤波之后的值 超过 sensor_ch4_3500 的报警阈值 报警状态处理 */
-        // if (ch4_adc_value >= sensor_ch4_3500)
-        // {
-        //     /* Brown-Out Detector 电源电压检测 */
-        //     check_BOD();
-        //     /* 预热完成 */
-        //     if (sensor_preheat_flag)
-        //     {
-        //         /* 设置为报警状态 */
-        //         STATUS1_ALARM;
-        //         /* 设置P0.0为推挽输出模式 */
-        //         P0M1 = 0x00;
-        //         P0M2 = 0x01;
-
-        //         /* XXX */
-        //         if (Delay1s_flag == 1)
-        //         {
-        //             Delay1s_flag = 0;
-        //             /* XXX */
-        //             Alarm_Count++;
-
-        //             /* 报警次数等于 3 */
-        //             if (Alarm_Count == 3)
-        //             {
-        //                 Alarm_flag = 1;
-        //             }
-
-        //             /* 报警次数大于 5 */
-        //             if (Alarm_Count > 5)
-        //             {
-        //                 Alarm_Count = 5;
-        //                 /* 继电器开 */
-        //                 DELAY_ON;
-        //                 /* XXX Alarm_Value 为8的倍数 */
-        //                 if (!(Alarm_Value % 8))
-        //                 {
-        //                     /* 电磁阀开 */
-        //                     VALVE_ON;
-        //                     delay_1ms(30);
-
-        //                     /* 电磁阀关 */
-        //                     VALVE_OFF;
-        //                     delay_1ms(30);
-        //                 }
-        //                 Alarm_Value++;
-        //             }
-        //         }
-
-        //         /* 报警次数等于 3 Alarm_flag = 1 */
-        //         if (Alarm_flag == 1)
-        //         {
-        //             {
-        //                 Alarm_flag = 0;
-        //                 Alarm_Back_flag = 1;
-        //                 /* Brown-Out Detector 电源电压检测 */
-        //                 check_BOD();
-        //                 /* 向FLASH中 写报警记录 */
-        //                 WriteRecordData(ALARM_RECORD);
-        //             }
-        //         }
-
-        //         /* 报警次数大于3等于 */
-        //         if (Alarm_Count >= 3)
-        //         {
-        //             /* 发出报警声光信号 */
-        //             Light_Alarm_Flash();
-        //         }
-        //     }
-        // }
-        // /* 得到ADC采样并滤波之后的值 小于 Short_Fault_L 的故障阈值 故障状态处理 */
-        // else if (ch4_adc_value <= Short_Fault_L)
-        // {
-        //     /* Brown-Out Detector 电源电压检测 */
-        //     check_BOD();
-
-        //     /* 预热完成 */
-        //     if (sensor_preheat_flag)
-        //     {
-        //         /* 设置系统状态为故障状态 */
-        //         STATUS1_FAULT;
-
-        //         Alarm_Count = 0;
-        //         Alarm_Value = 0;
-
-        //         /* 报警灯关 */
-        //         LED_ALARM_OFF;
-        //         /* 继电器关 */
-        //         DELAY_OFF;
-
-        //         /* XXX */
-        //         Fault_Count++;
-        //         if (Fault_Count == 1)
-        //         {
-        //             Fault_flag = 1;
-        //         }
-        //         if (Fault_Count > 2)
-        //         {
-        //             Fault_Count = 2;
-        //         }
-
-        //         /* 故障声光信号 */
-        //         Fault_Flash();
-
-        //         /* XXX */
-        //         if (Fault_flag == 1)
-        //         {
-        //             Fault_flag = 0;
-        //             Fault_Back_flag = 1;
-        //             /* Brown-Out Detector 电源电压检测 */
-        //             check_BOD();
-        //             /* 向FLASH中 写故障记录 */
-        //             WriteRecordData(FAULT_RECORD);
-        //         }
-        //     }
-        // }
-        // /* 得到ADC采样并滤波之后的值 大于 Short_Fault_L 的故障阈值 小于 sensor_ch4_3500 的报警阈值 正常状态处理 */
-        // else
-        // {
-        //     if (Delay_Time_Flag)
-        //     {
-        //         STATUS1_NOMAL;
-        //     }
-        //     /* Brown-Out Detector 电源电压检测 */
-        //     check_BOD();
-
-        //     /* XXX */
-        //     Alarm_flag = 0;
-        //     Alarm_Count = 0;
-        //     Alarm_Value = 0;
-        //     Fault_flag = 0;
-        //     Fault_Count = 0;
-
-        //     /* XXX */
-        //     if (Alarm_Back_flag == 1)
-        //     {
-        //         Alarm_Back_flag = 0;
-        //         /* Brown-Out Detector 电源电压检测 */
-        //         check_BOD();
-        //         /* 向FLASH中 写报警恢复记录 */
-        //         WriteRecordData(ALARM_BACK_RECORD);
-        //     }
-
-        //     /* XXX */
-        //     if (Fault_Back_flag == 1)
-        //     {
-        //         Fault_Back_flag = 0;
-        //         Fault_flag = 0;
-
-        //         /* Brown-Out Detector 电源电压检测 */
-        //         check_BOD();
-        //         /* 向FLASH中 写故障恢复记录 */
-        //         WriteRecordData(FAULT_BACK_RECORD);
-        //     }
-
-        //     /* 报警灯关 */
-        //     LED_ALARM_OFF;
-        //     /* 故障灯关 */
-        //     LED_FAULT_OFF;
-
-        //     /* 蜂鸣器1关 */
-        //     SOUND1_OFF;
-        //     /* 蜂鸣器2关 */
-        //     SOUND2_OFF;
-        //     /* 电磁阀关 */
-        //     VALVE_OFF;
-
-        //     /* XXX */
-        //     if (!device_value_state)
-        //     {
-        //         /* 继电器关 */
-        //         DELAY_OFF;
-        //     }
         // }
     }
 }

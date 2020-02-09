@@ -67,7 +67,7 @@ uint8_t device_power_down_count = 0;
 bit EA_save_bit;
 
 /* Éè±¸µÄ·§×´Ì¬ */
-bit device_value_state = false;
+bit device_valve_state = false;
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
  ******************************************************************************/

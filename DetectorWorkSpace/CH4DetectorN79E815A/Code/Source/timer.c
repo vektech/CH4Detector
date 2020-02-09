@@ -185,7 +185,7 @@ void Timer2_ISR(void) interrupt 5
     /* 1小时标志位 */
     if (timer2_life_second_count == 3600)
     {
-        timer2_life_hour_flag = 1;
+        timer2_life_hour_flag = true;
         timer2_life_second_count = 0;
     }
 }

@@ -126,14 +126,6 @@
 /* 标定低电平检测 */
 #define DEMED_TR_LW (P06 = 0) 
 
-/* 传感器寿命 单位年 */
-#define SENSOR_LIFE 5
-
-/* 采集值过低故障 */
-#define Short_Fault_L 35
-/* 采集值过高故障 */
-#define Short_Fault_H 1000
-
 /* 3分钟 */
 #define Delay_Time_Count 750
 
