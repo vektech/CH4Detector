@@ -54,15 +54,15 @@ void format_to_device_time(void)
     time_data[5] = i2c_time_code[6];
 }
 
-// void format_to_RTC_time(void)
-// {
-//     i2c_time_code[6] = time_data[5];
-//     i2c_time_code[5] = time_data[4];
-//     i2c_time_code[3] = time_data[3];
-//     i2c_time_code[2] = time_data[2];
-//     i2c_time_code[1] = time_data[1];
-//     i2c_time_code[0] = time_data[0];
-// }
+void format_to_RTC_time(void)
+{
+    i2c_time_code[6] = time_data[5];
+    i2c_time_code[5] = time_data[4];
+    i2c_time_code[3] = time_data[3];
+    i2c_time_code[2] = time_data[2];
+    i2c_time_code[1] = time_data[1];
+    i2c_time_code[0] = time_data[0];
+}
 
 // /* 16½øÖÆ×ªBCDÂë */
 // uint8_t hex2bcd(uint8_t temp)

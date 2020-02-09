@@ -37,6 +37,9 @@
  ******************************************************************************/
 extern uint16_t timer2_life_second_count;
 
+extern bit key_long_press_flag;
+extern uint8_t timer2_key_long_press_count;
+
 void timer2_init(void);
 
 #endif /* _TIMER_H_ */

@@ -66,6 +66,8 @@ uint8_t device_power_down_count = 0;
 /* 全局中断存储位 */
 bit EA_save_bit;
 
+/* 设备的阀状态 */
+bit device_value_state = false;
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
  ******************************************************************************/

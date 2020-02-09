@@ -41,14 +41,17 @@
  ******************************************************************************/
 bit timer2_second_flag;
 bit timer2_life_hour_flag;
+bit key_long_press_flag;
+
+uint8_t timer2_key_long_press_count;
 
 uint16_t timer2_count;
 uint8_t timer2_second_count;
-uint8_t timer2_key_long_press_count;
+
 
 uint16_t timer2_life_second_count;
 
-bit key_long_press_flag;
+
 
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
@@ -172,7 +175,6 @@ void Timer2_ISR(void) interrupt 5
 
         /* 寿命到期计时数 */
         timer2_life_second_count++;
-
 
         if (key_long_press_flag)
         {
