@@ -26,6 +26,7 @@
 #include "uart.h"
 #include "i2c.h"
 #include "utlities.h"
+#include "flash.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
@@ -97,7 +98,7 @@ void sersor_demarcation(void)
             device_alarm(Alarm_Demarcation);
             
             /* 选择ADC0 即P0.1作为ADC采样端口 打开ADC中断使能 */
-            /* YYY 是否可以只使用 adc_init_interrupt() 而不需要 adc_init() */
+            /* ZZZ 是否可以只使用 adc_init_interrupt() 而不需要 adc_init() */
             adc_init_interrupt();
 
             /* 设备预热标记为已预热 */
@@ -164,7 +165,7 @@ void sersor_demarcation(void)
             /* 再次得到ADC采样并滤波之后的值 */
             adc_value = adc_sensor();
 
-            /* YYY 此处程序结构可以改善 不需要循环全部内容 */
+            /* ZZZ 此处程序结构可以改善 不需要循环全部内容 */
             while (1)
             { 
                 /* 得到ADC采样并滤波之后的值 */
@@ -295,8 +296,8 @@ void sersor_demarcation(void)
                     sensor_demarcation_result[2] = sensor_ch4_3500;
                     sensor_demarcation_result[3] = sensor_ch4_3500 >> 8;
 
-                    /* YYY 将采样结果数组存入FLASH中 */
-                    ///flash_write_data(sensor_demarcation_result, 4, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], Life_start_OFFSET_DEMA_sensor_ch4_0);
+                    /* 将采样结果数组存入FLASH中 */
+                    flash_write_data(sensor_demarcation_result, 4, DEVICE_INFO_ADDR, OFFSET_OF_CH4_0);
 
                     /* 从I2C时钟芯片中读取时间戳 */
                     i2c_get_time();
@@ -311,8 +312,8 @@ void sersor_demarcation(void)
                     /* YYY 存储标定记录总数 */
                     ///WriteRecordData(DEM_RECORD);
                     
-                    /* YYY 从Flash中读取 sensor_ch4_0 与 sensor_ch4_3500 数据 并进行比对 */
-                    ///ReadData(i2c_time_code, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD] + Life_start_OFFSET_DEMA_sensor_ch4_0, 4);
+                    /* 从Flash中读取 sensor_ch4_0 与 sensor_ch4_3500 数据 并进行比对 使用 i2c_time_code 暂存 */
+                    flash_read_data(i2c_time_code, ADC_VALUE_OF_CH4_0_ADDR, 4);
 
                     if (i2c_time_code[0] != sensor_demarcation_result[0])
                         goto ERROR;

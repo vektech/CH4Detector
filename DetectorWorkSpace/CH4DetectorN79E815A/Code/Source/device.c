@@ -199,7 +199,7 @@ void check_BOD(void)
         LED_POWER_OFF;
 
         /* YYY 向FLASH中写掉电记录 */
-        ///FLASH_OP(DOWNPOWER_RECORD);
+        ///WriteRecordData(DOWNPOWER_RECORD);
 
         /* 掉电计数复位 */
         device_power_down_count = 0;

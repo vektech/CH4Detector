@@ -27,6 +27,16 @@
 /*******************************************************************************
  *                 Macro Define Section ('#define')
  ******************************************************************************/
+#define ALL_RECORD_COUNT        0
+#define ALARM_RECORD            1
+#define ALARM_RECOVERY_RECORD   2
+#define FAULT_RECORD            3
+#define FAULT_RECOVERY_RECORD   4
+#define POWER_DOWN_RECORD       5
+#define POWER_ON_RECORD         6
+#define SENSOR_EXPIRED_RECORD   7
+#define DEVICE_CURRENT_TIME     8
+
 #define  BYTES_OF_PAGE              128
 
 /*  
@@ -48,19 +58,32 @@
 */
 
 /* 共计九个地址 */
-#define  ALARM_RECORD_ADDR          100 * 128
-#define  ALARM_RECOVERY_RECORD_ADDR 107 * 128
-#define  FAULT_RECORD_ADDR          114 * 128
-#define  FAULT_RECOVERY_RECORD_ADDR 118 * 128 
-#define  POWER_DOWN_RECORD_ADDR     122 * 128
-#define  POWER_ON_RECORD_ADDR       124 * 128 
+#define  ALARM_RECORD_ADDR          100 * 128 /* +7 */
+#define  ALARM_RECOVERY_RECORD_ADDR 107 * 128 /* +7 */
+#define  FAULT_RECORD_ADDR          114 * 128 /* +4 */
+#define  FAULT_RECOVERY_RECORD_ADDR 118 * 128 /* +4 */
+#define  POWER_DOWN_RECORD_ADDR     122 * 128 /* +2 */
+#define  POWER_ON_RECORD_ADDR       124 * 128 /* +2 */
 #define  TEMP_PAGE_ADDR             126 * 128 /* 倒数第二页 */
 #define  DEVICE_INFO_ADDR           127 * 128 /* 最后一页 */
-#define  SENSOR_EXPIRED_RECORD_ADDR (DEVICE_INFO_ADDR + OFFSET_OF_SENSOR_EXPIRED)
 
-#define  OFFSET_OF_SENSOR_EXPIRED 14
-#define  OFFSET_OF_CH4_0  10     
-#define  OFFSET_OF_CH4_3500  12   
+/* FLASH存储记录的开始地址 */
+#define RECORD_START_ADDR           ALARM_RECORD_ADDR
+
+/* 基于 DEVICE_INFO_ADDR 计算的地址 */
+#define  PRODUCTION_DATE_ADDR       (DEVICE_INFO_ADDR + OFFSET_OF_PRODUCTION_DATE)
+#define  ADC_VALUE_OF_CH4_0_ADDR    (DEVICE_INFO_ADDR + OFFSET_OF_CH4_0)
+#define  ADC_VALUE_OF_CH4_3500_ADDR (DEVICE_INFO_ADDR + OFFSET_OF_CH4_3500)
+#define  SENSOR_EXPIRED_RECORD_ADDR (DEVICE_INFO_ADDR + OFFSET_OF_SENSOR_EXPIRED)
+#define  RTC_RECORD_ADDR            (DEVICE_INFO_ADDR + OFFSET_OF_RTC)
+
+/* 相对 DEVICE_INFO 页内地址偏移 */
+#define  OFFSET_OF_PRODUCTION_DATE  0   /* 5 bytes */  
+#define  OFFSET_OF_CH4_0            10  /* 2 bytes */  
+#define  OFFSET_OF_CH4_3500         12  /* 2 bytes */ 
+#define  OFFSET_OF_SENSOR_EXPIRED   14  /* ZZZ 5 bytes */
+#define  OFFSET_OF_RTC              30  /* ZZZ 5 bytes */
+
 
 /*******************************************************************************
  *                 Struct Define Section ('typedef')
@@ -72,6 +95,7 @@
 /* 每一项记录的总记录数 */
 extern code uint8_t max_of_each_record[9];
 
+void flash_erase_page(uint16_t start_addr);
 void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offset);
 void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len);
 

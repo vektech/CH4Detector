@@ -135,30 +135,6 @@
 /*  */
 #define SERIAL_ADDRESS 0X2FF0
 
-/* 
-    下标0：0xff无意义;
-    下标1：标定记录总数;
-    下标2：报警记录总数;
-    下标3：报警恢复记录总数;
-    下标4: 故障记录总数;
-    下标5：故障恢复记录总数;
-    下标6：掉电记录总数;
-    下标7：上电记录总数;
-    下标8：失效记录总数;
-    下标9: 查询时间,0xff无意义
- */
-#define ALL_RECORD_COUNT       0
-#define DEM_RECORD             1
-#define ALARM_RECORD           2
-#define ALARM_BACK_RECORD      3
-#define FAULT_RECORD           4
-#define FAULT_BACK_RECORD      5
-#define DOWNPOWER_RECORD       6
-#define UPPOWER_RECORD         7
-#define LIFE_RECORD            8
-#define CURT_DATE_RECORD       9
-#define LIFE_START_DATE_RECORD 10
-
 /* 国标读命令的帧长度 */
 #define GB_READ_FRAME_LEN 6
 /* 国标读命令的最大种类数 */
