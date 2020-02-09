@@ -29,33 +29,48 @@
 #include "i2c.h"
 #include "utlities.h"
 #include "adc.h"
+#include "flash.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
  ******************************************************************************/
 /*
+
 /*
-P2.0 蜂鸣器2
-P2.1 蜂鸣器1
-P2.3 继电器
-P2.4 报警灯
-P2.5 故障灯
-P2.6 传感器寿命灯
+    P2.0 蜂鸣器2
+    P2.1 蜂鸣器1
+    P2.3 继电器
+    P2.4 报警灯
+    P2.5 故障灯
+    P2.6 传感器寿命灯
 
-P1.3  SDA
-P1.2  SCL
-P1.1  RXD
-P1.0  TXD
-P1.4  T_INT
+    P1.3  SDA
+    P1.2  SCL
+    P1.1  RXD
+    P1.0  TXD
+    P1.4  T_INT
 
-P0.0  电磁阀
-P0.1  传感器AD采样
-P0.2  电磁阀检测
-P0.3  电源灯
-P0.5  电源电压检测
-P0.6  调试、标定
-P0.7  测试按键
+    P0.0  电磁阀
+    P0.1  传感器AD采样
+    P0.2  电磁阀检测
+    P0.3  电源灯
+    P0.5  电源电压检测
+    P0.6  调试、标定
+    P0.7  测试按键
 */
+
+/*  
+    下标0：查询各类记录总数;
+    下标1：报警记录 200;
+    下标2：报警恢复记录 200;
+    下标3：故障记录 100;
+    下标4：故障恢复记录 100;
+    下标5：掉电记录 50;
+    下标6：上电记录 50;
+    下标7：传感器失效记录 1;
+    下标8：内部定时器当前时间
+*/
+
 /*******************************************************************************
  *                 Struct Define Section ('typedef')
  ******************************************************************************/
@@ -82,7 +97,7 @@ uint8_t device_status[2]={0};
 #define ILLEGAL_PARA_EROR 4
 #define COMMAND_EROR 5
 
-/* YYY 0x3af0 处的数据 */
+/* 产品序列号地址 0x3af0 处的数据 */
 code uint8_t SERIAL_ADD[8] _at_ 0x3af0;
 
 code uint8_t COMMAND_LEN_EASE_REC[2]={4,6};
@@ -387,7 +402,7 @@ void main(void)
                         // /* YYY 从FLASH中读取 寿命到期存储地址 的第一个字节 1代表失效，0代表未失效 */
                         // ReadData(production_date, RECORD_FIRST_ADDRESS[LIFE_RECORD], 1);
                         // /* YYY 该字节为0 或者 大于应存的到期记录1条 */
-                        // if (production_date[0] == 0 || (production_date[0] > RecordLEN[LIFE_RECORD]))
+                        // if (production_date[0] == 0 || (production_date[0] > max_of_each_record[LIFE_RECORD]))
                         // {
                         //     /* Brown-Out Detector 电源电压检测 */
                         //     check_BOD();
@@ -714,7 +729,7 @@ void main(void)
                                 for (i = 1; i <= 8; i++)
                                 {
                                     /* YYY 按页擦除 */
-                                    // ease_page(RECORD_FIRST_ADDRESS[i]);
+                                    // flash_erase_page(RECORD_FIRST_ADDRESS[i]);
                                     /* Brown-Out Detector 电源电压检测 */
                                     check_BOD();
                                 }
@@ -844,7 +859,7 @@ void main(void)
                                 life_check[1] = 0x36;
                                 life_check_flag = 1;
                                 /* YYY */
-                                // WriteData(life_check, 4, RECORD_FIRST_ADDRESS[LIFE_RECORD], 30);
+                                // flash_write_data(life_check, 4, RECORD_FIRST_ADDRESS[LIFE_RECORD], 30);
                             }
                             break;
                         }
@@ -856,7 +871,7 @@ void main(void)
                                 if (get_crc(uart_buffer, COMMAND_LEN_WR_DATEOFPRODUCTION[0]) == uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[0] - 2]) //
                                 {
                                     /* YYY */
-                                    // WriteData(&uart_buffer[2], 5, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 0);
+                                    // flash_write_data(&uart_buffer[2], 5, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 0);
                                     // ReadData(&uart_buffer[7], RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], 5);
                                     if (uart_buffer[8] != uart_buffer[3])
                                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
@@ -893,7 +908,7 @@ void main(void)
                                 life_check[3] = 0xe7;
                                 life_check_flag = 1;
                                 /* YYY */
-                                // WriteData(life_check, 4, RECORD_FIRST_ADDRESS[LIFE_RECORD], 30);
+                                // flash_write_data(life_check, 4, RECORD_FIRST_ADDRESS[LIFE_RECORD], 30);
                             }
                             break;
                         }
@@ -928,15 +943,16 @@ void main(void)
                         delay_1ms(5);
                         uart_send(0xDD);
                         delay_1ms(5);
-                        // /* 所查询的索引号小于该类型的记录总数 */
-                        // if ((uart_buffer[1] <= RecordLEN[uart_buffer[2]]))
-                        // {
-                        //     /* 若检查校验和通过 */
-                        //     if ((rx_index >= (READFrameLEN - 1)) && uart_buffer[4] == get_crc(uart_buffer, READFrameLEN))
-                        //     {
-                        //         ReadRecordData(uart_buffer[2], uart_buffer[1]);
-                        //     }
-                        // }
+                        /* 所查询的索引号小于该类型的记录总数 */
+                        if ((uart_buffer[1] <= max_of_each_record[uart_buffer[2]]))
+                        {
+                            /* 若检查校验和通过 */
+                            if ((rx_index >= (GB_READ_FRAME_LEN - 1)) && uart_buffer[4] == get_crc(uart_buffer, GB_READ_FRAME_LEN))
+                            {
+                                /* YYY */
+                                // ReadRecordData(uart_buffer[2], uart_buffer[1]);
+                            }
+                        }
                     }
                     break;
                 }

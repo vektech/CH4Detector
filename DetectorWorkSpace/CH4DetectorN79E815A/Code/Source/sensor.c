@@ -296,7 +296,7 @@ void sersor_demarcation(void)
                     sensor_demarcation_result[3] = sensor_ch4_3500 >> 8;
 
                     /* YYY 将采样结果数组存入FLASH中 */
-                    ///WriteData(sensor_demarcation_result, 4, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], Life_start_OFFSET_DEMA_sensor_ch4_0);
+                    ///flash_write_data(sensor_demarcation_result, 4, RECORD_FIRST_ADDRESS[LIFE_START_DATE_RECORD], Life_start_OFFSET_DEMA_sensor_ch4_0);
 
                     /* 从I2C时钟芯片中读取时间戳 */
                     i2c_get_time();

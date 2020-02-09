@@ -38,3 +38,7 @@
 #### Version 1.9
 
 - Reorganized part of Main function 
+
+#### Version 2.0
+
+- Uart is completed

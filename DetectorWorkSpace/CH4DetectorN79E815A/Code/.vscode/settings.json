@@ -18,6 +18,7 @@
         "signal.h": "c",
         "n79e81x.h": "c",
         "globalformat8051core.h": "c",
-        "timer.h": "c"
+        "timer.h": "c",
+        "flash.h": "c"
     }
 }

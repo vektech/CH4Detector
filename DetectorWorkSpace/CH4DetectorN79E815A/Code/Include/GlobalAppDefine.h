@@ -159,9 +159,9 @@
 #define CURT_DATE_RECORD       9
 #define LIFE_START_DATE_RECORD 10
 
-/* XXX */
-#define READFrameLEN 6
-/*  */
+/* 国标读命令的帧长度 */
+#define GB_READ_FRAME_LEN 6
+/* 国标读命令的最大种类数 */
 #define GB_COMMAND_MAX 9
 
 /* 所有存储项中的最大的那项记录条数 */
