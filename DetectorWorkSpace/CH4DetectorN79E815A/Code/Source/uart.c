@@ -177,7 +177,7 @@ void UART_ISR(void) interrupt 4
         {
             /* 读SBUF 存入uart_buffer中 */
             uart_buffer[rx_index++] = SBUF;
-            /* Rx 存储空间满 XXX 为何和前项不同 */
+            /* Rx 存储空间满 ZZZ 为何和前项不同 */
             if (rx_index >= sizeof(uart_buffer))
             {
                 /* UART0 关闭接收功能 */
@@ -196,7 +196,7 @@ void UART_ISR(void) interrupt 4
         /* Clear transmit flag for next transmition */
         TI = 0;
     }
-    /* XXX 使能TIME2定时器 因为在蜂鸣器响之前 把TR2关掉了 蜂鸣器独占CPU时间 
+    /* ZZZ 使能TIME2定时器 因为在蜂鸣器响之前 把TR2关掉了 蜂鸣器独占CPU时间 
        所以一旦接收到数据 则把TIME2打开以增加串口接收完成判断的实时性 */
     TR2 = 1;
 }

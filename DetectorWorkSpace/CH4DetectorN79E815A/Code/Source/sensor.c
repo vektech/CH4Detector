@@ -287,7 +287,7 @@ void sersor_demarcation(void)
                     /* 暂存 得到ADC采样并滤波之后的值 */
                     temp_data = adc_sensor();
 
-                    /* 将暂存的ADC采样值 存入sensor_ch4_3500中 sensor_ch4_3500为传感器 3500 XXX 的值 */
+                    /* 将暂存的ADC采样值 存入sensor_ch4_3500中 sensor_ch4_3500为传感器 3500 ZZZ 的值 */
                     sensor_ch4_3500 = temp_data;
 
                     /* 将零点和3500点的ADC采样数据存入数组中 */

@@ -236,7 +236,7 @@ void BOD_ISR(void) interrupt 8
 {
     /* 清楚欠压检测标志 */
     clr_BOF;
-    /* XXX */
+    /* 设备检测到掉电计数 */
     device_power_down_count++;
     if (device_power_down_count >= POWER_DOWN_LIMIT)
     {

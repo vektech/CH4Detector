@@ -155,7 +155,7 @@ void flash_erase_page(uint16_t start_addr)
     /* ISPCN = 0010 0010B ISP控制 选择操作APROM或者数据FLASH 进行FLASH页擦除
         - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
         - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-        - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+        - [4] FCEN      = 0B 无其他设置 只能为0;
         - [3:0] FCTRL   = 0010B 页擦除; 0001B 编程; 0000B 读数据;
         */
     ISPCN = ERASE_ALL_DATA;
@@ -203,7 +203,7 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
         /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
             - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-            - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+            - [4] FCEN      = 0B 无其他设置 只能为0;
             - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
             */
         ISPCN = FLASH_READ_DATA;
@@ -218,7 +218,7 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
         /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
             - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-            - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+            - [4] FCEN      = 0B 无其他设置 只能为0;
             - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
             */
         ISPCN = BYTE_PROGRAM_DATA;
@@ -246,7 +246,7 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
             /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
                 - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
                 - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-                - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+                - [4] FCEN      = 0B 无其他设置 只能为0;
                 - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
                 */
             ISPCN = BYTE_PROGRAM_DATA;
@@ -266,7 +266,7 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
             /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
                 - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
                 - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-                - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+                - [4] FCEN      = 0B 无其他设置 只能为0;
                 - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
                 */
             ISPCN = FLASH_READ_DATA;
@@ -281,7 +281,7 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
             /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
                 - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
                 - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-                - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+                - [4] FCEN      = 0B 无其他设置 只能为0;
                 - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
                 */
             ISPCN = BYTE_PROGRAM_DATA;
@@ -317,7 +317,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
     /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
         - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
         - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-        - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+        - [4] FCEN      = 0B 无其他设置 只能为0;
         - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
         */
     ISPCN = FLASH_READ_DATA;
@@ -374,7 +374,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 //     /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
 //         - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
 //         - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-//         - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+//         - [4] FCEN      = 0B 无其他设置 只能为0;
 //         - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
 //         */
 //     ISPCN = FLASH_READ_DATA;
@@ -511,7 +511,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 //             /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
 //                 - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
 //                 - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-//                 - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+//                 - [4] FCEN      = 0B 无其他设置 只能为0;
 //                 - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
 //                 */
 //             ISPCN = FLASH_READ_DATA;
@@ -683,7 +683,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 //         /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
 //             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
 //             - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-//             - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+//             - [4] FCEN      = 0B 无其他设置 只能为0;
 //             - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
 //             */
 //         ISPCN = FLASH_READ_DATA;
@@ -730,7 +730,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 //         /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
 //             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
 //             - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-//             - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+//             - [4] FCEN      = 0B 无其他设置 只能为0;
 //             - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
 //             */
 //         ISPCN = BYTE_PROGRAM_DATA;
@@ -782,7 +782,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 //         /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
 //             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
 //             - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-//             - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+//             - [4] FCEN      = 0B 无其他设置 只能为0;
 //             - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
 //             */
 //         ISPCN = FLASH_READ_DATA;
@@ -812,7 +812,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 //         /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
 //             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
 //             - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-//             - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+//             - [4] FCEN      = 0B 无其他设置 只能为0;
 //             - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
 //             */
 //         ISPCN = BYTE_PROGRAM_DATA;
@@ -884,7 +884,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 //     /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
 //         - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
 //         - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-//         - [4] FCEN      = 0B XXX 无其他设置 只能为0;
+//         - [4] FCEN      = 0B 无其他设置 只能为0;
 //         - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
 //         */
 //     ISPCN = BYTE_PROGRAM_DATA;

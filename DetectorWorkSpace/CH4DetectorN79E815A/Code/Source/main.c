@@ -288,17 +288,17 @@ void main(void)
                 check_BOD();
                 /* 读取当前时间 存入Time_Code */
                 i2c_get_time();
-                /* XXX */
+                /* ZZZ */
                 if (i2c_time_code[6] < 15 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
                 {
-                    /* XXX 将 i2c_time_code 转换为 time_data */
+                    /* ZZZ 将 i2c_time_code 转换为 time_data */
                     format_to_RTC_time();
                 }
                 else
                 {
                     /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
                     EBO = 0;
-                    /* XXX 复制从时钟芯片获取的时间戳 将 time_data 转换为 i2c_time_code */
+                    /* ZZZ 复制从时钟芯片获取的时间戳 将 time_data 转换为 i2c_time_code */
                     format_to_device_time();
                     /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
                     EBO = 1;

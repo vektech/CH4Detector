@@ -244,7 +244,7 @@ static void i2c_8563_address(uint8_t sub)
     uint8_t delay_count = 0;
 
     /* I2C 数据寄存器 只要SI为逻辑1 I2DAT中的数据保持不变 在I2C发送接收过程中 读或写I2DAT的结果都是不确定的 */
-    /* XXX Address high for I2C EEPROM */
+    /* Address high for I2C EEPROM */
     I2DAT = sub;
     /* 串行中断标志SI清零 串行传输暂停 */
     SI = 0;
