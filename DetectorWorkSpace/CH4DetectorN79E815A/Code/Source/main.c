@@ -238,13 +238,9 @@ void main(void)
     
     while (1)
     {
-        /* 传感器寿命已到期 */
-        if (life_check_flag == false)
-        {
-            /* 传感器寿命灯开 */
-            LED_LIFE_ON;
-        }
-        
+        /* Brown-Out Detector 电源电压检测 */
+        check_BOD();
+
         /* 每两秒执行一次 从RTC更新设备时间 */
         if (!(timer2_life_second_count % 2))
         {
@@ -279,69 +275,11 @@ void main(void)
             device_time_renew_flag = 0;
         }
 
-        /* 读取按键 P0.7 的值 检查自检功能是否触发 */
-        selfcheck_key = P07 & 0x01;
-        /* 测试键按下 */
-        if (selfcheck_key == 0x00)
+        /* 传感器寿命已到期 */
+        if (life_check_flag == false)
         {
-            /* 延时去抖 */
-            delay_1ms(30);
-            /* 确认测试键按下 */
-            if (selfcheck_key == 0x00)
-            {
-                /* 测试键长按标志未置位 */
-                if (!key_long_press_flag)
-                {
-                    timer2_key_long_press_count = 0;
-                    /* 置位测试键长按标志 */
-                    key_long_press_flag = true;
-                }
-                /* 这里等于6 通过实际测试出延时时间为11s 国标规定测试键按下后 在7~30s内 应触发继电器 阀 */
-                if (timer2_key_long_press_count >= 6)
-                {
-                    /* 阀检测 当阀关闭时 */
-                    if (!device_valve_state)
-                    {
-                        device_valve_state = true;
-
-                        /* 电磁阀开 */
-                        VALVE_ON;
-                        delay_1ms(30);
-
-                        /* 电磁阀关 */
-                        VALVE_OFF;
-                        delay_1ms(30);
-                    }
-                    /* 继电器开 */
-                    DELAY_ON;
-                    timer2_key_long_press_count = 8;
-                }
-                device_alarm(Alarm_Selfcheck);
-            }
-        }
-        /* 测试键未按下 */
-        else
-        {
-            /* 测试键长按标志已置位 */
-            if (key_long_press_flag)
-            {
-                /* 延时去抖 */
-                delay_1ms(30);
-                /* 确认测试键未按下 */
-                if (selfcheck_key != 0x00)
-                {
-                    /* 测试键长按标志清除 */
-                    key_long_press_flag = false;
-                    /* 阀状态标志清除 */
-                    device_valve_state = false;
-                    /* 传感器未预热完成 */
-                    if (!sensor_preheat_flag)
-                    {   
-                        /* 继电器关 */
-                        DELAY_OFF;
-                    }
-                }
-            }
+            /* 传感器寿命灯开 */
+            LED_LIFE_ON;
         }
 
         /* 1小时时间到就进行一次寿命比较 */
@@ -442,6 +380,71 @@ void main(void)
                     {
                         /* 传感器寿命灯关 */
                         LED_LIFE_OFF;
+                    }
+                }
+            }
+        }
+
+        /* 读取按键 P0.7 的值 检查自检功能是否触发 */
+        selfcheck_key = P07 & 0x01;
+        /* 测试键按下 */
+        if (selfcheck_key == 0x00)
+        {
+            /* 延时去抖 */
+            delay_1ms(30);
+            /* 确认测试键按下 */
+            if (selfcheck_key == 0x00)
+            {
+                /* 测试键长按标志未置位 */
+                if (!key_long_press_flag)
+                {
+                    timer2_key_long_press_count = 0;
+                    /* 置位测试键长按标志 */
+                    key_long_press_flag = true;
+                }
+                /* 这里等于6 通过实际测试出延时时间为11s 国标规定测试键按下后 在7~30s内 应触发继电器 阀 */
+                if (timer2_key_long_press_count >= 6)
+                {
+                    /* 阀检测 当阀关闭时 */
+                    if (!device_valve_state)
+                    {
+                        device_valve_state = true;
+
+                        /* 电磁阀开 */
+                        VALVE_ON;
+                        delay_1ms(30);
+
+                        /* 电磁阀关 */
+                        VALVE_OFF;
+                        delay_1ms(30);
+                    }
+                    /* 继电器开 */
+                    DELAY_ON;
+                    timer2_key_long_press_count = 8;
+                }
+                device_alarm(Alarm_Selfcheck);
+            }
+        }
+        /* 测试键未按下 */
+        else
+        {
+            /* 测试键长按标志已置位 */
+            if (key_long_press_flag)
+            {
+                /* 延时去抖 */
+                delay_1ms(30);
+                /* 确认测试键未按下 */
+                if (selfcheck_key != 0x00)
+                {
+                    /* 测试键长按标志清除 */
+                    key_long_press_flag = false;
+                    /* 阀状态标志清除 */
+                    device_valve_state = false;
+                    /* 传感器未预热完成 */
+                    if (!sensor_preheat_flag)
+                    {   
+                        /* 继电器关 */
+                        DELAY_OFF;
                     }
                 }
             }
@@ -633,9 +636,6 @@ void main(void)
         //     uart_send(0xAA);
         //     delay_1ms(3000);
         // }
-
-        // /* Brown-Out Detector 电源电压检测 */
-        // check_BOD();
 
         // /* YYY 已在设备初始化中进行了 ADC初始化 所以此处注释掉 */
         // // adc_init();
