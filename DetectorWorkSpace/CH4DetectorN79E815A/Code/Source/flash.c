@@ -20,6 +20,7 @@
 #include "flash.h"
 #include "device.h"
 #include "delay.h"
+#include "i2c.h"
 
 #include <intrins.h>
 
@@ -78,6 +79,11 @@ code uint16_t RECORD_FIRST_ADDRESS[11] =
     TEMP_PAGE_ADDR,             /*!< 9.用于备份存储临时数据的FLASH地址 */
     DEVICE_INFO_ADDR            /*!< 10.设备信息存储地址 */
 };
+
+/* 存储压缩之后的时间结果 */
+uint8_t zipped_time[4] = {0};
+/* 存储解压之后的时间结果 */
+uint8_t unzipped_time[5] = {0};
 
 /*******************************************************************************
  *                 File Static Variable Define Section ('static variable')
@@ -347,6 +353,88 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
     Disable_ISP_Mode();
 }
 
+/* 压缩当前时间 因每次存记录时都要读取当前的时间 */
+void zip_current_time(uint8_t *p)
+{
+    uint8_t i;
+
+    /* 暂时存储压缩之后的时间 */
+    uint8_t temp_zipped_time[4] = {0};
+    /* 暂时存储解压之后的时间 */
+    uint8_t temp_unzipped_time[5] = {0};
+
+    /* 调用一次读时间函数 约耗时500uS */
+    i2c_get_time();
+
+    /* second */
+    // i2c_time_code[0];
+    /* minute */
+    temp_unzipped_time[4] = i2c_time_code[1];
+    /* hour */
+    temp_unzipped_time[3] = i2c_time_code[2];
+    /* day */
+    temp_unzipped_time[2] = i2c_time_code[3];
+    /* week */
+    // i2c_time_code[4];
+    /* month */
+    temp_unzipped_time[1] = i2c_time_code[5];
+    /* year */
+    temp_unzipped_time[0] = i2c_time_code[6];
+
+    /* 通过移位压缩 */
+
+    /* flag & year 0000 00|11 */
+    temp_zipped_time[0] = (temp_unzipped_time[0] >> 4);
+    /* year & month 1111|1111 */
+    temp_zipped_time[1] = temp_unzipped_time[1];
+    temp_zipped_time[1] |= (temp_unzipped_time[0] << 4);
+    /* day & hour 1111 1|111 */
+    temp_zipped_time[2] = temp_unzipped_time[2];
+    temp_zipped_time[2] <<= 3;
+    temp_zipped_time[2] |= (temp_unzipped_time[3] >> 2);
+    /* hour & minute 11|11 1111 */
+    temp_zipped_time[3] = temp_unzipped_time[4];
+    temp_zipped_time[3] |= (temp_unzipped_time[3] << 6);
+
+    /* 拷贝至目标数组中 */
+    for ( i = 0; i < 4; i++)
+    {
+        *(p + i) = temp_zipped_time[i];
+    }    
+}
+
+void unzip_time(uint8_t *p, uint8_t *q)
+{
+    uint8_t i;
+
+    /* 暂时存储压缩之后的时间 */
+    uint8_t temp_zipped_time[4] = {0};
+    /* 暂时存储解压之后的时间 */
+    uint8_t temp_unzipped_time[5] = {0};
+
+    /* 拷贝至目标数组中 */
+    for ( i = 0; i < 4; i++)
+    {
+        temp_zipped_time[i] = *(p + i);
+    }
+
+    /* flag & year 0000 00|11 */
+    temp_unzipped_time[0] = ((temp_zipped_time[0] << 4) | (temp_zipped_time[1] >> 4));
+    /* year & month 1111|1111 */
+    temp_unzipped_time[1] = (temp_zipped_time[1] & 0x0F);
+    /* day & hour 1111 1|111 */
+    temp_unzipped_time[2] = ((temp_zipped_time[2] & 0xF8) >> 3);
+    /* hour & minute 11|11 1111 */
+    temp_unzipped_time[3] = (((temp_zipped_time[2] & 0x07) << 2) | ((temp_zipped_time[3] & 0xC0) >> 6));
+    temp_unzipped_time[4] = (temp_zipped_time[3] & 0x3F);
+
+    /* 拷贝至目标数组中 */
+    for ( i = 0; i < 5; i++)
+    {
+        *(q + i) = temp_unzipped_time[i];
+    }
+}
+
 /*******************************************************************************  
 * 函 数 名: uint8_t ReadRecordTotal(uint8_t FirstAddr_index)
 * 功能描述: 
@@ -481,14 +569,14 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 //             rxbuf[3] = 6;
 
 //             /* 调用一次读时间函数 约耗时500uS */
-//             Master_Read_Data();
+//             i2c_get_time();
 
-//             rxbuf[4] = (2000 + Time_Code[6]) / 256;
-//             rxbuf[5] = (2000 + Time_Code[6]) % 256;
-//             rxbuf[6] = Time_Code[5];
-//             rxbuf[7] = Time_Code[3];
-//             rxbuf[8] = Time_Code[2];
-//             rxbuf[9] = Time_Code[1];
+//             rxbuf[4] = (2000 + i2c_time_code[6]) / 256;
+//             rxbuf[5] = (2000 + i2c_time_code[6]) % 256;
+//             rxbuf[6] = i2c_time_code[5];
+//             rxbuf[7] = i2c_time_code[3];
+//             rxbuf[8] = i2c_time_code[2];
+//             rxbuf[9] = i2c_time_code[1];
 //             rxbuf[10] = Get_crc(rxbuf, FRAME_TOTAL_LEN[FirstAddr_index]);
 //             rxbuf[11] = 0x55;
 //             for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
@@ -659,7 +747,6 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len)
 *使用注意事项：
 1、既然是下标值，则不能大于数组的下标索引，否则该函数什么也不做。
 ********************************************************************************/
-// /* XXX 该函数可能解读和注释有误 */
 // void WriteRecordData(uint8_t FirstAddr_index)
 // {
 //     uint8_t i, j, k, cnt;

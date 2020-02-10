@@ -27,16 +27,6 @@
 /*******************************************************************************
  *                 Macro Define Section ('#define')
  ******************************************************************************/
-#define ALL_RECORD_COUNT        0
-#define ALARM_RECORD            1
-#define ALARM_RECOVERY_RECORD   2
-#define FAULT_RECORD            3
-#define FAULT_RECOVERY_RECORD   4
-#define POWER_DOWN_RECORD       5
-#define POWER_ON_RECORD         6
-#define SENSOR_EXPIRED_RECORD   7
-#define DEVICE_CURRENT_TIME     8
-
 #define  BYTES_OF_PAGE              128
 
 /*  
@@ -54,7 +44,7 @@
     (7 * 2 + 4 * 2 + 2 * 2) * 128 = 26 * 128 = 3328 
     (26 + 2) * 128 = 28 * 128 = 3584
     3328 / 1024 = 3.5k
-
+    16 - 3.5 = 12.5k
 */
 
 /* 共计九个地址 */
@@ -84,6 +74,16 @@
 #define  OFFSET_OF_SENSOR_EXPIRED   14  /* ZZZ 5 bytes */
 #define  OFFSET_OF_RTC              30  /* ZZZ 5 bytes */
 
+/* 各类记录类型在寻址数组中的标号 */
+#define ALL_RECORD_COUNT        0
+#define ALARM_RECORD            1
+#define ALARM_RECOVERY_RECORD   2
+#define FAULT_RECORD            3
+#define FAULT_RECOVERY_RECORD   4
+#define POWER_DOWN_RECORD       5
+#define POWER_ON_RECORD         6
+#define SENSOR_EXPIRED_RECORD   7
+#define DEVICE_CURRENT_TIME     8
 
 /*******************************************************************************
  *                 Struct Define Section ('typedef')

@@ -42,3 +42,7 @@
 #### Version 2.0
 
 - Uart is completed
+
+#### Version 2.1
+
+- Flash read & write completed
