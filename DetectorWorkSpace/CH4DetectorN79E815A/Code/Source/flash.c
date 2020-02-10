@@ -612,17 +612,17 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
     /* n1 记录序号 */
     uart_buffer[4] = record_number;
     /* n2 年高字节 */
-    uart_buffer[5] = (2000 + i2c_time_code[6]) / 256;
+    uart_buffer[5] = (2000 + unzipped_time[0]) / 256;
     /* n3 年低字节 */
-    uart_buffer[6] = (2000 + i2c_time_code[6]) % 256;
+    uart_buffer[6] = (2000 + unzipped_time[0]) % 256;
     /* n4 月 */
-    uart_buffer[7] = i2c_time_code[5];
+    uart_buffer[7] = unzipped_time[1];
     /* n5 日 */
-    uart_buffer[8] = i2c_time_code[3];
+    uart_buffer[8] = unzipped_time[2];
     /* n6 时 */
-    uart_buffer[9] = i2c_time_code[2];
+    uart_buffer[9] = unzipped_time[3];
     /* n7 分 */
-    uart_buffer[10] = i2c_time_code[1];
+    uart_buffer[10] = unzipped_time[4];
     /* 校验符 */
     uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
     /* 结束符 */

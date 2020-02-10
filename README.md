@@ -46,3 +46,7 @@
 #### Version 2.1
 
 - Flash read & write completed
+
+#### Version 2.2
+
+- Flash read & write record
