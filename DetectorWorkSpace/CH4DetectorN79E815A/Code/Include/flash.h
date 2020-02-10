@@ -99,6 +99,9 @@ void flash_erase_page(uint16_t start_addr);
 void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offset);
 void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len);
 
+void flash_write_record(uint8_t record_type);
+void flash_read_record(uint8_t record_type, uint8_t record_number);
+
 #endif /* _FLASH_H_ */
 /*******************************************************************************
  *                 End of File ('EOF')

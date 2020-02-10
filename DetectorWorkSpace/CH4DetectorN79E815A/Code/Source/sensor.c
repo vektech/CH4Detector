@@ -308,9 +308,6 @@ void sersor_demarcation(void)
                     format_to_device_time();
                     /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
                     EBO = 1;
-
-                    /* YYY 存储标定记录总数 */
-                    ///WriteRecordData(DEM_RECORD);
                     
                     /* 从Flash中读取 sensor_ch4_0 与 sensor_ch4_3500 数据 并进行比对 使用 i2c_time_code 暂存 */
                     flash_read_data(i2c_time_code, ADC_VALUE_OF_CH4_0_ADDR, 4);

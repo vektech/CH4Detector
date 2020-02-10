@@ -180,8 +180,8 @@ void main(void)
     if (device_first_power_on == false)
     {
         device_first_power_on = true;
-        /* YYY 进行上电记录 */
-        // WriteRecordData(UPPOWER_RECORD);
+        /* 进行上电记录 */
+        flash_write_record(POWER_ON_RECORD);
     }
 
     /* WARMUP 设置系统状态 device_status[1] &= 0x1f */
@@ -404,8 +404,8 @@ void main(void)
                         {
                             /* Brown-Out Detector 电源电压检测 */
                             check_BOD();
-                            /* YYY 写寿命到期记录 */
-                            // WriteRecordData(LIFE_RECORD);
+                            /* 写寿命到期记录 */
+                            flash_write_record(SENSOR_EXPIRED_RECORD);
                         }
                     }
                 }
@@ -544,8 +544,8 @@ void main(void)
                     write_no_exceeded_record_flag = true;
                     /* Brown-Out Detector 电源电压检测 */
                     check_BOD();
-                    /* YYY 向FLASH中 写报警记录 */
-                    // WriteRecordData(ALARM_RECORD);
+                    /* 向FLASH中 写报警记录 */
+                    flash_write_record(ALARM_RECORD);
                 }
 
                 /* 报警次数大于3等于 */
@@ -598,8 +598,8 @@ void main(void)
                     write_no_fault_record_flag = 1;
                     /* Brown-Out Detector 电源电压检测 */
                     check_BOD();
-                    /* YYY 向FLASH中 写故障记录 */
-                    // WriteRecordData(FAULT_RECORD);
+                    /* 向FLASH中 写故障记录 */
+                    flash_write_record(FAULT_RECORD);
                 }
             }
         }
@@ -629,8 +629,8 @@ void main(void)
                 write_no_exceeded_record_flag = false;
                 /* Brown-Out Detector 电源电压检测 */
                 check_BOD();
-                /* YYY 向FLASH中 写报警恢复记录 */
-                // WriteRecordData(ALARM_BACK_RECORD);
+                /* 向FLASH中 写报警恢复记录 */
+                flash_write_record(ALARM_RECOVERY_RECORD);
             }
 
             /* 未写传感器故障恢复记录 */
@@ -641,8 +641,8 @@ void main(void)
 
                 /* Brown-Out Detector 电源电压检测 */
                 check_BOD();
-                /* YYY向FLASH中 写故障恢复记录 */
-                // WriteRecordData(FAULT_BACK_RECORD);
+                /* 向FLASH中 写故障恢复记录 */
+                flash_write_record(FAULT_RECOVERY_RECORD);
             }
 
             /* 报警灯关 */
@@ -734,8 +734,8 @@ void main(void)
                             /* 若检查校验和通过 */
                             if ((rx_index >= (GB_READ_FRAME_LEN - 1)) && uart_buffer[4] == get_crc(uart_buffer, GB_READ_FRAME_LEN))
                             {
-                                /* YYY 查询记录 */
-                                // ReadRecordData(uart_buffer[2], uart_buffer[1]);
+                                /* 查询记录 */
+                                flash_read_record(uart_buffer[2], uart_buffer[1]);
                             }
                         }
                     }

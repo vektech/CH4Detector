@@ -21,6 +21,8 @@
 #include "device.h"
 #include "delay.h"
 #include "i2c.h"
+#include "uart.h"
+#include "utlities.h"
 
 #include <intrins.h>
 
@@ -64,6 +66,8 @@
 
 /* 每一项记录的总记录数 */
 code uint8_t max_of_each_record[9] = {0xff,200,200,100,100,50,50,1,0xff};
+/* 数据区域长度 */
+code uint8_t length_of_data_zone[9] = {0x07,0x07,0x07,0x07,0x07,0x07,0x07,0x07,0x06};
 
 code uint16_t RECORD_FIRST_ADDRESS[11] = 
 {
@@ -219,7 +223,7 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
         ISPAH = HIBYTE(start_addr + j);
 
         Trigger_ISP();        
-        delay_1ms(0);
+        // delay_1ms(0);
 
         /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
@@ -234,7 +238,7 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
         ISPAH = HIBYTE(TEMP_PAGE_ADDR + j);
         
         Trigger_ISP();
-        delay_1ms(0);
+        // delay_1ms(0);
     }
 
     Disable_ISP_Mode();
@@ -403,6 +407,7 @@ void zip_current_time(uint8_t *p)
     }    
 }
 
+/* 解压缩时间 p 存储压缩过的时间 q 存储解压后的时间 */
 void unzip_time(uint8_t *p, uint8_t *q)
 {
     uint8_t i;
@@ -432,6 +437,202 @@ void unzip_time(uint8_t *p, uint8_t *q)
     for ( i = 0; i < 5; i++)
     {
         *(q + i) = temp_unzipped_time[i];
+    }
+}
+
+/* ZZZ find_the_newest_record() find_next_record */
+
+void flash_write_record(uint8_t record_type)
+{
+    bit get_out = false;
+    bit first_record = false;
+
+    uint8_t pages_index;
+    uint8_t page_offset;
+    uint8_t record_first_byte;
+
+    uint16_t record_count;
+    uint16_t start_addr;
+    uint16_t renew_addr;
+    
+    /* 找到最新一条记录的存储地址 */
+    start_addr = RECORD_FIRST_ADDRESS[record_type];
+    for (pages_index = 0; pages_index < 128; pages_index++)
+    {
+        for (page_offset = 0; page_offset < 128; page_offset += 4)
+        {   
+            renew_addr = start_addr + (pages_index * 128) + page_offset;
+            flash_read_data(&record_first_byte, renew_addr, 1);
+            /* 已查询的记录条数 */
+            record_count++;
+            /* 第一次写记录 */
+            if ((record_first_byte & 0xFC) == 0xFC)
+            {   
+                first_record = true;
+                get_out = true;
+                break;
+            }
+            /* 找到了最新的记录 */
+            else if ((record_first_byte & 0xFC) == 0x80)
+            {
+                first_record = false;
+                get_out = true;
+            }
+            
+        }
+        if (get_out == true)
+        {
+            break;
+        }
+    }
+    
+    /* 并非第一次记录 处理此前最新的记录 */
+    if (!first_record)
+    {
+        /* 将此前最新的记录标志改为旧的记录标志 0000 00 */
+        record_first_byte &= 0x03;
+        /* 将更新标志后的记录首字节写回 */
+        flash_write_data(&record_first_byte, 1, (RECORD_FIRST_ADDRESS[record_type] + (pages_index * 128)), page_offset);
+
+        /* 若查询到的记录为存储在末尾的记录 */
+        if ((record_count + 1) >= max_of_each_record[record_type])
+        {
+            /* 存储指针 回到该记录存储区域头部 */
+            pages_index = 0;
+            page_offset = 0;
+            record_count = 0;
+        }
+        /* 此记录为本页最后一条记录 处理跨页 */
+        else if (page_offset == 124)
+        {
+            /* 存储指针 回到下一页头部 */
+            pages_index++;
+            page_offset = 0;
+        }
+        /* 正常情形 存储指针 移至下一个存储位置 */
+        else
+        {
+            page_offset += 4;
+        }
+        
+    }
+
+    /* 压缩当前时间至 zipped_time */
+    zip_current_time(zipped_time);
+
+    /* 设置最新数据标志 1000 00 */
+    zipped_time[0] &= 0x03;
+    zipped_time[0] |= 0x80;
+    /* 写记录 */
+    flash_write_data(zipped_time, 4, (RECORD_FIRST_ADDRESS[record_type] + (pages_index * 128)), page_offset);
+}
+
+void flash_read_record(uint8_t record_type, uint8_t record_number)
+{
+    bit get_out = false;
+    bit start_count_record = false;
+
+    uint8_t i;
+
+    uint8_t pages_index;
+    uint8_t page_offset;
+    uint8_t record_first_byte;
+
+    uint16_t record_count;
+    uint16_t record_index;
+    uint16_t start_addr;
+    uint16_t renew_addr;
+
+    /* 找到最新一条记录的存储地址 */
+    start_addr = RECORD_FIRST_ADDRESS[record_type];
+    for (pages_index = 0; pages_index < 128; pages_index++)
+    {
+        for (page_offset = 0; page_offset < 128; page_offset += 4)
+        {   
+            renew_addr = start_addr + (pages_index * 128) + page_offset;
+            flash_read_data(&record_first_byte, renew_addr, 1);
+
+            /* 已查询的记录条数 */
+            record_count++;
+            /* 若查询到的记录为存储在末尾的记录 */
+            if ((record_count + 1) >= max_of_each_record[record_type])
+            {
+                /* 存储指针 回到该记录存储区域头部 */
+                pages_index = 0;
+                page_offset = 0;
+                record_count = 0;
+            }
+
+            /* 未写过记录 */
+            if ((record_first_byte & 0xFC) == 0xFC)
+            {   
+                return;
+            }
+
+            /* 从最旧的记录开始计数 放在找到了最新的记录 record_index 可记录正确 */
+            if (start_count_record)
+            {
+                if (record_index < record_number)
+                {
+                    record_index++;
+                }
+                else
+                {
+                    get_out = true;
+                }
+            }
+
+            /* 找到了最新的记录 */
+            if ((record_first_byte & 0xFC) == 0x80)
+            {
+                /* 记录序号设置为0 表示为最新的记录 1 为最旧的记录 */
+                record_index = 0x00;
+                start_count_record = true;
+            }
+        }
+        if (get_out == true)
+        {
+            break;
+        }
+    }
+
+    flash_read_data(zipped_time, renew_addr, 4);
+
+    unzip_time(zipped_time, unzipped_time);
+
+    /* 起始符 */
+    uart_buffer[0] = 0xaa;
+    /* 记录序号 */
+    uart_buffer[1] = uart_buffer[1];
+    /* 记录类型 */
+    uart_buffer[2] = uart_buffer[2];
+    /* 数据域长度 除最后一条设备时间其余均为 0x07 */
+    uart_buffer[3] = 0x07;
+
+    /* n1 记录序号 */
+    uart_buffer[4] = record_number;
+    /* n2 年高字节 */
+    uart_buffer[5] = (2000 + i2c_time_code[6]) / 256;
+    /* n3 年低字节 */
+    uart_buffer[6] = (2000 + i2c_time_code[6]) % 256;
+    /* n4 月 */
+    uart_buffer[7] = i2c_time_code[5];
+    /* n5 日 */
+    uart_buffer[8] = i2c_time_code[3];
+    /* n6 时 */
+    uart_buffer[9] = i2c_time_code[2];
+    /* n7 分 */
+    uart_buffer[10] = i2c_time_code[1];
+    /* 校验符 */
+    uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
+    /* 结束符 */
+    uart_buffer[12] = 0x55;
+
+    for (i = 0; i < (0x07 + 0x06); i++)
+    {
+        uart_send(uart_buffer[i]);
+        /* 串口输出延时函数 关键参数 不可少 */
+        delay_1ms(5);
     }
 }
 
@@ -539,22 +740,22 @@ void unzip_time(uint8_t *p, uint8_t *q)
 //         /* Check 查询各类记录总数 */
 //         case 0:
 //         {
-//             rxbuf[0] = 0xaa;
-//             rxbuf[1] = 0;
-//             rxbuf[2] = 0;
-//             rxbuf[3] = 8;
+//             uart_buffer[0] = 0xaa;
+//             uart_buffer[1] = 0;
+//             uart_buffer[2] = 0;
+//             uart_buffer[3] = 8;
 //             /* XXX 旧版按照8类数据计算 新版需改为7类 */
 //             for (i = 1; i <= 8; i++)
 //             {   
 //                 /* 调用FLASH读总记录函数 */
-//                 rxbuf[i + 3] = ReadRecordTotal(i);
+//                 uart_buffer[i + 3] = ReadRecordTotal(i);
 //             }
-//             rxbuf[12] = Get_crc(rxbuf, FRAME_TOTAL_LEN[FirstAddr_index]);
-//             rxbuf[13] = 0x55;
+//             uart_buffer[12] = Get_crc(uart_buffer, FRAME_TOTAL_LEN[FirstAddr_index]);
+//             uart_buffer[13] = 0x55;
 
 //             for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
 //             {
-//                 UART_SEND(rxbuf[i]);
+//                 UART_SEND(uart_buffer[i]);
 //                 /* 串口输出延时函数 关键参数 不可少 */
 //                 delay_1ms(5);
 //             }
@@ -563,25 +764,25 @@ void unzip_time(uint8_t *p, uint8_t *q)
 //         /* Check 查询探测器的当前时间 */
 //         case 9:
 //         {
-//             rxbuf[0] = 0xaa;
-//             rxbuf[1] = 0;
-//             rxbuf[2] = 9;
-//             rxbuf[3] = 6;
+//             uart_buffer[0] = 0xaa;
+//             uart_buffer[1] = 0;
+//             uart_buffer[2] = 9;
+//             uart_buffer[3] = 6;
 
 //             /* 调用一次读时间函数 约耗时500uS */
 //             i2c_get_time();
 
-//             rxbuf[4] = (2000 + i2c_time_code[6]) / 256;
-//             rxbuf[5] = (2000 + i2c_time_code[6]) % 256;
-//             rxbuf[6] = i2c_time_code[5];
-//             rxbuf[7] = i2c_time_code[3];
-//             rxbuf[8] = i2c_time_code[2];
-//             rxbuf[9] = i2c_time_code[1];
-//             rxbuf[10] = Get_crc(rxbuf, FRAME_TOTAL_LEN[FirstAddr_index]);
-//             rxbuf[11] = 0x55;
+//             uart_buffer[4] = (2000 + i2c_time_code[6]) / 256;
+//             uart_buffer[5] = (2000 + i2c_time_code[6]) % 256;
+//             uart_buffer[6] = i2c_time_code[5];
+//             uart_buffer[7] = i2c_time_code[3];
+//             uart_buffer[8] = i2c_time_code[2];
+//             uart_buffer[9] = i2c_time_code[1];
+//             uart_buffer[10] = Get_crc(uart_buffer, FRAME_TOTAL_LEN[FirstAddr_index]);
+//             uart_buffer[11] = 0x55;
 //             for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
 //             {
-//                 UART_SEND(rxbuf[i]);
+//                 UART_SEND(uart_buffer[i]);
 //                 /* 串口输出延时函数 关键参数 不可少 */
 //                 delay_1ms(5);
 //             }
@@ -618,9 +819,9 @@ void unzip_time(uint8_t *p, uint8_t *q)
 //                     - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
 //                     - 读/校验模式下 在ISP完成后从ISPFD读出数据
 //                 */
-//                 rxbuf[1] = ISPFD;
+//                 uart_buffer[1] = ISPFD;
 //                 /* 查询到所需的记录号则退出 */
-//                 if (rxbuf[1] == recordnumber)
+//                 if (uart_buffer[1] == recordnumber)
 //                 {
 //                     break;
 //                 }
@@ -671,26 +872,26 @@ void unzip_time(uint8_t *p, uint8_t *q)
 //                         - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
 //                         - 读/校验模式下 在ISP完成后从ISPFD读出数据
 //                     */
-//                     rxbuf[i] = ISPFD;
+//                     uart_buffer[i] = ISPFD;
 //                 }
 //                 Disable_ISP_Mode();
 
 //                 /* 该条记录的记录号n1 */
 //                 /* 年高字节 */
-//                 rxbuf[5] = (rxbuf[6] + 2000) / 256;
+//                 uart_buffer[5] = (uart_buffer[6] + 2000) / 256;
 //                 /* 年低字节 */
-//                 rxbuf[6] = (rxbuf[6] + 2000) % 256;
-//                 rxbuf[0] = 0xaa;
-//                 rxbuf[2] = rxbuf[2];
-//                 rxbuf[3] = FRAME_DATA_LEN[FirstAddr_index];
-//                 rxbuf[4] = rxbuf[1];
-//                 rxbuf[11] = Get_crc(rxbuf, FRAME_TOTAL_LEN[FirstAddr_index]);
-//                 rxbuf[12] = 0x55;
+//                 uart_buffer[6] = (uart_buffer[6] + 2000) % 256;
+//                 uart_buffer[0] = 0xaa;
+//                 uart_buffer[2] = uart_buffer[2];
+//                 uart_buffer[3] = FRAME_DATA_LEN[FirstAddr_index];
+//                 uart_buffer[4] = uart_buffer[1];
+//                 uart_buffer[11] = Get_crc(uart_buffer, FRAME_TOTAL_LEN[FirstAddr_index]);
+//                 uart_buffer[12] = 0x55;
 //                 if (!j)
 //                 {
 //                     for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
 //                     {
-//                         UART_SEND(rxbuf[i]);
+//                         UART_SEND(uart_buffer[i]);
 //                         /* 串口输出延时函数 关键参数 不可少 */
 //                         delay_1ms(5);
 //                     }
@@ -705,21 +906,21 @@ void unzip_time(uint8_t *p, uint8_t *q)
 //                     /* 此处应传输传感器的失效日期 n1表示是否失效 
 //                         - n1 = 0 未失效 失效日期均为0 
 //                         - n1 = 1 已失效 失效日期为n2 - n7 */
-//                     rxbuf[0] = 0xaa;
-//                     rxbuf[1] = 1;
-//                     rxbuf[3] = FRAME_DATA_LEN[FirstAddr_index];
-//                     rxbuf[4] = 0;
-//                     rxbuf[5] = 0;
-//                     rxbuf[6] = 0;
-//                     rxbuf[7] = 0;
-//                     rxbuf[8] = 0;
-//                     rxbuf[9] = 0;
-//                     rxbuf[10] = 0;
-//                     rxbuf[11] = Get_crc(rxbuf, FRAME_TOTAL_LEN[FirstAddr_index]);
-//                     rxbuf[12] = 0x55;
+//                     uart_buffer[0] = 0xaa;
+//                     uart_buffer[1] = 1;
+//                     uart_buffer[3] = FRAME_DATA_LEN[FirstAddr_index];
+//                     uart_buffer[4] = 0;
+//                     uart_buffer[5] = 0;
+//                     uart_buffer[6] = 0;
+//                     uart_buffer[7] = 0;
+//                     uart_buffer[8] = 0;
+//                     uart_buffer[9] = 0;
+//                     uart_buffer[10] = 0;
+//                     uart_buffer[11] = Get_crc(uart_buffer, FRAME_TOTAL_LEN[FirstAddr_index]);
+//                     uart_buffer[12] = 0x55;
 //                     for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
 //                     {
-//                         UART_SEND(rxbuf[i]);
+//                         UART_SEND(uart_buffer[i]);
 //                         /* 串口输出延时函数 关键参数 不可少 */
 //                         delay_1ms(5);
 //                     }

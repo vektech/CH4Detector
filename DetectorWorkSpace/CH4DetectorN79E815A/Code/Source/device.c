@@ -198,8 +198,8 @@ void check_BOD(void)
         /* 电源灯关 */
         LED_POWER_OFF;
 
-        /* YYY 向FLASH中写掉电记录 */
-        ///WriteRecordData(DOWNPOWER_RECORD);
+        /* 向FLASH中写掉电记录 */
+        flash_write_record(POWER_DOWN_RECORD);
 
         /* 掉电计数复位 */
         device_power_down_count = 0;
