@@ -68,11 +68,16 @@
 #define  RTC_RECORD_ADDR            (DEVICE_INFO_ADDR + OFFSET_OF_RTC)
 
 /* 相对 DEVICE_INFO 页内地址偏移 */
-#define  OFFSET_OF_PRODUCTION_DATE  0   /* 5 bytes */  
-#define  OFFSET_OF_CH4_0            10  /* 2 bytes */  
-#define  OFFSET_OF_CH4_3500         12  /* 2 bytes */ 
-#define  OFFSET_OF_SENSOR_EXPIRED   14  /* ZZZ 5 bytes */
-#define  OFFSET_OF_RTC              30  /* ZZZ 5 bytes */
+/* 生产日期 */
+#define  OFFSET_OF_PRODUCTION_DATE  0   /* 5 bytes */
+/* CH4 0点AD值 */  
+#define  OFFSET_OF_CH4_0            10  /* 2 bytes */
+/* CH4 3500点AD值 */  
+#define  OFFSET_OF_CH4_3500         12  /* 2 bytes */
+/* 传感器过期日期 ZZZ 未使用 */ 
+#define  OFFSET_OF_SENSOR_EXPIRED   14  /* 5 bytes */
+/* 写时钟和出厂日期标志 life_check ZZZ */
+#define  OFFSET_OF_RTC              30  /* 5 bytes */
 
 /* 各类记录类型在寻址数组中的标号 */
 #define ALL_RECORD_COUNT        0

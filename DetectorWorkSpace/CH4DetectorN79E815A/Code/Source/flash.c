@@ -543,114 +543,155 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
     uint16_t start_addr;
     uint16_t renew_addr;
 
-    uart_send(0xaa);
-    delay_1ms(5);
-
-    /* 找到最新一条记录的存储地址 */
-    start_addr = RECORD_FIRST_ADDRESS[record_type];
-    
-    uart_send((uint8_t)((start_addr >> 8) & 0xFF));
-    delay_1ms(5);
-    uart_send((uint8_t)(start_addr & 0xFF));
-    delay_1ms(5);
-
-    for (pages_index = 0; pages_index < 128; pages_index++)
+    switch (record_type)
     {
-        for (page_offset = 0; page_offset < 128; page_offset += 4)
-        {   
-            renew_addr = start_addr + (pages_index * 128) + page_offset;
-            flash_read_data(&record_first_byte, renew_addr, 1);
-
-            /* 已查询的记录条数 */
-            record_count++;
-            /* 若查询到的记录为存储在末尾的记录 */
-            if ((record_count + 1) >= max_of_each_record[record_type])
-            {
-                /* 存储指针 回到该记录存储区域头部 */
-                pages_index = 0;
-                page_offset = 0;
-                record_count = 0;
-            }
-
-            /* 未写过记录 */
-            if ((record_first_byte & 0xFC) == 0xFC)
-            {   
-                uart_send(0xcc);
-                delay_1ms(5);
-                return;
-            }
-
-            /* 从最旧的记录开始计数 放在找到了最新的记录 record_index 可记录正确 */
-            if (start_count_record)
-            {
-                if (record_index < record_number)
-                {
-                    record_index++;
-                }
-                else
-                {
-                    get_out = true;
-                    uart_send(0xbb);
-                    delay_1ms(5);
-                }
-            }
-
-            /* 找到了最新的记录 */
-            if ((record_first_byte & 0xFC) == 0x80)
-            {
-                /* 记录序号设置为0 表示为最新的记录 1 为最旧的记录 */
-                /* ZZZ 找到最新的记录之后应该开始倒着查询 */
-                record_index = 0x00;
-                start_count_record = true;
-                uart_send(0xdd);
-                delay_1ms(5);
-            }
-        }
-        if (get_out == true)
+        /* 查询设备各项记录总条数 */
+        case 0x00:
         {
-            uart_send(0xee);
-            delay_1ms(5);
             break;
         }
-    }
+        /* 查询设备当前时间 */
+        case 0x08:
+        {
+            /* 获取当前的设备时间 */
+            i2c_get_time();
 
-    flash_read_data(zipped_time, renew_addr, 4);
+            /* 起始符 */
+            uart_buffer[0] = 0xaa;
+            /* 记录序号 */
+            uart_buffer[1] = uart_buffer[1];
+            /* 记录类型 */
+            uart_buffer[2] = uart_buffer[2];
+            /* 数据域长度 0x06 */
+            uart_buffer[3] = 0x06;
 
-    unzip_time(zipped_time, unzipped_time);
+            /* n1 年高字节 */
+            uart_buffer[4] = (2000 + i2c_time_code[6]) / 256;
+            /* n2 年低字节 */
+            uart_buffer[5] = (2000 + i2c_time_code[6]) % 256;
+            /* n3 月 */
+            uart_buffer[6] = i2c_time_code[5];
+            /* n4 日 */
+            uart_buffer[7] = i2c_time_code[3];
+            /* n5 时 */
+            uart_buffer[8] = i2c_time_code[2];
+            /* n6 分 */
+            uart_buffer[9] = i2c_time_code[1];
+            /* 校验符 */
+            uart_buffer[10] = get_crc(uart_buffer, (0x06 + 0x06 - 0x02));
+            /* 结束符 */
+            uart_buffer[11] = 0x55;
 
-    /* 起始符 */
-    uart_buffer[0] = 0xaa;
-    /* 记录序号 */
-    uart_buffer[1] = uart_buffer[1];
-    /* 记录类型 */
-    uart_buffer[2] = uart_buffer[2];
-    /* 数据域长度 除最后一条设备时间其余均为 0x07 */
-    uart_buffer[3] = 0x07;
+            for (i = 0; i < (0x06 + 0x06); i++)
+            {
+                uart_send(uart_buffer[i]);
+                /* 串口输出延时函数 关键参数 不可少 */
+                delay_1ms(5);
+            }
+            break;
+        }
+        default:
+        {
+            /* 找到最新一条记录的存储地址 */
+            start_addr = RECORD_FIRST_ADDRESS[record_type];
+            
+            uart_send((uint8_t)((start_addr >> 8) & 0xFF));
+            delay_1ms(5);
+            uart_send((uint8_t)(start_addr & 0xFF));
+            delay_1ms(5);
 
-    /* n1 记录序号 */
-    uart_buffer[4] = record_number;
-    /* n2 年高字节 */
-    uart_buffer[5] = (2000 + unzipped_time[0]) / 256;
-    /* n3 年低字节 */
-    uart_buffer[6] = (2000 + unzipped_time[0]) % 256;
-    /* n4 月 */
-    uart_buffer[7] = unzipped_time[1];
-    /* n5 日 */
-    uart_buffer[8] = unzipped_time[2];
-    /* n6 时 */
-    uart_buffer[9] = unzipped_time[3];
-    /* n7 分 */
-    uart_buffer[10] = unzipped_time[4];
-    /* 校验符 */
-    uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
-    /* 结束符 */
-    uart_buffer[12] = 0x55;
+            for (pages_index = 0; pages_index < 128; pages_index++)
+            {
+                for (page_offset = 0; page_offset < 128; page_offset += 4)
+                {   
+                    renew_addr = start_addr + (pages_index * 128) + page_offset;
+                    flash_read_data(&record_first_byte, renew_addr, 1);
 
-    for (i = 0; i < (0x07 + 0x06); i++)
-    {
-        uart_send(uart_buffer[i]);
-        /* 串口输出延时函数 关键参数 不可少 */
-        delay_1ms(5);
+                    /* 已查询的记录条数 */
+                    record_count++;
+                    /* 若查询到的记录为存储在末尾的记录 */
+                    if ((record_count + 1) >= max_of_each_record[record_type])
+                    {
+                        /* 存储指针 回到该记录存储区域头部 */
+                        pages_index = 0;
+                        page_offset = 0;
+                        record_count = 0;
+                    }
+
+                    /* 未写过记录 */
+                    if ((record_first_byte & 0xFC) == 0xFC)
+                    {   
+                        return;
+                    }
+
+                    /* 从最旧的记录开始计数 放在找到了最新的记录 record_index 可记录正确 */
+                    if (start_count_record)
+                    {
+                        if (record_index < record_number)
+                        {
+                            record_index++;
+                        }
+                        else
+                        {
+                            get_out = true;
+                        }
+                    }
+
+                    /* 找到了最新的记录 */
+                    if ((record_first_byte & 0xFC) == 0x80)
+                    {
+                        /* 记录序号设置为0 表示为最新的记录 1 为最旧的记录 */
+                        /* ZZZ 找到最新的记录之后应该开始倒着查询 */
+                        record_index = 0x00;
+                        start_count_record = true;
+                    }
+                }
+                if (get_out == true)
+                {
+                    break;
+                }
+            }
+
+            flash_read_data(zipped_time, renew_addr, 4);
+
+            unzip_time(zipped_time, unzipped_time);
+
+            /* 起始符 */
+            uart_buffer[0] = 0xaa;
+            /* 记录序号 */
+            uart_buffer[1] = uart_buffer[1];
+            /* 记录类型 */
+            uart_buffer[2] = uart_buffer[2];
+            /* 数据域长度 除最后一条设备时间其余均为 0x07 */
+            uart_buffer[3] = 0x07;
+
+            /* n1 记录序号 */
+            uart_buffer[4] = record_number;
+            /* n2 年高字节 */
+            uart_buffer[5] = (2000 + unzipped_time[0]) / 256;
+            /* n3 年低字节 */
+            uart_buffer[6] = (2000 + unzipped_time[0]) % 256;
+            /* n4 月 */
+            uart_buffer[7] = unzipped_time[1];
+            /* n5 日 */
+            uart_buffer[8] = unzipped_time[2];
+            /* n6 时 */
+            uart_buffer[9] = unzipped_time[3];
+            /* n7 分 */
+            uart_buffer[10] = unzipped_time[4];
+            /* 校验符 */
+            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
+            /* 结束符 */
+            uart_buffer[12] = 0x55;
+
+            for (i = 0; i < (0x07 + 0x06); i++)
+            {
+                uart_send(uart_buffer[i]);
+                /* 串口输出延时函数 关键参数 不可少 */
+                delay_1ms(5);
+            }
+            break;
+        }
     }
 }
 
