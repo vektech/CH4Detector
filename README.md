@@ -50,3 +50,7 @@
 #### Version 2.2
 
 - Flash read & write record
+
+#### Version 2.3
+
+- 0x08 device time OK
