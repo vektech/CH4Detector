@@ -84,6 +84,36 @@ code uint16_t RECORD_FIRST_ADDRESS[11] =
     DEVICE_INFO_ADDR            /*!< 10.设备信息存储地址 */
 };
 
+// code uint16_t RECORD_LAST_ADDRESS[11] = 
+// {
+//     0xffff,                                                                     /*!< 0.查询各类记录总数 */
+//     ALARM_RECORD_ADDR          + max_of_each_record[ALARM_RECORD] * 4,          /*!< 1.报警记录 200 */
+//     ALARM_RECOVERY_RECORD_ADDR + max_of_each_record[ALARM_RECOVERY_RECORD] * 4, /*!< 2.报警恢复记录 200 */
+//     FAULT_RECORD_ADDR          + max_of_each_record[FAULT_RECORD] * 4,          /*!< 3.故障记录 100 */
+//     FAULT_RECOVERY_RECORD_ADDR + max_of_each_record[FAULT_RECOVERY_RECORD] * 4, /*!< 4.故障恢复记录 100 */
+//     POWER_DOWN_RECORD_ADDR     + max_of_each_record[POWER_DOWN_RECORD] * 4,     /*!< 5.掉电记录 50 */
+//     POWER_ON_RECORD_ADDR       + max_of_each_record[POWER_ON_RECORD] * 4,       /*!< 6.上电记录 50 */
+//     SENSOR_EXPIRED_RECORD_ADDR, /*!< 7.传感器失效记录 1 */
+//     0xffff,                     /*!< 8.内部定时器当前时间 */
+//     TEMP_PAGE_ADDR,             /*!< 9.用于备份存储临时数据的FLASH地址 */
+//     DEVICE_INFO_ADDR            /*!< 10.设备信息存储地址 */
+// };
+
+code uint16_t RECORD_LAST_ADDRESS[11] = 
+{
+    0xffff,                               /*!< 0.查询各类记录总数 */
+    ALARM_RECORD_ADDR          + 200 * 4, /*!< 1.报警记录 200 */
+    ALARM_RECOVERY_RECORD_ADDR + 200 * 4, /*!< 2.报警恢复记录 200 */
+    FAULT_RECORD_ADDR          + 100 * 4, /*!< 3.故障记录 100 */
+    FAULT_RECOVERY_RECORD_ADDR + 100 * 4, /*!< 4.故障恢复记录 100 */
+    POWER_DOWN_RECORD_ADDR     + 50 * 4,  /*!< 5.掉电记录 50 */
+    POWER_ON_RECORD_ADDR       + 50 * 4,  /*!< 6.上电记录 50 */
+    SENSOR_EXPIRED_RECORD_ADDR,           /*!< 7.传感器失效记录 1 */
+    0xffff,                               /*!< 8.内部定时器当前时间 */
+    TEMP_PAGE_ADDR,                       /*!< 9.用于备份存储临时数据的FLASH地址 */
+    DEVICE_INFO_ADDR                      /*!< 10.设备信息存储地址 */
+};
+
 /* 存储压缩之后的时间结果 */
 uint8_t zipped_time[4] = {0};
 /* 存储解压之后的时间结果 */
@@ -444,110 +474,166 @@ void unzip_time(uint8_t *p, uint8_t *q)
 
 void flash_write_record(uint8_t record_type)
 {
-    bit get_out = false;
-    bit first_record = false;
-
-    uint8_t pages_index;
+    uint8_t page_addr;
     uint8_t page_offset;
     uint8_t record_first_byte;
 
-    uint16_t record_count;
+    uint16_t record_total;
+
     uint16_t start_addr;
-    uint16_t renew_addr;
+    uint16_t record_addr;
+    uint16_t newest_addr;
+
+    uint8_t temp_record_total[2];
+    uint8_t temp_newest_addr[2];
     
-    /* 找到最新一条记录的存储地址 */
+    /* 找到该类型记录的首地址 */
     start_addr = RECORD_FIRST_ADDRESS[record_type];
-    for (pages_index = 0; pages_index < 128; pages_index++)
+
+    /* 读取记录总数 */
+    flash_read_data(temp_record_total, start_addr, 2);
+    /* 记录总数的高位 */
+    record_total = temp_record_total[0];
+    /* 记录总数的低位 */
+    record_total = (record_total << 8) + temp_record_total[1];
+
+    /* 读取最新记录的地址 */
+    flash_read_data(temp_record_total, start_addr + 2, 2);
+    /* 最新记录地址的高位 */
+    newest_addr = temp_newest_addr[0];
+    /* 最新记录地址的低位 */
+    newest_addr = (newest_addr << 8) + temp_newest_addr[1];
+
+    /* 该记录类型未存储过记录 */
+    if ((record_total == 0xFFFF) && (newest_addr == 0xFFFF))
     {
-        for (page_offset = 0; page_offset < 128; page_offset += 4)
-        {   
-            renew_addr = start_addr + (pages_index * 128) + page_offset;
-            flash_read_data(&record_first_byte, renew_addr, 1);
-            /* 已查询的记录条数 */
-            record_count++;
-            /* 第一次写记录 */
-            if ((record_first_byte & 0xFC) == 0xFC)
-            {   
-                first_record = true;
-                get_out = true;
-                break;
-            }
-            /* 找到了最新的记录 */
-            else if ((record_first_byte & 0xFC) == 0x80)
-            {
-                first_record = false;
-                get_out = true;
-            }
-            
-        }
-        if (get_out == true)
-        {
-            break;
-        }
+        /* 更新记录总数 */
+        record_total = 0x0001;
+
+        /* 计算写新纪录的地址 */
+        record_addr = start_addr + 4;
     }
-    
-    /* 并非第一次记录 处理此前最新的记录 */
-    if (!first_record)
+    /* 有已存储的记录 */
+    else
     {
+        /* 少于所规定的最大记录条数 */
+        if (record_total < max_of_each_record[record_type])
+        {
+            record_total++;
+        }
+
+        /* 读取前最新的记录的首字节 */
+        flash_read_data(&record_first_byte, newest_addr, 1);
         /* 将此前最新的记录标志改为旧的记录标志 0000 00 */
         record_first_byte &= 0x03;
         /* 将更新标志后的记录首字节写回 */
-        flash_write_data(&record_first_byte, 1, (RECORD_FIRST_ADDRESS[record_type] + (pages_index * 128)), page_offset);
+        page_addr = start_addr + ((newest_addr - start_addr) / 128) * 128;
+        page_offset = (newest_addr - start_addr) % 128;
+        flash_write_data(&record_first_byte, 1, page_addr, page_offset);
 
-        /* 若查询到的记录为存储在末尾的记录 */
-        if ((record_count + 1) >= max_of_each_record[record_type])
+        /* 如果最新记录的地址位于记录区域的末尾 */
+        if (newest_addr == RECORD_LAST_ADDRESS[record_type])
         {
-            /* 存储指针 回到该记录存储区域头部 */
-            pages_index = 0;
-            page_offset = 0;
-            record_count = 0;
+            /* 计算写新纪录的地址 回至记录区域首部 +4 byte 即开始的第一条记录 */
+            record_addr = start_addr + 4;
         }
-        /* 此记录为本页最后一条记录 处理跨页 */
-        else if (page_offset == 124)
-        {
-            /* 存储指针 回到下一页头部 */
-            pages_index++;
-            page_offset = 0;
-        }
-        /* 正常情形 存储指针 移至下一个存储位置 */
         else
         {
-            page_offset += 4;
+            /* 计算写新纪录的地址 */
+            record_addr = newest_addr + 4;
         }
-        
     }
+
+    /* 更新最新记录的地址 页地址和页内偏移 */
+    newest_addr = record_addr;
+    page_addr = start_addr + ((newest_addr - start_addr) / 128) * 128;
+    page_offset = (newest_addr - start_addr) % 128;
 
     /* 压缩当前时间至 zipped_time */
     zip_current_time(zipped_time);
-
     /* 设置最新数据标志 1000 00 */
     zipped_time[0] &= 0x03;
     zipped_time[0] |= 0x80;
-    /* 写记录 */
-    flash_write_data(zipped_time, 4, (RECORD_FIRST_ADDRESS[record_type] + (pages_index * 128)), page_offset);
+    /* 写记录 需要计算页首地址 */
+    flash_write_data(zipped_time, 4, page_addr, page_offset);
+
+    /* 写记录总数 */
+    temp_record_total[0] = (uint8_t)((record_total >> 8) & 0xFF);
+    temp_record_total[1] = (uint8_t)(record_total & 0xFF);
+    flash_write_data(temp_record_total, 2, start_addr, 0);
+    /* 写最新记录地址 */
+    temp_newest_addr[0] = (uint8_t)((newest_addr >> 8) & 0xFF);
+    temp_newest_addr[1] = (uint8_t)(newest_addr & 0xFF);
+    flash_write_data(newest_addr, 2, start_addr, 2);
 }
 
 void flash_read_record(uint8_t record_type, uint8_t record_number)
 {
-    bit get_out = false;
-    bit start_count_record = false;
-
     uint8_t i;
 
-    uint8_t pages_index;
+    uint8_t page_addr;
     uint8_t page_offset;
-    uint8_t record_first_byte;
 
-    uint16_t record_count;
-    uint16_t record_index;
+    uint16_t record_total;
+
     uint16_t start_addr;
-    uint16_t renew_addr;
+    uint16_t record_addr;
+    uint16_t newest_addr;
+
+    uint8_t temp_record_total[2];
+    uint8_t temp_newest_addr[2];
 
     switch (record_type)
     {
         /* 查询设备各项记录总条数 */
         case 0x00:
         {
+            /* ZZZ SENSOR_EXPIRED_RECORD 除外 */
+            for (i = ALARM_RECORD; i < SENSOR_EXPIRED_RECORD; i++)
+            {
+                /* 找到该类型记录的首地址 */
+                start_addr = RECORD_FIRST_ADDRESS[record_type];
+
+                /* 读取记录总数 此处仅用低8位 temp_record_total[1] 即可 */
+                flash_read_data(temp_record_total, start_addr, 2);
+
+                /* 该记录类型未存储过记录 此处仅用低8位 temp_record_total[1] 即可 */
+                if (temp_record_total[1] = 0xFF)
+                {
+                    uart_buffer[i + 3] = 0x00;
+                }
+                else
+                {
+                    uart_buffer[i + 3] = temp_record_total[1];
+                }
+            }
+            
+            /* ZZZ SENSOR_EXPIRED_RECORD */
+            uart_buffer[10] = 0x00;
+
+            /* 起始符 */
+            uart_buffer[0] = 0xaa;
+            /* 记录序号 */
+            uart_buffer[1] = uart_buffer[1];
+            /* 记录类型 */
+            uart_buffer[2] = uart_buffer[2];
+            /* 数据域长度 除最后一条设备时间其余均为 0x07 */
+            uart_buffer[3] = 0x07;
+
+            /* uart_buffer[4] 至 uart_buffer[11] 已处理 */
+
+            /* 校验符 */
+            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
+            /* 结束符 */
+            uart_buffer[12] = 0x55;
+
+            for (i = 0; i < (0x07 + 0x06); i++)
+            {
+                uart_send(uart_buffer[i]);
+                /* 串口输出延时函数 关键参数 不可少 */
+                delay_1ms(5);
+            }
+
             break;
         }
         /* 查询设备当前时间 */
@@ -592,69 +678,51 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
         }
         default:
         {
-            /* 找到最新一条记录的存储地址 */
+            /* 找到该类型记录的首地址 */
             start_addr = RECORD_FIRST_ADDRESS[record_type];
-            
-            uart_send((uint8_t)((start_addr >> 8) & 0xFF));
-            delay_1ms(5);
-            uart_send((uint8_t)(start_addr & 0xFF));
-            delay_1ms(5);
 
-            for (pages_index = 0; pages_index < 128; pages_index++)
+            /* 读取记录总数 */
+            flash_read_data(temp_record_total, start_addr, 2);
+            /* 记录总数的高位 */
+            record_total = temp_record_total[0];
+            /* 记录总数的低位 */
+            record_total = (record_total << 8) + temp_record_total[1];
+
+            /* 读取最新记录的地址 */
+            flash_read_data(temp_record_total, start_addr + 2, 2);
+            /* 最新记录地址的高位 */
+            newest_addr = temp_newest_addr[0];
+            /* 最新记录地址的低位 */
+            newest_addr = (newest_addr << 8) + temp_newest_addr[1];
+
+            /* 该记录类型未存储过记录 */
+            if ((record_total == 0xFFFF) && (newest_addr == 0xFFFF))
             {
-                for (page_offset = 0; page_offset < 128; page_offset += 4)
-                {   
-                    renew_addr = start_addr + (pages_index * 128) + page_offset;
-                    flash_read_data(&record_first_byte, renew_addr, 1);
-
-                    /* 已查询的记录条数 */
-                    record_count++;
-                    /* 若查询到的记录为存储在末尾的记录 */
-                    if ((record_count + 1) >= max_of_each_record[record_type])
-                    {
-                        /* 存储指针 回到该记录存储区域头部 */
-                        pages_index = 0;
-                        page_offset = 0;
-                        record_count = 0;
-                    }
-
-                    /* 未写过记录 */
-                    if ((record_first_byte & 0xFC) == 0xFC)
-                    {   
-                        return;
-                    }
-
-                    /* 从最旧的记录开始计数 放在找到了最新的记录 record_index 可记录正确 */
-                    if (start_count_record)
-                    {
-                        if (record_index < record_number)
-                        {
-                            record_index++;
-                        }
-                        else
-                        {
-                            get_out = true;
-                        }
-                    }
-
-                    /* 找到了最新的记录 */
-                    if ((record_first_byte & 0xFC) == 0x80)
-                    {
-                        /* 记录序号设置为0 表示为最新的记录 1 为最旧的记录 */
-                        /* ZZZ 找到最新的记录之后应该开始倒着查询 */
-                        record_index = 0x00;
-                        start_count_record = true;
-                    }
-                }
-                if (get_out == true)
+                for (i = 4; i < 11; i++)
                 {
-                    break;
+                    uart_buffer[i] = 0x00;
                 }
             }
+            else
+            {
+                flash_read_data(zipped_time, newest_addr, 4);
+                unzip_time(zipped_time, unzipped_time);
 
-            flash_read_data(zipped_time, renew_addr, 4);
-
-            unzip_time(zipped_time, unzipped_time);
+                /* n1 记录序号 */
+                uart_buffer[4] = record_number;
+                /* n2 年高字节 */
+                uart_buffer[5] = (2000 + unzipped_time[0]) / 256;
+                /* n3 年低字节 */
+                uart_buffer[6] = (2000 + unzipped_time[0]) % 256;
+                /* n4 月 */
+                uart_buffer[7] = unzipped_time[1];
+                /* n5 日 */
+                uart_buffer[8] = unzipped_time[2];
+                /* n6 时 */
+                uart_buffer[9] = unzipped_time[3];
+                /* n7 分 */
+                uart_buffer[10] = unzipped_time[4];
+            }
 
             /* 起始符 */
             uart_buffer[0] = 0xaa;
@@ -665,20 +733,8 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             /* 数据域长度 除最后一条设备时间其余均为 0x07 */
             uart_buffer[3] = 0x07;
 
-            /* n1 记录序号 */
-            uart_buffer[4] = record_number;
-            /* n2 年高字节 */
-            uart_buffer[5] = (2000 + unzipped_time[0]) / 256;
-            /* n3 年低字节 */
-            uart_buffer[6] = (2000 + unzipped_time[0]) % 256;
-            /* n4 月 */
-            uart_buffer[7] = unzipped_time[1];
-            /* n5 日 */
-            uart_buffer[8] = unzipped_time[2];
-            /* n6 时 */
-            uart_buffer[9] = unzipped_time[3];
-            /* n7 分 */
-            uart_buffer[10] = unzipped_time[4];
+            /* uart_buffer[4] 至 uart_buffer[11] 已处理 */
+
             /* 校验符 */
             uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
             /* 结束符 */
@@ -694,631 +750,6 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
         }
     }
 }
-
-/*******************************************************************************  
-* 函 数 名: uint8_t ReadRecordTotal(uint8_t FirstAddr_index)
-* 功能描述: 
-* 函数说明: 无
-* 调用函数: 无
-* 全局变量: 无
-* 输    入: FirstAddr_index:（是这个数组RECORD_FIRST_ADDRESS的下标），
-
-* 返    回:  
-* 设 计 者： 杜瑞杰                  日期：2015.08.18
-* 修 改 者：                         日期：
-* 版    本：V1.00
-*使用注意事项：
-1、既然是下标值，则不能大于数组的下标索引，否则该函数什么也不做。
-********************************************************************************/
-// uint8_t ReadRecordTotal(uint8_t FirstAddr_index)
-// {
-//     uint8_t i, k1, k2;
-
-//     /* 读取数据类型超范围 XXX 应大于最后的类型即第8类 返回0 */
-//     if (FirstAddr_index <= 0 || (FirstAddr_index >= (sizeof(RECORD_FIRST_ADDRESS) - 1)))
-//         return 0;
-
-//     Enable_ISP_Mode();
-//     /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
-//         - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
-//         - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-//         - [4] FCEN      = 0B 无其他设置 只能为0;
-//         - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
-//         */
-//     ISPCN = FLASH_READ_DATA;
-//     /* ISPAL ISP地址低字节 */
-//     ISPAL = LOBYTE(RECORD_FIRST_ADDRESS[FirstAddr_index]);
-//     /* ISPAH ISP地址高字节 */
-//     ISPAH = HIBYTE(RECORD_FIRST_ADDRESS[FirstAddr_index]);
-
-//     k1 = 0;
-//     /* XXX  计算某类记录的总条数 */
-//     for (i = 0; i < RecordLEN[FirstAddr_index]; i++)
-//     {
-//         Trigger_ISP();
-
-//         /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//             - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//             - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//         */
-//         k2 = ISPFD;
-//         /* 如果读取的第一条记录的记录号 大于此类型的最大记录数 或者小于等于k1(上一条的记录号) 或者等于0 */
-//         if (k2 > RecordLEN[FirstAddr_index] || (k2 <= k1) || (k2 == 0))
-//         {
-//             /* 表示存储的记录第一遍还没存满 如 1 0xff 0xff (共3条记录的记录号) */
-//             Disable_ISP_Mode();
-//             return i;
-//         }
-
-//         /* ISPAL ISP地址低字节 加上此类型单条记录所占的字节数 即下一条记录的起始地址 */
-//         ISPAL += NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index];
-
-//         /* 使用k1 存储此条记录的记录号 */
-//         k1 = k2;
-//         /* Brown-Out Detector 电源电压检测 */
-//         check_BOD();
-//     }
-//     Disable_ISP_Mode();
-
-//     /* 表示记录已存满 且首地址存的那条记录的记录号正好是从1开始 递增到RecordLEN[FirstAddr_index] 如：1 2 3 (共3条记录的记录号) */
-//     if (i == RecordLEN[FirstAddr_index])
-//         return RecordLEN[FirstAddr_index];
-
-//     return 0;
-// }
-
-/*******************************************************************************  
-* 函 数 名: void ReadRecordData(uint8_t FirstAddr_index, uint8_t recordnumber)
-* 功能描述: 根据一个首地址的下标值,和记录号，来读一条记录。
-* 函数说明: 无
-* 调用函数: 无
-* 全局变量: 无
-* 输    入: FirstAddr_index:（是这个数组RECORD_FIRST_ADDRESS的下标），
-            recordnumber:记录号是不能大于RecordLEN[FirstAddr_index]的。
-* 返    回:  
-* 设 计 者： 杜瑞杰                  日期：2015.08.18
-* 修 改 者：                         日期：
-* 版    本：V1.00
-*使用注意事项：
-1、既然是下标值，则不能大于数组的下标索引，否则该函数什么也不做。
-********************************************************************************/
-// void ReadRecordData(uint8_t FirstAddr_index, uint8_t recordnumber)
-// {
-//     uint8_t i, j = FirstAddr_index & 0x80;
-
-//     FirstAddr_index = FirstAddr_index & 0x7f;
-//     if ((FirstAddr_index >= (sizeof(RECORD_FIRST_ADDRESS))))
-//         return;
-//     if (recordnumber > RecordLEN[FirstAddr_index])
-//         return;
-
-//     demaAD[0] = demaAD[1] = demaAD[2] = demaAD[3] = 0;
-
-//     switch (FirstAddr_index)
-//     {
-//         /* Check 查询各类记录总数 */
-//         case 0:
-//         {
-//             uart_buffer[0] = 0xaa;
-//             uart_buffer[1] = 0;
-//             uart_buffer[2] = 0;
-//             uart_buffer[3] = 8;
-//             /* XXX 旧版按照8类数据计算 新版需改为7类 */
-//             for (i = 1; i <= 8; i++)
-//             {   
-//                 /* 调用FLASH读总记录函数 */
-//                 uart_buffer[i + 3] = ReadRecordTotal(i);
-//             }
-//             uart_buffer[12] = Get_crc(uart_buffer, FRAME_TOTAL_LEN[FirstAddr_index]);
-//             uart_buffer[13] = 0x55;
-
-//             for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
-//             {
-//                 UART_SEND(uart_buffer[i]);
-//                 /* 串口输出延时函数 关键参数 不可少 */
-//                 delay_1ms(5);
-//             }
-//             break;
-//         }
-//         /* Check 查询探测器的当前时间 */
-//         case 9:
-//         {
-//             uart_buffer[0] = 0xaa;
-//             uart_buffer[1] = 0;
-//             uart_buffer[2] = 9;
-//             uart_buffer[3] = 6;
-
-//             /* 调用一次读时间函数 约耗时500uS */
-//             i2c_get_time();
-
-//             uart_buffer[4] = (2000 + i2c_time_code[6]) / 256;
-//             uart_buffer[5] = (2000 + i2c_time_code[6]) % 256;
-//             uart_buffer[6] = i2c_time_code[5];
-//             uart_buffer[7] = i2c_time_code[3];
-//             uart_buffer[8] = i2c_time_code[2];
-//             uart_buffer[9] = i2c_time_code[1];
-//             uart_buffer[10] = Get_crc(uart_buffer, FRAME_TOTAL_LEN[FirstAddr_index]);
-//             uart_buffer[11] = 0x55;
-//             for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
-//             {
-//                 UART_SEND(uart_buffer[i]);
-//                 /* 串口输出延时函数 关键参数 不可少 */
-//                 delay_1ms(5);
-//             }
-//             break;
-//         }
-//         /* 查询单项记录号为recordnumber的记录 */
-//         default:
-//         {
-//             /* 非数据记录查询 */
-//             if (recordnumber == 0)
-//                 return;
-
-//             Enable_ISP_Mode();
-
-//             /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
-//                 - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
-//                 - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-//                 - [4] FCEN      = 0B 无其他设置 只能为0;
-//                 - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
-//                 */
-//             ISPCN = FLASH_READ_DATA;
-//             /* ISPAL ISP地址低字节 根据类型计算数据首地址 */
-//             ISPAL = LOBYTE(RECORD_FIRST_ADDRESS[FirstAddr_index]);
-//             /* ISPAH ISP地址高字节 根据类型计算数据首地址 */
-//             ISPAH = HIBYTE(RECORD_FIRST_ADDRESS[FirstAddr_index]);
-
-//             /* 查询的记录数要小于等于该记录所规定的总条数 */
-//             for (i = 0; i < RecordLEN[FirstAddr_index]; i++)
-//             {
-//                 Trigger_ISP();
-//                 delay_1ms(0);
-
-//                 /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                     - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                     - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//                 */
-//                 uart_buffer[1] = ISPFD;
-//                 /* 查询到所需的记录号则退出 */
-//                 if (uart_buffer[1] == recordnumber)
-//                 {
-//                     break;
-//                 }
-//                 /* ISPAL ISP地址低字节 加上此类型单条记录所占的字节数 即下一条记录的起始地址 */
-//                 ISPAL += NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index];
-//             }
-
-//             /* 若查询到的记录号小于等于该记录所规定的总条数 */
-//             if (i < RecordLEN[FirstAddr_index])
-//             {
-//                 /* 若读取的记录类型为标定值 */
-//                 if (FirstAddr_index == DEM_RECORD)
-//                 {
-//                     for (i = 0; i < 4; i++)
-//                     {
-//                         /* ISPAL ISP地址低字节 加1 */
-//                         ISPAL++;
-//                         /* 读取标定值 */
-//                         Trigger_ISP();
-//                         _nop_();
-//                         _nop_();
-//                         _nop_();
-//                         _nop_();
-//                         _nop_();
-//                         delay_1ms(0);
-//                         /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                             - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                             - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//                         */
-//                         /* 将标定值读入数组中 */
-//                         demaAD[i] = ISPFD;
-//                     }
-//                 }
-
-//                 /* 此处发送 年 月 日 时 分 共5个字节的数据 */
-//                 for (i = 10; i > 5; i--)
-//                 {
-//                     /* ISPAL ISP地址低字节 */
-//                     ISPAL++;
-//                     Trigger_ISP();
-//                     _nop_();
-//                     _nop_();
-//                     _nop_();
-//                     _nop_();
-//                     _nop_();
-//                     delay_1ms(0);
-//                     /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                         - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                         - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//                     */
-//                     uart_buffer[i] = ISPFD;
-//                 }
-//                 Disable_ISP_Mode();
-
-//                 /* 该条记录的记录号n1 */
-//                 /* 年高字节 */
-//                 uart_buffer[5] = (uart_buffer[6] + 2000) / 256;
-//                 /* 年低字节 */
-//                 uart_buffer[6] = (uart_buffer[6] + 2000) % 256;
-//                 uart_buffer[0] = 0xaa;
-//                 uart_buffer[2] = uart_buffer[2];
-//                 uart_buffer[3] = FRAME_DATA_LEN[FirstAddr_index];
-//                 uart_buffer[4] = uart_buffer[1];
-//                 uart_buffer[11] = Get_crc(uart_buffer, FRAME_TOTAL_LEN[FirstAddr_index]);
-//                 uart_buffer[12] = 0x55;
-//                 if (!j)
-//                 {
-//                     for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
-//                     {
-//                         UART_SEND(uart_buffer[i]);
-//                         /* 串口输出延时函数 关键参数 不可少 */
-//                         delay_1ms(5);
-//                     }
-//                 }
-//             }
-//             /* 若查询到的记录号大于该记录所规定的总条数 */
-//             else
-//             {
-//                 /* 若要读取的是传感器寿命 XXX 需进行修改*/
-//                 if (FirstAddr_index == LIFE_RECORD)
-//                 {
-//                     /* 此处应传输传感器的失效日期 n1表示是否失效 
-//                         - n1 = 0 未失效 失效日期均为0 
-//                         - n1 = 1 已失效 失效日期为n2 - n7 */
-//                     uart_buffer[0] = 0xaa;
-//                     uart_buffer[1] = 1;
-//                     uart_buffer[3] = FRAME_DATA_LEN[FirstAddr_index];
-//                     uart_buffer[4] = 0;
-//                     uart_buffer[5] = 0;
-//                     uart_buffer[6] = 0;
-//                     uart_buffer[7] = 0;
-//                     uart_buffer[8] = 0;
-//                     uart_buffer[9] = 0;
-//                     uart_buffer[10] = 0;
-//                     uart_buffer[11] = Get_crc(uart_buffer, FRAME_TOTAL_LEN[FirstAddr_index]);
-//                     uart_buffer[12] = 0x55;
-//                     for (i = 0; i < FRAME_TOTAL_LEN[FirstAddr_index]; i++)
-//                     {
-//                         UART_SEND(uart_buffer[i]);
-//                         /* 串口输出延时函数 关键参数 不可少 */
-//                         delay_1ms(5);
-//                     }
-//                 }
-//                 Disable_ISP_Mode();
-//                 return;
-//             }
-//             break;
-//         }
-//     }
-// }
-
-/*******************************************************************************  
-* 函 数 名: void WriteRecordData(uint8_t FirstAddr_index)
-* 功能描述: 根据一个首地址的下标值,来写一条记录。
-* 函数说明: 无
-* 调用函数: 无
-* 全局变量: 无
-* 输    入: FirstAddr_index:（是这个数组RECORD_FIRST_ADDRESS的下标），
-
-* 返    回:  
-* 设 计 者： 杜瑞杰                  日期：2015.08.18
-* 修 改 者：                         日期：
-* 版    本：V1.00
-*使用注意事项：
-1、既然是下标值，则不能大于数组的下标索引，否则该函数什么也不做。
-********************************************************************************/
-// void WriteRecordData(uint8_t FirstAddr_index)
-// {
-//     uint8_t i, j, k, cnt;
-//     uint16_t writeaddres, readaddres;
-
-//     if (FirstAddr_index <= 0 || (FirstAddr_index >= (sizeof(RECORD_FIRST_ADDRESS) - 1)))
-//         return;
-
-//     /* Erase copy_Adress 用于写入时备份用 */
-//     flash_erase_page(TEMP_PAGE_ADDR);
-    
-//     /* copy to copy_Adress */
-//     i = 0;
-//     cnt = 0;
-//     for (j = 0; j < RecordLEN[FirstAddr_index]; j++)
-//     {
-//         /* 计算该类型记录中每条记录的首地址 */
-//         writeaddres = RECORD_FIRST_ADDRESS[FirstAddr_index] + j * NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index];
-//     REREAD:
-//         Enable_ISP_Mode();
-//         /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
-//             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
-//             - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-//             - [4] FCEN      = 0B 无其他设置 只能为0;
-//             - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
-//             */
-//         ISPCN = FLASH_READ_DATA;
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL = LOBYTE(writeaddres);
-//         /* ISPAH ISP地址高字节 */
-//         ISPAH = HIBYTE(writeaddres);
-
-//         /* 读一条记录 */
-//         for (k = 0; k < NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index]; k++)
-//         {
-//             Trigger_ISP();
-//             /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                 - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                 - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//             */
-//             copyeep[k] = ISPFD;
-//             /* ISPAL ISP地址低字节 */
-//             ISPAL++;
-//         }
-//         Disable_ISP_Mode();
-
-//         /* copyeep[0] 为该条记录的记录标号 */
-//         if ((copyeep[0] != (j + 1)) || copyeep[0] > RecordLEN[FirstAddr_index] || (copyeep[0] <= i) || (copyeep[0] == 0))
-//         {
-//             /* 表示存储的记录第一遍还没存满。如 1 0xff 0xff 如共3条记录的记录号 */
-//             if (copyeep[0] != 0xff)
-//             {
-//                 if (++cnt <= 2)
-//                 {
-//                     Delay_1ms(100);
-//                     goto REREAD;
-//                 }
-//             }
-
-//             break;
-//         }
-//         i = copyeep[0];
-
-//         /* 计算写入的地址 */
-//         writeaddres = TEMP_PAGE_ADDR + j * NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index];
-//         Enable_ISP_Mode();
-
-//         /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
-//             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
-//             - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-//             - [4] FCEN      = 0B 无其他设置 只能为0;
-//             - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
-//             */
-//         ISPCN = BYTE_PROGRAM_DATA;
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL = LOBYTE(writeaddres);
-//         /* ISPAH ISP地址高字节 */
-//         ISPAH = HIBYTE(writeaddres);
-
-//         /* 写入一条记录至 copy_Adress */
-//         for (k = 0; k < NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index]; k++)
-//         {
-//             /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                 - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                 - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//             */
-//             ISPFD = copyeep[k];
-//             Trigger_ISP();
-//             _nop_();
-//             _nop_();
-//             _nop_();
-//             _nop_();
-//             _nop_();
-//             /* ISPAL ISP地址低字节 */
-//             ISPAL++;
-//         }
-//         Disable_ISP_Mode();
-//     }
-
-//     /* XXX 擦除该记录类型所在的页 */
-//     flash_erase_page(RECORD_FIRST_ADDRESS[FirstAddr_index]);
-
-//     /* XXX */
-//     if (j < RecordLEN[FirstAddr_index])
-//         readaddres = TEMP_PAGE_ADDR;
-//     else
-//     {
-//         /* XXX */
-//         readaddres = TEMP_PAGE_ADDR + NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index];
-//         /* XXX 满记录 */
-//         j = RecordLEN[FirstAddr_index] - 1;
-//     }
-
-//     /* 在备份页中循环读记录 和 写记录在该类型所属的Flash地址中 */
-//     for (i = 0; i < j; i++)
-//     {
-//         /* 写地址 = 读地址 + 当前记录数i * 每条记录的长度 */
-//         writeaddres = readaddres + i * NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index];
-//         Enable_ISP_Mode();
-//         /* ISPCN = 0000 0000B ISP控制 选择操作APROM或者数据FLASH 进行FLASH读数据
-//             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
-//             - [5] FOEN      = 0B 选择 读数据; 1B 选择 页擦除 或者 编程;
-//             - [4] FCEN      = 0B 无其他设置 只能为0;
-//             - [3:0] FCTRL   = 0000B 读数据; 0010B 页擦除; 0001B 编程; 
-//             */
-//         ISPCN = FLASH_READ_DATA;
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL = LOBYTE(writeaddres);
-//         /* ISPAH ISP地址高字节 */
-//         ISPAH = HIBYTE(writeaddres);
-
-//         /* 从备份页 XXX 的写地址 中读取一条记录 存入copyeep[]中 */
-//         for (k = 0; k < NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index]; k++)
-//         {
-//             Trigger_ISP();
-//             /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                 - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                 - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//             */
-//             copyeep[k] = ISPFD;
-//             /* ISPAL ISP地址低字节 */
-//             ISPAL++;
-//         }
-//         Disable_ISP_Mode();
-
-//         /* 写地址 = 该记录类型首地址 + 当前记录数i * 每条记录的长度 */
-//         writeaddres = RECORD_FIRST_ADDRESS[FirstAddr_index] + i * NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index];
-//         Enable_ISP_Mode();
-
-//         /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
-//             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
-//             - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-//             - [4] FCEN      = 0B 无其他设置 只能为0;
-//             - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
-//             */
-//         ISPCN = BYTE_PROGRAM_DATA;
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL = LOBYTE(writeaddres);
-//         /* ISPAH ISP地址高字节 */
-//         ISPAH = HIBYTE(writeaddres);
-
-//         /* 写 第一条 记录至该记录类型的FLASH中 */
-//         /* 读地址大于备份页的首地址 */
-//         if (readaddres > TEMP_PAGE_ADDR)
-//         {
-//             /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                 - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                 - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//             */
-//             /* 新的记录标号 */
-//             ISPFD = i + 1;
-//             Trigger_ISP();
-
-//             /* ISPAL ISP地址低字节 */
-//             ISPAL++;
-//             /* 写一条记录 */
-//             for (k = 1; k < NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index]; k++)
-//             {
-//                 /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                     - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                     - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//                 */
-//                 ISPFD = copyeep[k];
-//                 Trigger_ISP();
-//                 _nop_();
-//                 _nop_();
-//                 _nop_();
-//                 _nop_();
-//                 _nop_();
-//                 /* ISPAL ISP地址低字节 */
-//                 ISPAL++;
-//             }
-//         }
-//         /* 读地址小于等于备份页的首地址 */
-//         else
-//         {
-//             /* 写一条记录 */
-//             for (k = 0; k < NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index]; k++)
-//             {
-//                 /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//                     - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//                     - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//                 */
-//                 ISPFD = copyeep[k];
-//                 Trigger_ISP();
-//                 _nop_();
-//                 _nop_();
-//                 _nop_();
-//                 _nop_();
-//                 _nop_();
-//                 /* ISPAL ISP地址低字节 */
-//                 ISPAL++;
-//             }
-//         }
-//         Disable_ISP_Mode();
-//     }
-
-//     /* 写其余记录至该类型的FLASH中 新记录号 = 旧记录号 + 1 */
-//     writeaddres = RECORD_FIRST_ADDRESS[FirstAddr_index] + j * NUMBER_OF_BYTES_PER_RECORD[FirstAddr_index];
-//     Enable_ISP_Mode();
-
-//     /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
-//         - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
-//         - [5] FOEN      = 1B 选择 页擦除 或者 编程; 0B 选择 读数据;
-//         - [4] FCEN      = 0B 无其他设置 只能为0;
-//         - [3:0] FCTRL   = 0001B 编程; 0000B 读数据; 0010B 页擦除; 
-//         */
-//     ISPCN = BYTE_PROGRAM_DATA;
-//     /* ISPAL ISP地址低字节 */
-//     ISPAL = LOBYTE(writeaddres);
-//     /* ISPAH ISP地址高字节 */
-//     ISPAH = HIBYTE(writeaddres);
-
-//     /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 
-//         - 编程模式下    用户需要在触发ISP之前写数据到ISPFD里 
-//         - 读/校验模式下 在ISP完成后从ISPFD读出数据
-//     */
-//     /* 更新的记录号 */
-//     ISPFD = j + 1;
-//     Trigger_ISP();
-//     _nop_();
-//     _nop_();
-//     _nop_();
-//     _nop_();
-//     _nop_();
-//     /* ISPAL ISP地址低字节 */
-//     ISPAL++;
-
-//     /* 表示写的是标定记录 比其它的记录多了个0点AD 和标定点AD */
-//     if (FirstAddr_index == DEM_RECORD)
-//     {
-//         /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 */
-//         ISPFD = ch4_0;
-//         Trigger_ISP();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL++;
-
-//         /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 */
-//         ISPFD = ch4_0 >> 8;
-//         Trigger_ISP();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL++;
-
-//         /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 */
-//         ISPFD = ch4_3500;
-//         Trigger_ISP();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL++;
-
-//         /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 */
-//         ISPFD = ch4_3500 >> 8;
-//         Trigger_ISP();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL++;
-//     }
-
-//     /* 记录日期: 年 月 日 时 分 */
-//     for (i = 1; i < 6; i++)
-//     {
-//         /* ISPFD ISP内存数据 该字节包含将要读或写进内存空间的数据 */
-//         ISPFD = timeCOPY[i];
-//         Trigger_ISP();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         _nop_();
-//         /* ISPAL ISP地址低字节 */
-//         ISPAL++;
-//     }
-//     Disable_ISP_Mode();
-// }
 
 /*******************************************************************************
  *                 File Static Function Define Section ('static function')
