@@ -48,14 +48,14 @@
 */
 
 /* 共计九个地址 */
-#define  ALARM_RECORD_ADDR          100 * 128 /* +7 */
-#define  ALARM_RECOVERY_RECORD_ADDR 107 * 128 /* +7 */
-#define  FAULT_RECORD_ADDR          114 * 128 /* +4 */
-#define  FAULT_RECOVERY_RECORD_ADDR 118 * 128 /* +4 */
-#define  POWER_DOWN_RECORD_ADDR     122 * 128 /* +2 */
-#define  POWER_ON_RECORD_ADDR       124 * 128 /* +2 */
-#define  TEMP_PAGE_ADDR             126 * 128 /* 倒数第二页 */
-#define  DEVICE_INFO_ADDR           127 * 128 /* 最后一页 */
+#define  ALARM_RECORD_ADDR          100 * 128 /* +7 0x3200 delta = 0x0000 */
+#define  ALARM_RECOVERY_RECORD_ADDR 107 * 128 /* +7 0x3580 delta = 0x0380 */
+#define  FAULT_RECORD_ADDR          114 * 128 /* +4 0x3900 delta = 0x0700 */
+#define  FAULT_RECOVERY_RECORD_ADDR 118 * 128 /* +4 0x3B00 delta = 0x0900 */
+#define  POWER_DOWN_RECORD_ADDR     122 * 128 /* +2 0x3D00 delta = 0x0B00 */
+#define  POWER_ON_RECORD_ADDR       124 * 128 /* +2 0x3E00 delta = 0x0C00 */
+#define  TEMP_PAGE_ADDR             126 * 128 /* +1 0x3F00 delta = 0x0D00 */
+#define  DEVICE_INFO_ADDR           127 * 128 /* +0 0x3F80 delta = 0x0D80 */
 
 /* FLASH存储记录的开始地址 */
 #define RECORD_START_ADDR           ALARM_RECORD_ADDR

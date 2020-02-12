@@ -123,8 +123,8 @@ void main(void)
     uint8_t production_date[5] = {0};
 
     /* 传感器寿命到期检测标志 */
-    uint8_t life_check[4] = {0x00, 0x00, 0x00, 0x00};
     uint8_t life_check_flag = false;
+    uint8_t life_check[4] = {0x00, 0x00, 0x00, 0x00};
     
     /* 写传感器寿命到期记录标志 */
     bit write_expired_record_flag = false;
@@ -288,10 +288,10 @@ void main(void)
                 check_BOD();
                 /* 读取当前时间 存入Time_Code */
                 i2c_get_time();
-                /* ZZZ */
+                /* 读取的时间非法 */
                 if (i2c_time_code[6] < 15 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
                 {
-                    /* ZZZ 将 i2c_time_code 转换为 time_data */
+                    /* 将 i2c_time_code 转换为 time_data */
                     format_to_RTC_time();
                 }
                 else
@@ -720,14 +720,6 @@ void main(void)
                     /* 检测查询的记录类型 应小于0x09 */
                     if (uart_buffer[2] <= GB_COMMAND_MAX)
                     {
-                        uart_send(0xAA);
-                        delay_1ms(5);
-                        uart_send(0xBB);
-                        delay_1ms(5);
-                        uart_send(0xCC);
-                        delay_1ms(5);
-                        uart_send(0xDD);
-                        delay_1ms(5);
                         /* 所查询的索引号小于该类型的记录总数 */
                         if ((uart_buffer[1] <= max_of_each_record[uart_buffer[2]]))
                         {
@@ -785,22 +777,26 @@ void main(void)
                             {
                                 if (get_crc(uart_buffer, COMMAND_LEN_WRITE_CLOCK[0]) == uart_buffer[COMMAND_LEN_WRITE_CLOCK[0] - 2])
                                 {
+                                    /* 如果输入的时间不正确 */
+                                    /* 年 错误 */
                                     if (uart_buffer[2] < 15)
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
                                         goto WR_CLOCK_EROR;
                                     }
+                                    /* 月 错误 */
                                     if (uart_buffer[3] > 12 || (!uart_buffer[3]))
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
                                         goto WR_CLOCK_EROR;
                                     }
+                                    /* 日 错误 */
                                     if (uart_buffer[4] > 31 || (!uart_buffer[4]))
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
                                         goto WR_CLOCK_EROR;
                                     }
-
+                                    /* 时、分、秒 错误 */
                                     if ((uart_buffer[5] > 23) || (uart_buffer[6] > 59) || (uart_buffer[7] > 59))
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
@@ -812,6 +808,7 @@ void main(void)
                                         /* 十六进制转为BCD码 */
                                         i2c_time_code[8 - i] = hex2bcd(uart_buffer[i]);
                                     }
+
                                     i2c_time_code[0] = i2c_time_code[1];
                                     i2c_time_code[1] = i2c_time_code[2];
                                     i2c_time_code[2] = i2c_time_code[3];
@@ -822,12 +819,14 @@ void main(void)
                                     i2c_set_time();
 
                                     delay_1ms(100);
+
+                                    /* 重新读出RTC时间 */
                                     i2c_get_time();
+
                                     /* 月：表示写入时间不成功 */
                                     if (i2c_time_code[5] != uart_buffer[3] && (i2c_time_code[5] != (uart_buffer[3] + 1)))
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
-                                        ;
                                     }
                                     else
                                     {
@@ -859,13 +858,13 @@ void main(void)
                                 else
                                 {
                                     uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
-                                    ;
                                 }
                             }
                             else
                             {
                                 uart_buffer[3] = (device_status[1] & 0xe0) | BYTELOSS_EROR;
                             }
+
                         WR_CLOCK_EROR:
                             uart_buffer[2] = device_status[0];
                             uart_buffer[COMMAND_LEN_WRITE_CLOCK[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_WRITE_CLOCK[1]);
@@ -877,13 +876,15 @@ void main(void)
                                 delay_1ms(5);
                             }
 
-                            /* 表示时钟写入成功 没有发生错误 */
+                            /* 表示时钟输入成功 没有发生错误 */
                             if ((uart_buffer[3] & (~0xe0)) == 0)
                             {
+                                /* 时钟写入标志 */
                                 life_check[0] = 0xa5;
                                 life_check[1] = 0x36;
-                                life_check_flag = 1;
+                                life_check_flag = true;
 
+                                /* 将时钟写入标志存在FLASH中 */
                                 flash_write_data(life_check, 4, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
                             }
                             break;
@@ -895,16 +896,32 @@ void main(void)
                             {
                                 if (get_crc(uart_buffer, COMMAND_LEN_WR_DATEOFPRODUCTION[0]) == uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[0] - 2]) //
                                 {
+                                    /* 写出厂日期至FLASH */
                                     flash_write_data(&uart_buffer[2], 5, PRODUCTION_DATE_ADDR, 0);
+                                    /* 读取出厂日期 */
                                     flash_read_data(&uart_buffer[7], PRODUCTION_DATE_ADDR, 5);
+
+                                    /* 月 */
                                     if (uart_buffer[8] != uart_buffer[3])
+                                    {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    }
                                     else
+                                    {
                                         uart_buffer[3] = (device_status[1] & 0xe0);
-                                    if (uart_buffer[7] != uart_buffer[2])
+                                    }
+
+                                    /* 年 */
+                                    if (uart_buffer[7] != uart_buffer[2])   
+                                    {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    }
+
+                                    /* 日 */
                                     if (uart_buffer[9] != uart_buffer[4])
+                                    {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                    }
                                 }
                                 else
                                 {
@@ -915,6 +932,7 @@ void main(void)
                             {
                                 uart_buffer[3] = (device_status[1] & 0xe0) | BYTELOSS_EROR;
                             }
+
                             uart_buffer[2] = device_status[0];
                             uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_WR_DATEOFPRODUCTION[1]);
                             uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[1] - 1] = 0x55;
@@ -930,7 +948,7 @@ void main(void)
                             {
                                 life_check[2] = 0x5a;
                                 life_check[3] = 0xe7;
-                                life_check_flag = 1;
+                                life_check_flag = true;
 
                                 flash_write_data(life_check, 4, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
                             }
@@ -954,11 +972,13 @@ void main(void)
                     break;
                 }
                 /* 0xac开头 为读命令 */
+                /* Se:AC 0X CRC 55 */
                 case 0xac:
                 {
                     switch (uart_buffer[1])
                     {
                         /* 读时间 带秒 */
+                        /* Re:AC 01 00 20 年 月 日 时 分 秒 CRC 55 */
                         case 0x01:
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_RE_CLOCK[0]) == uart_buffer[COMMAND_LEN_RE_CLOCK[0] - 2])
@@ -969,14 +989,22 @@ void main(void)
                             {
                                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
                             }
+                            /* 设备状态字 */
                             uart_buffer[2] = device_status[0];
                             i2c_get_time();
+                            /* 年 */
                             uart_buffer[4] = i2c_time_code[6];
+                            /* 月 */
                             uart_buffer[5] = i2c_time_code[5];
+                            /* 日 */
                             uart_buffer[6] = i2c_time_code[3];
+                            /* 时 */
                             uart_buffer[7] = i2c_time_code[2];
+                            /* 分 */
                             uart_buffer[8] = i2c_time_code[1];
+                            /* 秒 */
                             uart_buffer[9] = i2c_time_code[0];
+
                             uart_buffer[COMMAND_LEN_RE_CLOCK[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_CLOCK[1]);
                             uart_buffer[COMMAND_LEN_RE_CLOCK[1] - 1] = 0x55;
                             for (i = 0; i < COMMAND_LEN_RE_CLOCK[1]; i++)
@@ -989,6 +1017,7 @@ void main(void)
                         }
 
                         /* 读模组型号等信息 */
+                        /* Re:AC 02 00 20 01 00 00 00 00 00 CRC 55 */
                         case 0x02:
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_RE_MODEL[0]) == uart_buffer[COMMAND_LEN_RE_MODEL[0] - 2])
@@ -1019,6 +1048,7 @@ void main(void)
                         }
                         
                         /* 读AD */
+                        /* Re:AC 03 00 20 ADH ADL CRC 55 */
                         case 0x03:
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_RE_CURTAD[0]) == uart_buffer[COMMAND_LEN_RE_CURTAD[0] - 2])
@@ -1045,6 +1075,7 @@ void main(void)
                         }
 
                         /* 读标定相关信息 */
+                        /* Re:AC 04 00 20 CH4_0H CH4_0L CH4_3500H CH4_3500L CRC 55 */
                         case 0x04:
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_RE_DEMA[0]) == uart_buffer[COMMAND_LEN_RE_DEMA[0] - 2])
@@ -1059,7 +1090,7 @@ void main(void)
 
                             /* 从FLASH中读取标定数据 ch4_0 & ch4_3500 因两个标定数据地址相连共 4 bytes */
                             flash_read_data(sensor_demarcation_result, ADC_VALUE_OF_CH4_0_ADDR, 4);
-
+                            /* ZZZ */
                             uart_buffer[8] = uart_buffer[4];
                             uart_buffer[4] = uart_buffer[5];
                             uart_buffer[5] = uart_buffer[8];
@@ -1078,6 +1109,7 @@ void main(void)
                         }
 
                         /* 读传感器寿命的超始时间 即出厂日期 */
+                        /* Re:AC 05 00 20 XX XX XX XX XX CRC 55 */
                         case 0x05:
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_RE_DATEOFPRODUCTION[0]) == uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[0] - 2])
@@ -1090,9 +1122,9 @@ void main(void)
                                 uart_buffer[2] = device_status[0];
                                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
                             }
+
                             /* 从FLASH中读取出厂日期 */
                             flash_read_data(&uart_buffer[4], PRODUCTION_DATE_ADDR, 5);
-
                             uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_DATEOFPRODUCTION[1]);
                             uart_buffer[COMMAND_LEN_RE_DATEOFPRODUCTION[1] - 1] = 0x55;
                             for (i = 0; i < COMMAND_LEN_RE_DATEOFPRODUCTION[1]; i++)
@@ -1105,6 +1137,7 @@ void main(void)
                         }
 
                         /* 读序列号 */
+                        /* Re:AC 06 00 20 XX XX XX XX XX XX XX XX CRC 55 */
                         case 0x06:
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_RE_SERIALNUM[0]) == uart_buffer[COMMAND_LEN_RE_SERIALNUM[0] - 2])
@@ -1135,7 +1168,7 @@ void main(void)
                         
                         default:
                         {
-
+                            /* Re:AC 0X 00 25 CRC 55 */
                             uart_buffer[2] = device_status[0];
                             uart_buffer[3] = (device_status[1] & 0xe0) | COMMAND_EROR;
                             uart_buffer[4] = get_crc(uart_buffer, 6);
@@ -1151,7 +1184,7 @@ void main(void)
                     }
                     break;
                 }
-                /* 0xad开头 为XXX命令 */
+                /* 0xad开头 为取消预热命令 并未实现功能 */
                 case 0xad:
                 {
                     switch (uart_buffer[1])

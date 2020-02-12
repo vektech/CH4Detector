@@ -50,6 +50,7 @@ void format_to_device_time(void)
     time_data[1] = i2c_time_code[1];
     time_data[2] = i2c_time_code[2];
     time_data[3] = i2c_time_code[3];
+    /* 略去了i2c_time_code[4] 星期 */
     time_data[4] = i2c_time_code[5];
     time_data[5] = i2c_time_code[6];
 }
@@ -58,6 +59,7 @@ void format_to_RTC_time(void)
 {
     i2c_time_code[6] = time_data[5];
     i2c_time_code[5] = time_data[4];
+    /* 略去了i2c_time_code[4] 星期 */
     i2c_time_code[3] = time_data[3];
     i2c_time_code[2] = time_data[2];
     i2c_time_code[1] = time_data[1];
