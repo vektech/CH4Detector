@@ -543,8 +543,17 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
     uint16_t start_addr;
     uint16_t renew_addr;
 
+    uart_send(0xaa);
+    delay_1ms(5);
+
     /* 找到最新一条记录的存储地址 */
     start_addr = RECORD_FIRST_ADDRESS[record_type];
+    
+    uart_send((uint8_t)((start_addr >> 8) & 0xFF));
+    delay_1ms(5);
+    uart_send((uint8_t)(start_addr & 0xFF));
+    delay_1ms(5);
+
     for (pages_index = 0; pages_index < 128; pages_index++)
     {
         for (page_offset = 0; page_offset < 128; page_offset += 4)
@@ -566,6 +575,8 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             /* 未写过记录 */
             if ((record_first_byte & 0xFC) == 0xFC)
             {   
+                uart_send(0xcc);
+                delay_1ms(5);
                 return;
             }
 
@@ -579,6 +590,8 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 else
                 {
                     get_out = true;
+                    uart_send(0xbb);
+                    delay_1ms(5);
                 }
             }
 
@@ -586,12 +599,17 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             if ((record_first_byte & 0xFC) == 0x80)
             {
                 /* 记录序号设置为0 表示为最新的记录 1 为最旧的记录 */
+                /* ZZZ 找到最新的记录之后应该开始倒着查询 */
                 record_index = 0x00;
                 start_count_record = true;
+                uart_send(0xdd);
+                delay_1ms(5);
             }
         }
         if (get_out == true)
         {
+            uart_send(0xee);
+            delay_1ms(5);
             break;
         }
     }
