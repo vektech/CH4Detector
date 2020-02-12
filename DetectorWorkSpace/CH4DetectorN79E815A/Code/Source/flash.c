@@ -564,15 +564,12 @@ void flash_write_record(uint8_t record_type)
     /* 写最新记录地址 */
     temp_newest_addr[0] = (uint8_t)((newest_addr >> 8) & 0xFF);
     temp_newest_addr[1] = (uint8_t)(newest_addr & 0xFF);
-    flash_write_data(newest_addr, 2, start_addr, 2);
+    flash_write_data(temp_newest_addr, 2, start_addr, 2);
 }
 
 void flash_read_record(uint8_t record_type, uint8_t record_number)
 {
     uint8_t i;
-
-    uint8_t page_addr;
-    uint8_t page_offset;
 
     uint16_t record_total;
 
@@ -598,7 +595,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 flash_read_data(temp_record_total, start_addr, 2);
 
                 /* 该记录类型未存储过记录 此处仅用低8位 temp_record_total[1] 即可 */
-                if (temp_record_total[1] = 0xFF)
+                if (temp_record_total[1] == 0xFF)
                 {
                     uart_buffer[i + 3] = 0x00;
                 }
@@ -694,6 +691,9 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             newest_addr = temp_newest_addr[0];
             /* 最新记录地址的低位 */
             newest_addr = (newest_addr << 8) + temp_newest_addr[1];
+
+            /* ZZZ Temp */
+            record_addr = newest_addr;
 
             /* 该记录类型未存储过记录 */
             if ((record_total == 0xFFFF) && (newest_addr == 0xFFFF))
