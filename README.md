@@ -54,3 +54,7 @@
 #### Version 2.3
 
 - 0x08 device time OK
+
+#### Version 2.4
+
+- flash record new method
