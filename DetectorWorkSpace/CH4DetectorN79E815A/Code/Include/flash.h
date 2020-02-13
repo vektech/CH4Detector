@@ -106,6 +106,7 @@ void flash_read_data(uint8_t *p, uint16_t start_addr, uint8_t len);
 
 void flash_write_record(uint8_t record_type);
 void flash_read_record(uint8_t record_type, uint8_t record_number);
+void flash_test_record(uint8_t record_type);
 
 #endif /* _FLASH_H_ */
 /*******************************************************************************

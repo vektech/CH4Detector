@@ -739,7 +739,7 @@ void main(void)
                 {
                     switch (uart_buffer[1])
                     {
-                        /* 擦除所有EEP 包括所有记录和设备信息 */
+                        /* 擦除所有EEP 包括所有记录和设备信息 ZZZ 不可用需修改 */
                         case 0x00:
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_EASE_REC[0]) == uart_buffer[COMMAND_LEN_EASE_REC[0] - 2])
@@ -1185,7 +1185,7 @@ void main(void)
                     }
                     break;
                 }
-                /* 0xad开头 为取消预热命令 并未实现功能 */
+                /* 0xad开头 为取消预热命令 */
                 case 0xad:
                 {
                     switch (uart_buffer[1])
@@ -1195,6 +1195,7 @@ void main(void)
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_CANCEL_WARMUP[0]) == uart_buffer[COMMAND_LEN_CANCEL_WARMUP[0] - 2])
                             {
+                                /* 取消预热 */
                                 STATUS1_NOMAL;
                                 uart_buffer[3] = device_status[1] & 0xe0;
                                 sensor_preheat_flag = 1;
@@ -1212,6 +1213,27 @@ void main(void)
                                 /* 串口输出 延时函数 关键参数 */
                                 delay_1ms(5);
                             }
+                            break;
+                        }
+                        /* 函数测试 */
+                        case 0x02:
+                        {
+                            uart_send(0xaa);
+                            delay_1ms(5);
+                            uart_send(0x02);
+                            delay_1ms(5);
+                            uart_send(0xab);
+                            delay_1ms(5);
+                            uart_send(0xcd);
+                            delay_1ms(5);
+
+                            flash_test_record(ALARM_RECORD);
+                            // for (i = 0; i < 10; i++)
+                            // {
+                            //     uart_send(uart_buffer[i]);
+                            //     /* 串口输出 延时函数 关键参数 */
+                            //     delay_1ms(5);
+                            // }
                             break;
                         }
                         default:
