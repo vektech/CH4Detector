@@ -699,6 +699,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
     uint8_t i;
 
     uint16_t record_total;
+    uint16_t storage_length;
 
     uint16_t start_addr;
     uint16_t record_addr;
@@ -828,8 +829,11 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             uart_send(temp_newest_addr[1]);
             delay_1ms(5);
 
-            /* ZZZ Temp */
-            record_addr = newest_addr;
+            /* 如果查询的记录号大于所存的记录总数 */
+            if (record_number > temp_newest_addr[1])
+            {
+                return;
+            }
 
             /* 该记录类型未存储过记录 */
             if ((record_total == 0xFFFF) && (newest_addr == 0xFFFF))
@@ -841,7 +845,33 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             }
             else
             {
-                flash_read_data(zipped_time, newest_addr, 4);
+                /* 计算要读取的记录地址 */
+                storage_length = max_of_each_record[record_type] * 4;
+                /* ZZZ 此计算可以有不同的形式 */
+                record_addr = (start_addr + 4) + ((storage_length + newest_addr - (record_number - 1) * 4 - (start_addr + 4)) % storage_length);
+
+                uart_send((uint8_t)((start_addr + 4) >> 8));
+                delay_1ms(5);
+                uart_send((uint8_t)(start_addr + 4));
+                delay_1ms(5);
+                uart_send((uint8_t)(storage_length >> 8));
+                delay_1ms(5);
+                uart_send((uint8_t)storage_length);
+                delay_1ms(5);
+                uart_send((uint8_t)(newest_addr >> 8));
+                delay_1ms(5);
+                uart_send((uint8_t)newest_addr);
+                delay_1ms(5);
+                uart_send((uint8_t)((record_number - 1) >> 8));
+                delay_1ms(5);
+                uart_send((uint8_t)(record_number - 1));
+                delay_1ms(5);
+                uart_send((uint8_t)(record_addr >> 8));
+                delay_1ms(5);
+                uart_send((uint8_t)record_addr);
+                delay_1ms(5);
+
+                flash_read_data(zipped_time, record_addr, 4);
                 uart_send(zipped_time[0]);
                 delay_1ms(5);
                 uart_send(zipped_time[1]);

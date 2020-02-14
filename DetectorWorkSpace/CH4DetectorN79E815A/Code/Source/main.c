@@ -123,8 +123,7 @@ void main(void)
     uint8_t production_date[5] = {0};
 
     /* 传感器寿命到期检测标志 */
-    /* ZZZ false */
-    uint8_t life_check_flag = true;
+    uint8_t life_check_flag = false;
     uint8_t life_check[4] = {0x00, 0x00, 0x00, 0x00};
     
     /* 写传感器寿命到期记录标志 */
