@@ -58,3 +58,7 @@
 #### Version 2.4
 
 - flash record new method
+
+#### Version 2.5
+
+- flash record write and read is OK

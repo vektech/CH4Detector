@@ -229,7 +229,8 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
         return;
     if (offset >= 128)
         return;
-    if ((len + offset) >= 128)
+    /* offset 为开始写的起始地址偏移 故注意此处应为 (offset + len - 1) */
+    if ((offset + len - 1) >= 128)
         return;
 
     /* 擦除 TEMP_PAGE_ADDR 用于备份 */
@@ -830,7 +831,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             delay_1ms(5);
 
             /* 如果查询的记录号大于所存的记录总数 */
-            if (record_number > temp_newest_addr[1])
+            if (record_number > temp_record_total[1])
             {
                 return;
             }
