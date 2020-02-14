@@ -76,7 +76,7 @@
 #define SOUND2_TOGGLE (P20 = ~P20) 
 
 /* -------- 传感器使能控制宏定义 -------- */
-/* (UNUSED) 传感器开 */
+/* (UNUSED) 传感器开 P2.7 常高 ZZZ*/
 #define SENSER_ON (P3OUT |= 0x08)
 /* (UNUSED) 传感器关 */
 #define SENSER_OFF (P3OUT &= ~0x08)
@@ -132,8 +132,8 @@
 /*  */
 #define POWER_DOWN_LIMIT 2
 
-/*  */
-#define SERIAL_ADDRESS 0X2FF0
+/* Unused */
+#define SERIAL_ADDRESS 0x2FF0
 
 /* 国标读命令的帧长度 */
 #define GB_READ_FRAME_LEN 6

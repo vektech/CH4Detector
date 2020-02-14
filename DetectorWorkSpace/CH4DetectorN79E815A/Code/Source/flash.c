@@ -718,10 +718,18 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             for (i = ALARM_RECORD; i < SENSOR_EXPIRED_RECORD; i++)
             {
                 /* 找到该类型记录的首地址 */
-                start_addr = RECORD_FIRST_ADDRESS[record_type];
+                start_addr = RECORD_FIRST_ADDRESS[i];
+                uart_send((uint8_t)(start_addr >> 8));
+                delay_1ms(5);
+                uart_send((uint8_t)start_addr);
+                delay_1ms(5);
 
                 /* 读取记录总数 此处仅用低8位 temp_record_total[1] 即可 */
                 flash_read_data(temp_record_total, start_addr, 2);
+                uart_send(temp_record_total[0]);
+                delay_1ms(5);
+                uart_send(temp_record_total[1]);
+                delay_1ms(5);
 
                 /* 该记录类型未存储过记录 此处仅用低8位 temp_record_total[1] 即可 */
                 if (temp_record_total[1] == 0xFF)
@@ -732,6 +740,8 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 {
                     uart_buffer[i + 3] = temp_record_total[1];
                 }
+                uart_send(uart_buffer[i + 3]);
+                delay_1ms(5);
             }
             
             /* ZZZ SENSOR_EXPIRED_RECORD */
@@ -760,6 +770,64 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 delay_1ms(5);
             }
 
+            break;
+        }
+        /* 查询气体传感器失效记录 */
+        case 0x07:
+        {
+            /* 起始符 */
+            uart_buffer[0] = 0xaa;
+            /* 记录序号 */
+            uart_buffer[1] = uart_buffer[1];
+            /* 记录类型 */
+            uart_buffer[2] = uart_buffer[2];
+            /* 数据域长度 除最后一条设备时间其余均为 0x07 */
+            uart_buffer[3] = 0x07;
+
+            /* 气体传感器已经失效 */
+            if (1)
+            {
+                /* 读取气体传感器失效日期 标志[5] 年[6] 月[7] 日[8] 时[9] 分[10] */
+                flash_read_data(&uart_buffer[5], SENSOR_EXPIRED_RECORD_ADDR, 6);
+                /* 使用 uart_buffer[11] 暂时存储年 */
+                uart_buffer[11] = uart_buffer[6];
+
+                /* n1 气体传感器失效标志 */
+                uart_buffer[4] = uart_buffer[5];
+                /* n2 年高字节 */
+                uart_buffer[5] = (2000 + uart_buffer[11]) / 256;
+                /* n3 年低字节 */
+                uart_buffer[6] = (2000 + uart_buffer[11]) % 256;
+                /* n4 月 */
+                uart_buffer[7] = uart_buffer[7];
+                /* n5 日 */
+                uart_buffer[8] = uart_buffer[8];
+                /* n6 时 */
+                uart_buffer[9] = uart_buffer[9];
+                /* n7 分 */
+                uart_buffer[10] = uart_buffer[10];
+            }
+            /* 气体传感器未失效 */
+            else
+            {
+                for (i = 4; i < 11; i++)
+                {
+                    uart_buffer[i] = 0x00;
+                }
+                
+            }
+
+            /* 校验符 */
+            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
+            /* 结束符 */
+            uart_buffer[12] = 0x55;
+
+            for (i = 0; i < (0x07 + 0x06); i++)
+            {
+                uart_send(uart_buffer[i]);
+                /* 串口输出延时函数 关键参数 不可少 */
+                delay_1ms(5);
+            }
             break;
         }
         /* 查询设备当前时间 */

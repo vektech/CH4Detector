@@ -121,6 +121,7 @@ code uint8_t COMMAND_LEN_CANCEL_WARMUP[2]={4,6};
 void main(void)
 {
     uint8_t production_date[5] = {0};
+    uint8_t expired_date[5] = {0};
 
     /* 传感器寿命到期检测标志 */
     uint8_t life_check_flag = false;
@@ -922,6 +923,11 @@ void main(void)
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
                                     }
+
+                                    /* 计算气体传感器失效日期 年 */
+                                    uart_buffer[7] += SENSOR_LIFE;
+                                    /* 写气体传感器失效日期至FLASH 第一个位是失效标志位 故偏移要 + 1 */
+                                    flash_write_data(&uart_buffer[7], 5, SENSOR_EXPIRED_RECORD_ADDR + 1, 0);
                                 }
                                 else
                                 {

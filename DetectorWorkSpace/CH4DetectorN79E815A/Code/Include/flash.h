@@ -62,20 +62,20 @@
 
 /* 基于 DEVICE_INFO_ADDR 计算的地址 */
 #define  PRODUCTION_DATE_ADDR       (DEVICE_INFO_ADDR + OFFSET_OF_PRODUCTION_DATE)
+#define  SENSOR_EXPIRED_RECORD_ADDR (DEVICE_INFO_ADDR + OFFSET_OF_SENSOR_EXPIRED)
 #define  ADC_VALUE_OF_CH4_0_ADDR    (DEVICE_INFO_ADDR + OFFSET_OF_CH4_0)
 #define  ADC_VALUE_OF_CH4_3500_ADDR (DEVICE_INFO_ADDR + OFFSET_OF_CH4_3500)
-#define  SENSOR_EXPIRED_RECORD_ADDR (DEVICE_INFO_ADDR + OFFSET_OF_SENSOR_EXPIRED)
 #define  RTC_RECORD_ADDR            (DEVICE_INFO_ADDR + OFFSET_OF_RTC)
 
 /* 相对 DEVICE_INFO 页内地址偏移 */
 /* 生产日期 */
 #define  OFFSET_OF_PRODUCTION_DATE  0   /* 5 bytes */
+/* 传感器失效日期 */ 
+#define  OFFSET_OF_SENSOR_EXPIRED   10  /* 6 bytes */
 /* CH4 0点AD值 */  
-#define  OFFSET_OF_CH4_0            10  /* 2 bytes */
+#define  OFFSET_OF_CH4_0            22  /* 2 bytes */
 /* CH4 3500点AD值 */  
-#define  OFFSET_OF_CH4_3500         12  /* 2 bytes */
-/* 传感器过期日期 ZZZ 未使用 */ 
-#define  OFFSET_OF_SENSOR_EXPIRED   14  /* 5 bytes */
+#define  OFFSET_OF_CH4_3500         26  /* 2 bytes */
 /* 写时钟和出厂日期标志 life_check ZZZ */
 #define  OFFSET_OF_RTC              30  /* 5 bytes */
 
