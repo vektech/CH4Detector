@@ -153,6 +153,7 @@ void sersor_demarcation(void)
             sensor_ch4_0 = adc_value;
 
             /* 串口输出该次采样的值 */
+#ifdef _DEBUG_
             uart_send(0x1f);
             delay_1ms(5);
             uart_send(0x1f);
@@ -161,6 +162,7 @@ void sersor_demarcation(void)
             delay_1ms(5);
             uart_send(sensor_ch4_0);
             delay_1ms(5);
+#endif
 
             /* 再次得到ADC采样并滤波之后的值 */
             adc_value = adc_sensor();
@@ -210,6 +212,7 @@ void sersor_demarcation(void)
                     if (++delay_count > 1200)
                     {
                         delay_count = 0;
+#ifdef _DEBUG_                        
                         uart_send(0x2f);
                         delay_1ms(5);
                         uart_send(0x2f);
@@ -218,6 +221,7 @@ void sersor_demarcation(void)
                         delay_1ms(5);
                         uart_send(adc_value);
                         delay_1ms(5);
+#endif                        
                     }
                 } while (adc_value < 410);
 
@@ -243,6 +247,7 @@ void sersor_demarcation(void)
                     /* 故障灯关 */
                     LED_FAULT_OFF;
 
+#ifdef _DEBUG_
                     /* 串口输出该次采样的值 */
                     uart_send(0x3f);
                     delay_1ms(5);
@@ -252,6 +257,7 @@ void sersor_demarcation(void)
                     delay_1ms(5);
                     uart_send(adc_value);
                     delay_1ms(5);
+#endif                    
                 }
 
                 /* 暂存得到ADC采样并滤波之后的值 */
@@ -320,7 +326,7 @@ void sersor_demarcation(void)
                         goto ERROR;
                     if (i2c_time_code[3] != sensor_demarcation_result[3])
                         goto ERROR;
-                    
+#ifdef _DEBUG_                    
                     /* 发送标定的报警点数据 sensor_ch4_3500 */
                     uart_send(0x4f);
                     delay_1ms(5);
@@ -330,6 +336,7 @@ void sersor_demarcation(void)
                     delay_1ms(5);
                     uart_send(sensor_ch4_3500);
                     delay_1ms(5);
+#endif                    
                 }
 
                 /* <4> 标定完成 电源 报警灯常亮 故障灯关闭 */

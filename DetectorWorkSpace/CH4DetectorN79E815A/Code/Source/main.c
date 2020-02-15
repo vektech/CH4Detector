@@ -1227,18 +1227,9 @@ void main(void)
                             delay_1ms(5);
                             uart_send(0x02);
                             delay_1ms(5);
-                            uart_send(0xab);
-                            delay_1ms(5);
-                            uart_send(0xcd);
-                            delay_1ms(5);
 
-                            flash_test_record(ALARM_RECORD);
-                            // for (i = 0; i < 10; i++)
-                            // {
-                            //     uart_send(uart_buffer[i]);
-                            //     /* 串口输出 延时函数 关键参数 */
-                            //     delay_1ms(5);
-                            // }
+                            flash_write_record(ALARM_RECORD);
+
                             break;
                         }
                         default:

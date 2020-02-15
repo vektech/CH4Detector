@@ -471,135 +471,6 @@ void unzip_time(uint8_t *p, uint8_t *q)
     }
 }
 
-void flash_test_record(uint8_t record_type)
-{
-    uint16_t page_addr;
-    uint8_t page_offset;
-    uint8_t record_first_byte;
-
-    uint16_t record_total;
-
-    uint16_t start_addr;
-    uint16_t record_addr;
-    uint16_t newest_addr;
-
-    uint8_t temp_record_total[2];
-    uint8_t temp_newest_addr[2];
-
-    uart_send(0xef);
-    delay_1ms(5);
-
-    /* 找到该类型记录的首地址 */
-    start_addr = RECORD_FIRST_ADDRESS[record_type];
-    uart_send((uint8_t)(start_addr >> 8));
-    delay_1ms(5);
-    uart_send((uint8_t)start_addr);
-    delay_1ms(5);
-
-    /* 读取记录总数 */
-    flash_read_data(temp_record_total, start_addr, 2);
-    /* 记录总数的高位 */
-    record_total = temp_record_total[0];
-    /* 记录总数的低位 */
-    record_total = (record_total << 8) + temp_record_total[1];
-    uart_send(temp_record_total[0]);
-    delay_1ms(5);
-    uart_send(temp_record_total[1]);
-    delay_1ms(5);
-
-    /* 读取最新记录的地址 */
-    flash_read_data(temp_newest_addr, start_addr + 2, 2);
-    /* 最新记录地址的高位 */
-    newest_addr = temp_newest_addr[0];
-    /* 最新记录地址的低位 */
-    newest_addr = (newest_addr << 8) + temp_newest_addr[1];
-    uart_send(temp_newest_addr[0]);
-    delay_1ms(5);
-    uart_send(temp_newest_addr[1]);
-    delay_1ms(5);
-
-    /* 该记录类型未存储过记录 */
-    if ((record_total == 0xFFFF) && (newest_addr == 0xFFFF))
-    {
-        /* 更新记录总数 */
-        record_total = 0x0001;
-
-        /* 计算写新纪录的地址 */
-        record_addr = start_addr + 4;
-    }
-    /* 有已存储的记录 */
-    else
-    {
-        /* 少于所规定的最大记录条数 */
-        if (record_total < max_of_each_record[record_type])
-        {
-            record_total++;
-        }
-
-        /* 读取前最新的记录的首字节 */
-        flash_read_data(&record_first_byte, newest_addr, 1);
-        /* 将此前最新的记录标志改为旧的记录标志 0000 00 */
-        record_first_byte &= 0x03;
-        /* 将更新标志后的记录首字节写回 */
-        page_addr = start_addr + ((newest_addr - start_addr) / 128) * 128;
-        page_offset = (newest_addr - start_addr) % 128;
-        flash_write_data(&record_first_byte, 1, page_addr, page_offset);
-
-        /* 如果最新记录的地址位于记录区域的末尾 */
-        if (newest_addr == RECORD_LAST_ADDRESS[record_type])
-        {
-            /* 计算写新纪录的地址 回至记录区域首部 +4 byte 即开始的第一条记录 */
-            record_addr = start_addr + 4;
-        }
-        else
-        {
-            /* 计算写新纪录的地址 */
-            record_addr = newest_addr + 4;
-        }
-    }
-
-    /* 更新最新记录的地址 页地址和页内偏移 */
-    newest_addr = record_addr;
-    page_addr = start_addr + ((newest_addr - start_addr) / 128) * 128;
-    page_offset = (newest_addr - start_addr) % 128;
-    uart_send((uint8_t)(newest_addr >> 8));
-    delay_1ms(5);
-    uart_send((uint8_t)newest_addr);
-    delay_1ms(5);
-    uart_send((uint8_t)(page_addr >> 8));
-    delay_1ms(5);
-    uart_send((uint8_t)page_addr);
-    delay_1ms(5);
-    uart_send(page_offset);
-    delay_1ms(5);
-
-    /* 压缩当前时间至 zipped_time */
-    zip_current_time(zipped_time);
-    /* 设置最新数据标志 1000 00 */
-    zipped_time[0] &= 0x03;
-    zipped_time[0] |= 0x80;
-    uart_send(zipped_time[0]);
-    delay_1ms(5);
-    uart_send(zipped_time[1]);
-    delay_1ms(5);
-    uart_send(zipped_time[2]);
-    delay_1ms(5);
-    uart_send(zipped_time[3]);
-    delay_1ms(5);
-
-    /* 写记录 需要计算页首地址 */
-    flash_write_data(zipped_time, 4, page_addr, page_offset);
-
-    /* 写记录总数 */
-    temp_record_total[0] = (uint8_t)((record_total >> 8) & 0xFF);
-    temp_record_total[1] = (uint8_t)(record_total & 0xFF);
-    flash_write_data(temp_record_total, 2, start_addr, 0);
-    /* 写最新记录地址 */
-    temp_newest_addr[0] = (uint8_t)((newest_addr >> 8) & 0xFF);
-    temp_newest_addr[1] = (uint8_t)(newest_addr & 0xFF);
-    flash_write_data(temp_newest_addr, 2, start_addr, 2);
-}
-
 void flash_write_record(uint8_t record_type)
 {
     uint16_t page_addr;
@@ -614,9 +485,15 @@ void flash_write_record(uint8_t record_type)
 
     uint8_t temp_record_total[2];
     uint8_t temp_newest_addr[2];
-    
+
     /* 找到该类型记录的首地址 */
     start_addr = RECORD_FIRST_ADDRESS[record_type];
+#ifdef _DEBUG_
+    uart_send((uint8_t)(start_addr >> 8));
+    delay_1ms_without_BOD(5);
+    uart_send((uint8_t)start_addr);
+    delay_1ms_without_BOD(5);
+#endif
 
     /* 读取记录总数 */
     flash_read_data(temp_record_total, start_addr, 2);
@@ -624,6 +501,12 @@ void flash_write_record(uint8_t record_type)
     record_total = temp_record_total[0];
     /* 记录总数的低位 */
     record_total = (record_total << 8) + temp_record_total[1];
+#ifdef _DEBUG_
+    uart_send(temp_record_total[0]);
+    delay_1ms_without_BOD(5);
+    uart_send(temp_record_total[1]);
+    delay_1ms_without_BOD(5);
+#endif
 
     /* 读取最新记录的地址 */
     flash_read_data(temp_newest_addr, start_addr + 2, 2);
@@ -631,6 +514,12 @@ void flash_write_record(uint8_t record_type)
     newest_addr = temp_newest_addr[0];
     /* 最新记录地址的低位 */
     newest_addr = (newest_addr << 8) + temp_newest_addr[1];
+#ifdef _DEBUG_
+    uart_send(temp_newest_addr[0]);
+    delay_1ms_without_BOD(5);
+    uart_send(temp_newest_addr[1]);
+    delay_1ms_without_BOD(5);
+#endif
 
     /* 该记录类型未存储过记录 */
     if ((record_total == 0xFFFF) && (newest_addr == 0xFFFF))
@@ -676,12 +565,35 @@ void flash_write_record(uint8_t record_type)
     newest_addr = record_addr;
     page_addr = start_addr + ((newest_addr - start_addr) / 128) * 128;
     page_offset = (newest_addr - start_addr) % 128;
+#ifdef _DEBUG_
+    uart_send((uint8_t)(newest_addr >> 8));
+    delay_1ms_without_BOD(5);
+    uart_send((uint8_t)newest_addr);
+    delay_1ms_without_BOD(5);
+    uart_send((uint8_t)(page_addr >> 8));
+    delay_1ms_without_BOD(5);
+    uart_send((uint8_t)page_addr);
+    delay_1ms_without_BOD(5);
+    uart_send(page_offset);
+    delay_1ms_without_BOD(5);
+#endif
 
     /* 压缩当前时间至 zipped_time */
     zip_current_time(zipped_time);
     /* 设置最新数据标志 1000 00 */
     zipped_time[0] &= 0x03;
     zipped_time[0] |= 0x80;
+#ifdef _DEBUG_
+    uart_send(zipped_time[0]);
+    delay_1ms_without_BOD(5);
+    uart_send(zipped_time[1]);
+    delay_1ms_without_BOD(5);
+    uart_send(zipped_time[2]);
+    delay_1ms_without_BOD(5);
+    uart_send(zipped_time[3]);
+    delay_1ms_without_BOD(5);
+#endif
+
     /* 写记录 需要计算页首地址 */
     flash_write_data(zipped_time, 4, page_addr, page_offset);
 
@@ -719,17 +631,20 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             {
                 /* 找到该类型记录的首地址 */
                 start_addr = RECORD_FIRST_ADDRESS[i];
+#ifdef _DEBUG_
                 uart_send((uint8_t)(start_addr >> 8));
                 delay_1ms(5);
                 uart_send((uint8_t)start_addr);
                 delay_1ms(5);
-
+#endif
                 /* 读取记录总数 此处仅用低8位 temp_record_total[1] 即可 */
                 flash_read_data(temp_record_total, start_addr, 2);
+#ifdef _DEBUG_
                 uart_send(temp_record_total[0]);
                 delay_1ms(5);
                 uart_send(temp_record_total[1]);
                 delay_1ms(5);
+#endif                
 
                 /* 该记录类型未存储过记录 此处仅用低8位 temp_record_total[1] 即可 */
                 if (temp_record_total[1] == 0xFF)
@@ -740,8 +655,10 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 {
                     uart_buffer[i + 3] = temp_record_total[1];
                 }
+#ifdef _DEBUG_                
                 uart_send(uart_buffer[i + 3]);
                 delay_1ms(5);
+#endif                
             }
             
             /* ZZZ SENSOR_EXPIRED_RECORD */
@@ -882,10 +799,12 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             record_total = temp_record_total[0];
             /* 记录总数的低位 */
             record_total = (record_total << 8) + temp_record_total[1];
+#ifdef _DEBUG_            
             uart_send(temp_record_total[0]);
             delay_1ms(5);
             uart_send(temp_record_total[1]);
             delay_1ms(5);
+#endif
 
             /* 读取最新记录的地址 */
             flash_read_data(temp_newest_addr, start_addr + 2, 2);
@@ -893,10 +812,12 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             newest_addr = temp_newest_addr[0];
             /* 最新记录地址的低位 */
             newest_addr = (newest_addr << 8) + temp_newest_addr[1];
+#ifdef _DEBUG_
             uart_send(temp_newest_addr[0]);
             delay_1ms(5);
             uart_send(temp_newest_addr[1]);
             delay_1ms(5);
+#endif
 
             /* 如果查询的记录号大于所存的记录总数 */
             if (record_number > temp_record_total[1])
@@ -918,7 +839,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 storage_length = max_of_each_record[record_type] * 4;
                 /* ZZZ 此计算可以有不同的形式 */
                 record_addr = (start_addr + 4) + ((storage_length + newest_addr - (record_number - 1) * 4 - (start_addr + 4)) % storage_length);
-
+#ifdef _DEBUG_
                 uart_send((uint8_t)((start_addr + 4) >> 8));
                 delay_1ms(5);
                 uart_send((uint8_t)(start_addr + 4));
@@ -939,8 +860,10 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 delay_1ms(5);
                 uart_send((uint8_t)record_addr);
                 delay_1ms(5);
+#endif
 
                 flash_read_data(zipped_time, record_addr, 4);
+#ifdef _DEBUG_                
                 uart_send(zipped_time[0]);
                 delay_1ms(5);
                 uart_send(zipped_time[1]);
@@ -949,6 +872,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 delay_1ms(5);
                 uart_send(zipped_time[3]);
                 delay_1ms(5);
+#endif
 
                 unzip_time(zipped_time, unzipped_time);
 

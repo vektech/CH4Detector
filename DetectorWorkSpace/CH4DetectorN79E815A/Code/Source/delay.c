@@ -141,34 +141,37 @@ void delay_1ms(uint16_t count)
     TR0 = 0;
 }
 
-// /* Delay without BOD */
-// void delay_1ms_No_BOD(uint16_t count)
-// {
-//     /* 打开定时器0 */
-//     TR0 = 1;
-//     while (count != 0)
-//     {
-//         /* 定时器0 低字节 */
-//         TL0 = LOBYTE(VALUE_1ms);
-//         /* 定时器0 高字节 */
-//         TH0 = HIBYTE(VALUE_1ms);
-//         /* TF0->TCON[5] 定时器0溢出标志
-//             - 在定时器0溢出时该位置1
-//             - 当程序响应定时器0中断执行相应的中断服务程序时 该位自动清0
-//             - 软件也可对其写1或写0
-//             */
-//         /* 等待定时器溢出 阻塞式延时*/
-//         while (TF0 != 1)
-//         {
-//             ;
-//         }
-//         /* 溢出标志清零 */
-//         TF0 = 0;
-//         count--;
-//     }
-//     /* 关闭定时器0 */
-//     TR0 = 0;
-// }
+/* Delay without BOD for short timer use. 
+    - Because in BOD check, the write record function will be called. 
+    - And therefore it result in a recursive call.
+    */
+void delay_1ms_without_BOD(uint16_t count)
+{
+    /* 打开定时器0 */
+    TR0 = 1;
+    while (count != 0)
+    {
+        /* 定时器0 低字节 */
+        TL0 = LOBYTE(VALUE_1ms);
+        /* 定时器0 高字节 */
+        TH0 = HIBYTE(VALUE_1ms);
+        /* TF0->TCON[5] 定时器0溢出标志
+            - 在定时器0溢出时该位置1
+            - 当程序响应定时器0中断执行相应的中断服务程序时 该位自动清0
+            - 软件也可对其写1或写0
+            */
+        /* 等待定时器溢出 阻塞式延时*/
+        while (TF0 != 1)
+        {
+            ;
+        }
+        /* 溢出标志清零 */
+        TF0 = 0;
+        count--;
+    }
+    /* 关闭定时器0 */
+    TR0 = 0;
+}
 
 /*******************************************************************************
  *                 File Static Function Define Section ('static function')
