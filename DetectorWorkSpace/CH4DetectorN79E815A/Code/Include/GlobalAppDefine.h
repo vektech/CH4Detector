@@ -127,7 +127,7 @@
 #define DEMED_TR_LW (P06 = 0) 
 
 /* 3∑÷÷” */
-#define Delay_Time_Count 750
+#define PREHEAT_TIME_COUNT 750
 
 /*  */
 #define POWER_DOWN_LIMIT 2

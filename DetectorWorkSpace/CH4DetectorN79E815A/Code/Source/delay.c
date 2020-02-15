@@ -141,10 +141,10 @@ void delay_1ms(uint16_t count)
     TR0 = 0;
 }
 
-/* Delay without BOD for short timer use. 
-    - Because in BOD check, the write record function will be called. 
-    - And therefore it result in a recursive call.
-    */
+#ifdef _DEBUG_
+/*  Delay without BOD for short timer use. 
+    Because in BOD check, the write record function will be called. 
+    And therefore it result in a recursive call. */
 void delay_1ms_without_BOD(uint16_t count)
 {
     /* 打开定时器0 */
@@ -172,6 +172,7 @@ void delay_1ms_without_BOD(uint16_t count)
     /* 关闭定时器0 */
     TR0 = 0;
 }
+#endif
 
 /*******************************************************************************
  *                 File Static Function Define Section ('static function')

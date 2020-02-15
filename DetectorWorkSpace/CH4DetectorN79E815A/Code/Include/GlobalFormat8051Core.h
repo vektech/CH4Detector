@@ -103,7 +103,7 @@ typedef unsigned long         uint32_t;
 /* To avoid complier's warning for unused parameters */
 #define UNUSED(x) (void)x
 /* DEBUG conditional compilation */
-#define _DEBUG_
+// #define _DEBUG_
 /*******************************************************************************
  *                 Struct Define Section ('typedef')
  ******************************************************************************/

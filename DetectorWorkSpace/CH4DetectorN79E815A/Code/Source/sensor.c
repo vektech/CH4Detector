@@ -293,7 +293,7 @@ void sersor_demarcation(void)
                     /* 暂存 得到ADC采样并滤波之后的值 */
                     temp_data = adc_sensor();
 
-                    /* 将暂存的ADC采样值 存入sensor_ch4_3500中 sensor_ch4_3500为传感器 3500 ZZZ 的值 */
+                    /* 将暂存的ADC采样值 存入sensor_ch4_3500中 sensor_ch4_3500为传感器 3500ppm 的值 */
                     sensor_ch4_3500 = temp_data;
 
                     /* 将零点和3500点的ADC采样数据存入数组中 */
@@ -318,14 +318,14 @@ void sersor_demarcation(void)
                     /* 从Flash中读取 sensor_ch4_0 与 sensor_ch4_3500 数据 并进行比对 使用 i2c_time_code 暂存 */
                     flash_read_data(i2c_time_code, ADC_VALUE_OF_CH4_0_ADDR, 4);
 
-                    if (i2c_time_code[0] != sensor_demarcation_result[0])
+                    if ((i2c_time_code[0] != sensor_demarcation_result[0]) ||
+                        (i2c_time_code[1] != sensor_demarcation_result[1]) ||
+                        (i2c_time_code[2] != sensor_demarcation_result[2]) ||
+                        (i2c_time_code[3] != sensor_demarcation_result[3]))
+                    {
                         goto ERROR;
-                    if (i2c_time_code[1] != sensor_demarcation_result[1])
-                        goto ERROR;
-                    if (i2c_time_code[2] != sensor_demarcation_result[2])
-                        goto ERROR;
-                    if (i2c_time_code[3] != sensor_demarcation_result[3])
-                        goto ERROR;
+                    }
+
 #ifdef _DEBUG_                    
                     /* 发送标定的报警点数据 sensor_ch4_3500 */
                     uart_send(0x4f);

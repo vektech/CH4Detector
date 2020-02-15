@@ -97,8 +97,8 @@ uint8_t device_status[2]={0};
 #define ILLEGAL_PARA_EROR 4
 #define COMMAND_EROR 5
 
-/* 产品序列号地址 0x3af0 处的数据 */
-code uint8_t SERIAL_ADD[8] _at_ 0x3af0;
+/* 产品序列号地址 0x31f0 处的数据 */
+code uint8_t SERIAL_ADD[8] _at_ 0x31f0;
 
 code uint8_t COMMAND_LEN_EASE_REC[2]={4,6};
 code uint8_t COMMAND_LEN_WRITE_CLOCK[2]={10,6};
@@ -173,7 +173,18 @@ void main(void)
 
     /* 设备初始化 */
     device_init();
-    
+
+    /* 从Flash存储地址 RTC_RECORD_ADDR 中读取时钟和出厂日期 写入标志 */
+    flash_read_data(life_check, RTC_RECORD_ADDR, 4);
+    /* 设置了RTC时钟 和 出厂日期 */
+    if ((life_check[0] == 0xa5) && 
+        (life_check[1] == 0x36) && 
+        (life_check[2] == 0x5a) && 
+        (life_check[3] == 0xe7))
+    {
+        life_check_flag = true;
+    }
+
     /* 设备标定 */
     sersor_demarcation();
 
@@ -214,68 +225,57 @@ void main(void)
     }
     /* 定时器秒计数归零 */
     timer2_life_second_count = 0;
-
-    /* 从Flash存储地址 SENSOR_EXPIRED_RECORD_ADDR 中读取寿命到期信息 */
-    flash_read_data(life_check, SENSOR_EXPIRED_RECORD_ADDR, 4);
-    /* life_check_flag 表示 线上设置了时钟 */
-    if (life_check[0] == 0xa5 && (life_check[1] == 0x36))
-    {
-        if (life_check[2] == 0x5a && (life_check[3] == 0xe7))
-        {
-                life_check_flag = true;
-        }
-    }
-
-    /* 已预热完成 */
-    if (sensor_preheat_flag == true)
-    {
-        /* 电源灯开 */
-        LED_POWER_ON;
-
-        /* 没有从FLASH中读取标定值 */
-        if (!device_threshold_flag)
-        {
-            device_threshold_flag = true;
-            /* 尝试从FLASH中读取标定数据 10次 */
-            for (i = 0; i < 10; i++)
-            {
-                /* 开启I2C 并进行时间写入 */
-                i2c_start_rtc();
-                /* 从FLASH中读取标定数据 ch4_0 & ch4_3500 因两个标定数据地址相连共 4 bytes */
-                flash_read_data(sensor_demarcation_result, ADC_VALUE_OF_CH4_0_ADDR, 4);
-
-                /* 设置 sensor_ch4_0 */
-                sensor_ch4_0 = sensor_demarcation_result[1];
-                sensor_ch4_0 = sensor_ch4_0 << 8;
-                sensor_ch4_0 |= sensor_demarcation_result[0];
-                /* 设置 sensor_ch4_3500 */
-                sensor_ch4_3500 = sensor_demarcation_result[3];
-                sensor_ch4_3500 = sensor_ch4_3500 << 8;
-                sensor_ch4_3500 |= sensor_demarcation_result[2];
-
-                /* 如果未标定或者读取的标定数据有误 则设置默认的报警阈值 
-                    - sensor_ch4_0 = 150 
-                    - sensor_ch4_3500 = 750 
-                    - 再次尝试读取
-                    */
-                if (sensor_ch4_3500 >= 1024 || (sensor_ch4_3500 <= sensor_ch4_0) || (sensor_ch4_0 <= 0))
-                {
-                    sensor_ch4_0 = 150;
-                    sensor_ch4_3500 = 750;
-                }
-                /* 标定数据无误 跳出 */
-                else
-                {
-                    break;
-                }
-            }
-        }
-    }
     
     while (1)
     {
         /* Brown-Out Detector 电源电压检测 */
         check_BOD();
+
+        /* 已预热完成 */
+        if (sensor_preheat_flag == true)
+        {
+            /* 电源灯开 */
+            LED_POWER_ON;
+
+            /* 没有从FLASH中读取标定值 */
+            if (!device_threshold_flag)
+            {
+                device_threshold_flag = true;
+                /* 尝试从FLASH中读取标定数据 10次 */
+                for (i = 0; i < 10; i++)
+                {
+                    /* 开启I2C 并进行时间写入 */
+                    i2c_start_rtc();
+                    /* 从FLASH中读取标定数据 ch4_0 & ch4_3500 因两个标定数据地址相连共 4 bytes */
+                    flash_read_data(sensor_demarcation_result, ADC_VALUE_OF_CH4_0_ADDR, 4);
+
+                    /* 设置 sensor_ch4_0 */
+                    sensor_ch4_0 = sensor_demarcation_result[1];
+                    sensor_ch4_0 = sensor_ch4_0 << 8;
+                    sensor_ch4_0 |= sensor_demarcation_result[0];
+                    /* 设置 sensor_ch4_3500 */
+                    sensor_ch4_3500 = sensor_demarcation_result[3];
+                    sensor_ch4_3500 = sensor_ch4_3500 << 8;
+                    sensor_ch4_3500 |= sensor_demarcation_result[2];
+
+                    /* 如果未标定或者读取的标定数据有误 则设置默认的报警阈值 
+                    - sensor_ch4_0 = 150 
+                    - sensor_ch4_3500 = 750 
+                    - 再次尝试读取
+                    */
+                    if (sensor_ch4_3500 >= 1024 || (sensor_ch4_3500 <= sensor_ch4_0) || (sensor_ch4_0 <= 0))
+                    {
+                        sensor_ch4_0 = 150;
+                        sensor_ch4_3500 = 750;
+                    }
+                    /* 标定数据无误 跳出 */
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
 
         /* 每两秒执行一次 从RTC更新设备时间 */
         if (!(timer2_life_second_count % 2))
@@ -398,15 +398,29 @@ void main(void)
                     {
                         write_expired_record_flag = true;
 
-                        /* 从FLASH中读取 寿命到期存储地址 的第一个字节 1代表失效 0代表未失效 使用 production_date 暂存 */
+                        /* 从FLASH中读取 寿命到期存储地址 的第一个字节 0x01代表失效 0xFF代表未失效 使用 production_date[0] 暂存 */
                         flash_read_data(production_date, SENSOR_EXPIRED_RECORD_ADDR, 1);
-                        /* 该字节为0 或者 大于应存的到期记录1条 */
-                        if (production_date[0] == 0 || (production_date[0] > max_of_each_record[SENSOR_EXPIRED_RECORD]))
+                        /* 该字节非0x01 表示未写过失效记录 */
+                        if (production_date[0] != 0x01)
                         {
                             /* Brown-Out Detector 电源电压检测 */
                             check_BOD();
                             /* 写寿命到期记录 */
-                            flash_write_record(SENSOR_EXPIRED_RECORD);
+                            production_date[0] = 0x01;
+                            flash_write_data(production_date, 1, DEVICE_INFO_ADDR, OFFSET_OF_SENSOR_EXPIRED);
+
+                            /* 当前时间 年 */
+                            production_date[0] = i2c_time_code[6];
+                            /* 当前时间 年 */
+                            production_date[1] = i2c_time_code[5];
+                            /* 当前时间 年 */
+                            production_date[2] = i2c_time_code[3];                                                        
+                            /* 当前时间 年 */
+                            production_date[3] = i2c_time_code[2];
+                            /* 当前时间 年 */
+                            production_date[4] = i2c_time_code[1];
+                            /* 方式1 写寿命到期时间 */
+                            flash_write_data(production_date, 5, DEVICE_INFO_ADDR, OFFSET_OF_SENSOR_EXPIRED + 1);
                         }
                     }
                 }
@@ -671,47 +685,47 @@ void main(void)
         if (rx_finished)
         {   
             /* ZZZ 取第一个字节的最高一位 如果为0B 表示是工装板发来的命令 */
-            // if (!(uart_buffer[0] & 0x80))
-            // {
-            //     if (rx_index >= 9)
-            //     {
-            //         if (get_crc(uart_buffer, rx_index) == uart_buffer[rx_index - 2])
-            //         {
-            //             for (i = 0; i < 5; i++)
-            //             {
-            //                 if (SERIAL_ADD[i + 3] != uart_buffer[i + 1])
-            //                     break;
-            //             }
-            //             /* 表示地址对上了 */
-            //             if (i == 5)
-            //             {
-            //                 for (i = 6; i < rx_index; i++)
-            //                 {
-            //                     /* 把地址信息从接收帧中去掉 */
-            //                     uart_buffer[i - 5] = uart_buffer[i];
-            //                 }
-            //                 /* 把地址的字节数减去 */
-            //                 rx_index -= 5;
-            //                 /* 把命令恢复 */ 
-            //                 uart_buffer[0] |= 0x80;
-            //                 /* 重新计算crc */
-            //                 uart_buffer[rx_index - 2] = get_crc(uart_buffer, rx_index);
-            //             }
-            //             else
-            //             {
-            //                 uart_buffer[0] = 0x00;
-            //             }
-            //         }
-            //         else
-            //         {
-            //             uart_buffer[0] = 0x00;
-            //         }
-            //     }
-            //     else
-            //     {
-            //         uart_buffer[0] = 0x00;
-            //     }
-            // }
+            if (!(uart_buffer[0] & 0x80))
+            {
+                if (rx_index >= 9)
+                {
+                    if (get_crc(uart_buffer, rx_index) == uart_buffer[rx_index - 2])
+                    {
+                        for (i = 0; i < 5; i++)
+                        {
+                            if (SERIAL_ADD[i + 3] != uart_buffer[i + 1])
+                                break;
+                        }
+                        /* 表示地址对上了 */
+                        if (i == 5)
+                        {
+                            for (i = 6; i < rx_index; i++)
+                            {
+                                /* 把地址信息从接收帧中去掉 */
+                                uart_buffer[i - 5] = uart_buffer[i];
+                            }
+                            /* 把地址的字节数减去 */
+                            rx_index -= 5;
+                            /* 把命令恢复 */ 
+                            uart_buffer[0] |= 0x80;
+                            /* 重新计算crc */
+                            uart_buffer[rx_index - 2] = get_crc(uart_buffer, rx_index);
+                        }
+                        else
+                        {
+                            uart_buffer[0] = 0x00;
+                        }
+                    }
+                    else
+                    {
+                        uart_buffer[0] = 0x00;
+                    }
+                }
+                else
+                {
+                    uart_buffer[0] = 0x00;
+                }
+            }
 
             switch (uart_buffer[0])
             {
@@ -747,7 +761,7 @@ void main(void)
                                 for (i = 0; i < 28; i++)
                                 {
                                     /* 按页擦除 */
-                                    flash_erase_page(RECORD_START_ADDR + i);
+                                    flash_erase_page(RECORD_START_ADDR + (i * BYTES_OF_PAGE));
                                     /* Brown-Out Detector 电源电压检测 */
                                     check_BOD();
                                 }
@@ -756,7 +770,7 @@ void main(void)
                             }
                             else
                             {
-                                uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
                             }
                             uart_buffer[2] = device_status[0];
                             uart_buffer[COMMAND_LEN_EASE_REC[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_EASE_REC[1]);
@@ -785,13 +799,13 @@ void main(void)
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
                                         goto WR_CLOCK_EROR;
                                     }
-                                    /* 月 错误 */
+                                    /* 月 错误 大于12 或为 0 */
                                     if (uart_buffer[3] > 12 || (!uart_buffer[3]))
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
                                         goto WR_CLOCK_EROR;
                                     }
-                                    /* 日 错误 */
+                                    /* 日 错误 大于31 或为 0 */
                                     if (uart_buffer[4] > 31 || (!uart_buffer[4]))
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
@@ -898,7 +912,7 @@ void main(void)
                                 if (get_crc(uart_buffer, COMMAND_LEN_WR_DATEOFPRODUCTION[0]) == uart_buffer[COMMAND_LEN_WR_DATEOFPRODUCTION[0] - 2]) //
                                 {
                                     /* 写出厂日期至FLASH */
-                                    flash_write_data(&uart_buffer[2], 5, PRODUCTION_DATE_ADDR, 0);
+                                    flash_write_data(&uart_buffer[2], 5, DEVICE_INFO_ADDR, OFFSET_OF_PRODUCTION_DATE);
                                     /* 读取出厂日期 */
                                     flash_read_data(&uart_buffer[7], PRODUCTION_DATE_ADDR, 5);
 
@@ -924,10 +938,10 @@ void main(void)
                                         uart_buffer[3] = (device_status[1] & 0xe0) | Unknown_EROR;
                                     }
 
-                                    /* 计算气体传感器失效日期 年 */
-                                    uart_buffer[7] += SENSOR_LIFE;
-                                    /* 写气体传感器失效日期至FLASH 第一个位是失效标志位 故偏移要 + 1 */
-                                    flash_write_data(&uart_buffer[7], 5, SENSOR_EXPIRED_RECORD_ADDR + 1, 0);
+                                    // /* ZZZ 方式2 计算气体传感器失效日期 年 */
+                                    // uart_buffer[7] += SENSOR_LIFE;
+                                    // /* 写气体传感器失效日期至FLASH 第一个位是失效标志位 故偏移要 + 1 */
+                                    // flash_write_data(&uart_buffer[7], 5, DEVICE_INFO_ADDR, OFFSET_OF_SENSOR_EXPIRED + 1);
                                 }
                                 else
                                 {
@@ -997,6 +1011,7 @@ void main(void)
                             }
                             /* 设备状态字 */
                             uart_buffer[2] = device_status[0];
+                            /* 获取当前时间 */
                             i2c_get_time();
                             /* 年 */
                             uart_buffer[4] = i2c_time_code[6];
@@ -1095,7 +1110,7 @@ void main(void)
                             uart_buffer[2] = device_status[0];
 
                             /* 从FLASH中读取标定数据 ch4_0 & ch4_3500 因两个标定数据地址相连共 4 bytes */
-                            flash_read_data(sensor_demarcation_result, ADC_VALUE_OF_CH4_0_ADDR, 4);
+                            flash_read_data(&uart_buffer[4], ADC_VALUE_OF_CH4_0_ADDR, 4);
                             /* ZZZ */
                             uart_buffer[8] = uart_buffer[4];
                             uart_buffer[4] = uart_buffer[5];
@@ -1203,7 +1218,7 @@ void main(void)
                                 /* 取消预热 */
                                 STATUS1_NOMAL;
                                 uart_buffer[3] = device_status[1] & 0xe0;
-                                sensor_preheat_flag = 1;
+                                sensor_preheat_flag = true;
                             }
                             else
                             {
@@ -1220,16 +1235,44 @@ void main(void)
                             }
                             break;
                         }
-                        /* 函数测试 */
+                        /* 写记录函数测试 0xad 0x02 0x01~6(record_type) CRC 0x55 */
+                        /* Re:AD 02 00 20 record_type CRC 55 */
                         case 0x02:
                         {
-                            uart_send(0xaa);
-                            delay_1ms(5);
-                            uart_send(0x02);
-                            delay_1ms(5);
+                            /* 使用 uart_buffer[4] 暂存 record_type */
+                            uart_buffer[4] = uart_buffer[2];
 
-                            flash_write_record(ALARM_RECORD);
+                            /* 命令长度为 5 */
+                            if (get_crc(uart_buffer, 5) == uart_buffer[5 - 2])
+                            {
+                                if (uart_buffer[4] >= ALARM_RECORD && uart_buffer[4] <= POWER_ON_RECORD)
+                                {
+                                    flash_write_record(uart_buffer[4]);
+                                    uart_buffer[3] = device_status[1] & 0xe0;
+                                }
+                                else
+                                {
+                                    uart_buffer[3] = (device_status[1] & 0xe0) | COMMAND_EROR;
+                                }
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
 
+                            /* 设备状态 */
+                            uart_buffer[2] = device_status[0];
+                            
+                            /* 应答命令长度为 7 */
+                            uart_buffer[7 - 2] = get_crc(uart_buffer, 7);
+                            uart_buffer[7 - 1] = 0x55;
+
+                            for (i = 0; i < 7; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(5);
+                            }
                             break;
                         }
                         default:

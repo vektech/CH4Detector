@@ -84,21 +84,6 @@ code uint16_t RECORD_FIRST_ADDRESS[11] =
     DEVICE_INFO_ADDR            /*!< 10.设备信息存储地址 */
 };
 
-// code uint16_t RECORD_LAST_ADDRESS[11] = 
-// {
-//     0xffff,                                                                     /*!< 0.查询各类记录总数 */
-//     ALARM_RECORD_ADDR          + max_of_each_record[ALARM_RECORD] * 4,          /*!< 1.报警记录 200 */
-//     ALARM_RECOVERY_RECORD_ADDR + max_of_each_record[ALARM_RECOVERY_RECORD] * 4, /*!< 2.报警恢复记录 200 */
-//     FAULT_RECORD_ADDR          + max_of_each_record[FAULT_RECORD] * 4,          /*!< 3.故障记录 100 */
-//     FAULT_RECOVERY_RECORD_ADDR + max_of_each_record[FAULT_RECOVERY_RECORD] * 4, /*!< 4.故障恢复记录 100 */
-//     POWER_DOWN_RECORD_ADDR     + max_of_each_record[POWER_DOWN_RECORD] * 4,     /*!< 5.掉电记录 50 */
-//     POWER_ON_RECORD_ADDR       + max_of_each_record[POWER_ON_RECORD] * 4,       /*!< 6.上电记录 50 */
-//     SENSOR_EXPIRED_RECORD_ADDR, /*!< 7.传感器失效记录 1 */
-//     0xffff,                     /*!< 8.内部定时器当前时间 */
-//     TEMP_PAGE_ADDR,             /*!< 9.用于备份存储临时数据的FLASH地址 */
-//     DEVICE_INFO_ADDR            /*!< 10.设备信息存储地址 */
-// };
-
 code uint16_t RECORD_LAST_ADDRESS[11] = 
 {
     0xffff,                               /*!< 0.查询各类记录总数 */
@@ -254,7 +239,6 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
         ISPAH = HIBYTE(start_addr + j);
 
         Trigger_ISP();        
-        // delay_1ms(0);
 
         /* ISPCN = 0010 0001B ISP控制 选择操作 APROM或者数据FLASH 进行FLASH编程
             - [7:6] A17:A16 = 00B 00B 选择操作APROM或者数据FLASH; 01B 选择LDROM; 11B CONFIG特殊功能;
@@ -269,7 +253,6 @@ void flash_write_data(uint8_t *p, uint8_t len, uint16_t start_addr, uint8_t offs
         ISPAH = HIBYTE(TEMP_PAGE_ADDR + j);
         
         Trigger_ISP();
-        // delay_1ms(0);
     }
 
     Disable_ISP_Mode();
@@ -402,7 +385,7 @@ void zip_current_time(uint8_t *p)
     i2c_get_time();
 
     /* second */
-    // i2c_time_code[0];
+    /* i2c_time_code[0]; */
     /* minute */
     temp_unzipped_time[4] = i2c_time_code[1];
     /* hour */
@@ -410,7 +393,7 @@ void zip_current_time(uint8_t *p)
     /* day */
     temp_unzipped_time[2] = i2c_time_code[3];
     /* week */
-    // i2c_time_code[4];
+    /* i2c_time_code[4]; */
     /* month */
     temp_unzipped_time[1] = i2c_time_code[5];
     /* year */
@@ -626,7 +609,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
         /* 查询设备各项记录总条数 */
         case 0x00:
         {
-            /* ZZZ SENSOR_EXPIRED_RECORD 除外 */
+            /* SENSOR_EXPIRED_RECORD 单独处理 */
             for (i = ALARM_RECORD; i < SENSOR_EXPIRED_RECORD; i++)
             {
                 /* 找到该类型记录的首地址 */
@@ -660,9 +643,16 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 delay_1ms(5);
 #endif                
             }
-            
-            /* ZZZ SENSOR_EXPIRED_RECORD */
-            uart_buffer[10] = 0x00;
+
+            /* 读取气体传感器失效日期至 uart_buffer[10] */
+            flash_read_data(&uart_buffer[10], SENSOR_EXPIRED_RECORD_ADDR, 1);
+
+            /* 检查是否气体传感器已经到期 */
+            if (uart_buffer[10] != 0x01)
+            {
+                /* 未到期的情况下发送 0x00 */
+                uart_buffer[10] = 0x00;
+            }
 
             /* 起始符 */
             uart_buffer[0] = 0xaa;
@@ -701,12 +691,12 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             /* 数据域长度 除最后一条设备时间其余均为 0x07 */
             uart_buffer[3] = 0x07;
 
+            /* 读取气体传感器失效日期 标志[5] 年[6] 月[7] 日[8] 时[9] 分[10] */
+            flash_read_data(&uart_buffer[5], SENSOR_EXPIRED_RECORD_ADDR, 6);
             /* 气体传感器已经失效 */
-            if (1)
+            if (uart_buffer[5] == 0x01)
             {
-                /* 读取气体传感器失效日期 标志[5] 年[6] 月[7] 日[8] 时[9] 分[10] */
-                flash_read_data(&uart_buffer[5], SENSOR_EXPIRED_RECORD_ADDR, 6);
-                /* 使用 uart_buffer[11] 暂时存储年 */
+                /* 使用 uart_buffer[11] 暂时存储年 用于转化为年的完全格式 采用倒序对齐方式 */
                 uart_buffer[11] = uart_buffer[6];
 
                 /* n1 气体传感器失效标志 */
@@ -819,15 +809,10 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             delay_1ms(5);
 #endif
 
-            /* 如果查询的记录号大于所存的记录总数 */
-            if (record_number > temp_record_total[1])
+            /* 该记录类型未存储过记录 或 如果查询的记录号大于所存的记录总数 */
+            if (((record_total == 0xFFFF) && (newest_addr == 0xFFFF)) || (record_number > temp_record_total[1]))
             {
-                return;
-            }
-
-            /* 该记录类型未存储过记录 */
-            if ((record_total == 0xFFFF) && (newest_addr == 0xFFFF))
-            {
+                /* Option 1: all data set to 0x00; Option 2: just return */
                 for (i = 4; i < 11; i++)
                 {
                     uart_buffer[i] = 0x00;
@@ -837,7 +822,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             {
                 /* 计算要读取的记录地址 */
                 storage_length = max_of_each_record[record_type] * 4;
-                /* ZZZ 此计算可以有不同的形式 */
+                /* ZZZ 此计算可以有不同的计算形式 */
                 record_addr = (start_addr + 4) + ((storage_length + newest_addr - (record_number - 1) * 4 - (start_addr + 4)) % storage_length);
 #ifdef _DEBUG_
                 uart_send((uint8_t)((start_addr + 4) >> 8));
@@ -908,7 +893,6 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             /* 结束符 */
             uart_buffer[12] = 0x55;
 
-            delay_1ms(3000);
             for (i = 0; i < (0x07 + 0x06); i++)
             {
                 uart_send(uart_buffer[i]);

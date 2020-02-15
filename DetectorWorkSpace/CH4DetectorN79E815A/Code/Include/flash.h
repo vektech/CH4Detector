@@ -75,7 +75,7 @@
 /* CH4 0点AD值 */  
 #define  OFFSET_OF_CH4_0            22  /* 2 bytes */
 /* CH4 3500点AD值 */  
-#define  OFFSET_OF_CH4_3500         26  /* 2 bytes */
+#define  OFFSET_OF_CH4_3500         24  /* 2 bytes */
 /* 写时钟和出厂日期标志 life_check ZZZ */
 #define  OFFSET_OF_RTC              30  /* 5 bytes */
 

@@ -57,8 +57,14 @@
 
 #### Version 2.4
 
-- flash record new method
+- Flash record new method
 
 #### Version 2.5
 
-- flash record write and read is OK
+- Flash record write and read is OK
+
+#### Version 3.0
+
+> 2020/2/16 3:24
+
+- Device function is all complete. 
