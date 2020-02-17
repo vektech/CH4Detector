@@ -95,12 +95,7 @@ void delay_10us(uint16_t count)
         /* 等待定时器溢出 阻塞式延时*/
         while (TF0 != 1)
         {   
-            /* rx index */
-            if (rx_index)
-            {   
-                /* rx index = 1 打开定时器2 */
-                TR2 = 1;
-            }
+            ;
         }
         /* 溢出标志清零 */
         TF0 = 0;

@@ -77,3 +77,9 @@
 - Set uart send interval to 10ms in case of data loss(a better way to wait send complete)
 - Add blink yellow led for sensor expiration
 - Add a switch for sensor control 
+
+#### Version 3.2
+
+> 2020/2/17 16:09
+
+- Fix sensor expired led problem

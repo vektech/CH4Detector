@@ -206,7 +206,7 @@ void main(void)
     if (selfcheck_key == 0x00)
     {   
         /* 延时去抖 */
-        delay_1ms(50);
+        delay_1ms(30);
         /* 测试按键按下时长计算 */
         while ((P07 & 0x01) == 0x00)
         {   
@@ -231,18 +231,30 @@ void main(void)
         /* Brown-Out Detector 电源电压检测 */
         check_BOD();
 
-        /* 未写出厂日期和RTC */
-        if (life_check_flag == false)
+        /* 检查是否已写入RTC和出厂日期 传感器寿命过期信号执行 */
+        if (timer2_second_expired_flag == true)
         {
-            /* 传感器寿命灯开 */
-            LED_LIFE_ON;
-        }
-        else
-        {
-            /* 传感器寿命灯关 */
-            LED_LIFE_OFF;
-        }
+            timer2_second_expired_flag = false;
 
+            /* 未写出厂日期和RTC */
+            if (life_check_flag == false)
+            {
+                /* 传感器寿命灯开 */
+                LED_LIFE_ON;
+            }
+            /* 若传感器寿命已过期 */
+            else if (sensor_expired_flag == true)
+            {
+                /* 传感器寿命灯翻转 */
+                LED_LIFE_TOGGLE;
+            }
+            else
+            {
+                /* 传感器寿命灯关 */
+                LED_LIFE_OFF;
+            }
+        }
+        
         /* 已预热完成 */
         if (sensor_preheat_flag == true)
         {

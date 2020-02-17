@@ -43,6 +43,7 @@ extern uint8_t timer2_key_long_press_count;
 extern bit timer2_life_hour_flag;
 
 extern bit timer2_second_flag;
+extern bit timer2_second_expired_flag;
 
 void timer2_init(void);
 

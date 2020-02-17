@@ -40,6 +40,7 @@
  *                 Global Variable Declare Section ('variable')
  ******************************************************************************/
 bit timer2_second_flag;
+bit timer2_second_expired_flag;
 bit timer2_life_hour_flag;
 bit key_long_press_flag;
 
@@ -148,7 +149,7 @@ void Timer2_ISR(void) interrupt 5
     /* 秒计数加1 */
     timer2_second_count++;
 
-    /* 预热状态和传感器寿命过期灯闪烁频率 */
+    /* 预热状态灯闪烁频率 */
     if (timer2_count == 20)
     {   
         /* 预热状态下 */
@@ -156,12 +157,6 @@ void Timer2_ISR(void) interrupt 5
         {
             /* 电源灯翻转 */
             LED_POWER_TOGGLE;
-        }
-        /* 传感器寿命过期 */
-        if (sensor_expired_flag == true)
-        {
-            /* 传感器寿命灯翻转 */
-            LED_LIFE_TOGGLE;
         }
         timer2_count = 0;
         sensor_preheat_time_count++;
@@ -177,7 +172,11 @@ void Timer2_ISR(void) interrupt 5
     if (timer2_second_count == 100)
     {
         timer2_second_count = 0;
-        timer2_second_flag = 1;
+
+        /* 秒到期标志 */
+        timer2_second_flag = true;
+        /* 检查是否已写入RTC和出厂日期 传感器寿命过期检查标志 */
+        timer2_second_expired_flag = true;
 
         /* 寿命到期计时数 */
         timer2_life_second_count++;
@@ -191,6 +190,7 @@ void Timer2_ISR(void) interrupt 5
     /* 1小时标志位 ZZZ 3600 */
     if (timer2_life_second_count == 150)
     {
+        /* 小时到期标志 */
         timer2_life_hour_flag = true;
         timer2_life_second_count = 0;
     }
