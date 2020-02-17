@@ -53,6 +53,9 @@ extern bit sensor_preheat_flag;
 /* 预热时间计数 */
 extern uint16_t sensor_preheat_time_count;
 
+/* 传感器寿命到期标志 false 未到期 */
+extern bit sensor_expired_flag;
+
 void sersor_demarcation(void);
 
 #endif /* _SENSOR_H_ */

@@ -123,10 +123,10 @@ void main(void)
     uint8_t production_date[5] = {0};
     uint8_t expired_date[5] = {0};
 
-    /* 传感器寿命到期检测标志 */
+    /* 设备RTC和出场日期检测标志 */
     uint8_t life_check_flag = false;
     uint8_t life_check[4] = {0x00, 0x00, 0x00, 0x00};
-    
+
     /* 写传感器寿命到期记录标志 */
     bit write_expired_record_flag = false;
 
@@ -231,6 +231,18 @@ void main(void)
         /* Brown-Out Detector 电源电压检测 */
         check_BOD();
 
+        /* 未写出厂日期和RTC */
+        if (life_check_flag == false)
+        {
+            /* 传感器寿命灯开 */
+            LED_LIFE_ON;
+        }
+        else
+        {
+            /* 传感器寿命灯关 */
+            LED_LIFE_OFF;
+        }
+
         /* 已预热完成 */
         if (sensor_preheat_flag == true)
         {
@@ -311,13 +323,6 @@ void main(void)
             device_time_renew_flag = 0;
         }
 
-        /* 传感器寿命已到期 */
-        if (life_check_flag == false)
-        {
-            /* 传感器寿命灯开 */
-            LED_LIFE_ON;
-        }
-
         /* 1小时时间到就进行一次寿命比较 */
         if (timer2_life_hour_flag == true)
         {
@@ -390,9 +395,9 @@ void main(void)
                 /* 使用寿命超时 5年时间到 */
                 if (production_date[0] > SENSOR_LIFE)
                 {
-                    /* 传感器寿命灯开 */
-                    LED_LIFE_ON;
-                    
+                    /* 传感器寿命到期标志置位 */
+                    sensor_expired_flag = true;
+
                     /* 写失效记录标志 */
                     if (write_expired_record_flag == false)
                     {
@@ -426,11 +431,8 @@ void main(void)
                 }
                 else
                 {
-                    if (life_check_flag == true)
-                    {
-                        /* 传感器寿命灯关 */
-                        LED_LIFE_OFF;
-                    }
+                    /* 传感器寿命到期标志复位 */
+                    sensor_expired_flag = false;
                 }
             }
         }
@@ -779,7 +781,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
 
                             break;
@@ -888,7 +890,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出  延时函数，关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
 
                             /* 表示时钟输入成功 没有发生错误 */
@@ -961,7 +963,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             /* 表示出厂日期写入成功 */
                             if ((uart_buffer[3] & (~0xe0)) == 0)
@@ -984,7 +986,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1032,7 +1034,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1063,7 +1065,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1090,7 +1092,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1124,7 +1126,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1152,7 +1154,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1182,7 +1184,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1198,7 +1200,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1231,7 +1233,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }
@@ -1271,7 +1273,7 @@ void main(void)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */
-                                delay_1ms(5);
+                                delay_1ms(10);
                             }
                             break;
                         }

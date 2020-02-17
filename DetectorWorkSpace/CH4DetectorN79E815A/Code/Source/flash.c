@@ -616,17 +616,17 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 start_addr = RECORD_FIRST_ADDRESS[i];
 #ifdef _DEBUG_
                 uart_send((uint8_t)(start_addr >> 8));
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)start_addr);
-                delay_1ms(5);
+                delay_1ms(10);
 #endif
                 /* 读取记录总数 此处仅用低8位 temp_record_total[1] 即可 */
                 flash_read_data(temp_record_total, start_addr, 2);
 #ifdef _DEBUG_
                 uart_send(temp_record_total[0]);
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send(temp_record_total[1]);
-                delay_1ms(5);
+                delay_1ms(10);
 #endif                
 
                 /* 该记录类型未存储过记录 此处仅用低8位 temp_record_total[1] 即可 */
@@ -640,7 +640,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 }
 #ifdef _DEBUG_                
                 uart_send(uart_buffer[i + 3]);
-                delay_1ms(5);
+                delay_1ms(10);
 #endif                
             }
 
@@ -674,7 +674,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             {
                 uart_send(uart_buffer[i]);
                 /* 串口输出延时函数 关键参数 不可少 */
-                delay_1ms(5);
+                delay_1ms(10);
             }
 
             break;
@@ -733,7 +733,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             {
                 uart_send(uart_buffer[i]);
                 /* 串口输出延时函数 关键参数 不可少 */
-                delay_1ms(5);
+                delay_1ms(10);
             }
             break;
         }
@@ -773,7 +773,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             {
                 uart_send(uart_buffer[i]);
                 /* 串口输出延时函数 关键参数 不可少 */
-                delay_1ms(5);
+                delay_1ms(10);
             }
             break;
         }
@@ -791,9 +791,9 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             record_total = (record_total << 8) + temp_record_total[1];
 #ifdef _DEBUG_            
             uart_send(temp_record_total[0]);
-            delay_1ms(5);
+            delay_1ms(10);
             uart_send(temp_record_total[1]);
-            delay_1ms(5);
+            delay_1ms(10);
 #endif
 
             /* 读取最新记录的地址 */
@@ -804,9 +804,9 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             newest_addr = (newest_addr << 8) + temp_newest_addr[1];
 #ifdef _DEBUG_
             uart_send(temp_newest_addr[0]);
-            delay_1ms(5);
+            delay_1ms(10);
             uart_send(temp_newest_addr[1]);
-            delay_1ms(5);
+            delay_1ms(10);
 #endif
 
             /* 该记录类型未存储过记录 或 如果查询的记录号大于所存的记录总数 */
@@ -826,37 +826,37 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
                 record_addr = (start_addr + 4) + ((storage_length + newest_addr - (record_number - 1) * 4 - (start_addr + 4)) % storage_length);
 #ifdef _DEBUG_
                 uart_send((uint8_t)((start_addr + 4) >> 8));
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)(start_addr + 4));
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)(storage_length >> 8));
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)storage_length);
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)(newest_addr >> 8));
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)newest_addr);
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)((record_number - 1) >> 8));
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)(record_number - 1));
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)(record_addr >> 8));
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send((uint8_t)record_addr);
-                delay_1ms(5);
+                delay_1ms(10);
 #endif
 
                 flash_read_data(zipped_time, record_addr, 4);
 #ifdef _DEBUG_                
                 uart_send(zipped_time[0]);
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send(zipped_time[1]);
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send(zipped_time[2]);
-                delay_1ms(5);
+                delay_1ms(10);
                 uart_send(zipped_time[3]);
-                delay_1ms(5);
+                delay_1ms(10);
 #endif
 
                 unzip_time(zipped_time, unzipped_time);
@@ -897,7 +897,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             {
                 uart_send(uart_buffer[i]);
                 /* 串口输出延时函数 关键参数 不可少 */
-                delay_1ms(5);
+                delay_1ms(10);
             }
             break;
         }

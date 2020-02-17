@@ -148,13 +148,20 @@ void Timer2_ISR(void) interrupt 5
     /* 秒计数加1 */
     timer2_second_count++;
 
-    /* 预热状态下灯闪烁频率 */
+    /* 预热状态和传感器寿命过期灯闪烁频率 */
     if (timer2_count == 20)
-    {
+    {   
+        /* 预热状态下 */
         if (sensor_preheat_flag == false)
         {
             /* 电源灯翻转 */
             LED_POWER_TOGGLE;
+        }
+        /* 传感器寿命过期 */
+        if (sensor_expired_flag == true)
+        {
+            /* 传感器寿命灯翻转 */
+            LED_LIFE_TOGGLE;
         }
         timer2_count = 0;
         sensor_preheat_time_count++;

@@ -103,14 +103,18 @@ void device_init(void)
         - 设置成推挽输出，有大电流驱动能力
         - P2.2 继电器控制IO
         - P2.4 电源灯控制IO
+        - P2.7 传感器控制IO
         */
     /* 端口2输出模式配置1 */
     P2M1 = 0x00;
     /* 端口2输出模式配置2 */
-    P2M2 = 0x14;
+    P2M2 = 0x94;
 
     /* P3M1->P1S位 使能端口P1的史密特触发输入缓冲 增强手刺抑制能力 主要针对I2C */
     P3M1 |= 0x20;
+
+    /* 打开传感器开关 */
+    SENSER_ON;
 
     /* P2.2 = 0 继电器关 */
     DELAY_OFF;
@@ -162,8 +166,11 @@ void device_init(void)
 
     delay_1ms(1000);
 
-    /* 9600 Baud Rate @ 22.1184MHz */
-    uart_init(9600);
+    // /* 9600 Baud Rate @ 22.1184MHz */
+    // uart_init(9600);
+
+    /* 4800 Baud Rate @ 22.1184MHz */
+    uart_init(4800);
 
     /* 定时器2初始化 */
     timer2_init();

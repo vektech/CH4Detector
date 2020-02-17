@@ -45,6 +45,8 @@
  ******************************************************************************/
 /* 预热标记 */
 bit sensor_preheat_flag = false;
+/* 传感器寿命到期标志 false 未到期 */
+bit sensor_expired_flag = false;
 
 /* 预热时间计数 */
 uint16_t sensor_preheat_time_count = 0;
@@ -155,13 +157,13 @@ void sersor_demarcation(void)
             /* 串口输出该次采样的值 */
 #ifdef _DEBUG_
             uart_send(0x1f);
-            delay_1ms(5);
+            delay_1ms(10);
             uart_send(0x1f);
-            delay_1ms(5);
+            delay_1ms(10);
             uart_send(sensor_ch4_0 >> 8);
-            delay_1ms(5);
+            delay_1ms(10);
             uart_send(sensor_ch4_0);
-            delay_1ms(5);
+            delay_1ms(10);
 #endif
 
             /* 再次得到ADC采样并滤波之后的值 */
@@ -214,13 +216,13 @@ void sersor_demarcation(void)
                         delay_count = 0;
 #ifdef _DEBUG_                        
                         uart_send(0x2f);
-                        delay_1ms(5);
+                        delay_1ms(10);
                         uart_send(0x2f);
-                        delay_1ms(5);
+                        delay_1ms(10);
                         uart_send(adc_value >> 8);
-                        delay_1ms(5);
+                        delay_1ms(10);
                         uart_send(adc_value);
-                        delay_1ms(5);
+                        delay_1ms(10);
 #endif                        
                     }
                 } while (adc_value < 410);
@@ -250,13 +252,13 @@ void sersor_demarcation(void)
 #ifdef _DEBUG_
                     /* 串口输出该次采样的值 */
                     uart_send(0x3f);
-                    delay_1ms(5);
+                    delay_1ms(10);
                     uart_send(0x3f);
-                    delay_1ms(5);
+                    delay_1ms(10);
                     uart_send(adc_value >> 8);
-                    delay_1ms(5);
+                    delay_1ms(10);
                     uart_send(adc_value);
-                    delay_1ms(5);
+                    delay_1ms(10);
 #endif                    
                 }
 
@@ -329,13 +331,13 @@ void sersor_demarcation(void)
 #ifdef _DEBUG_                    
                     /* 发送标定的报警点数据 sensor_ch4_3500 */
                     uart_send(0x4f);
-                    delay_1ms(5);
+                    delay_1ms(10);
                     uart_send(0x4f);
-                    delay_1ms(5);
+                    delay_1ms(10);
                     uart_send(sensor_ch4_3500 >> 8);
-                    delay_1ms(5);
+                    delay_1ms(10);
                     uart_send(sensor_ch4_3500);
-                    delay_1ms(5);
+                    delay_1ms(10);
 #endif                    
                 }
 

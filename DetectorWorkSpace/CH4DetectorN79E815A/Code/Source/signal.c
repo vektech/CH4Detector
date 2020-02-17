@@ -226,9 +226,6 @@ void device_alarm(enum alarm_type type)
             /* 故障灯开 */
             EXPIRED_LED_ON;
 
-            /* 打开定时器2 */
-            TR2 = 1;
-
             for (k = 0; k < 1800; k++)
             {
                 delay_10us(10);

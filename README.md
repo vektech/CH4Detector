@@ -68,3 +68,12 @@
 > 2020/2/16 3:24
 
 - Device function is all complete. 
+
+#### Version 3.1
+
+> 2020/2/17 10:21
+
+- Set Baud rate to 4800bps 8 1 Even
+- Set uart send interval to 10ms in case of data loss(a better way to wait send complete)
+- Add blink yellow led for sensor expiration
+- Add a switch for sensor control 
