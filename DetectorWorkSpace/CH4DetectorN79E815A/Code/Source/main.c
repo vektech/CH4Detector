@@ -108,6 +108,7 @@ code uint8_t COMMAND_LEN_RE_SERIALNUM[2]={4,14};
 code uint8_t COMMAND_LEN_RE_CLOCK[2]={4,12};
 code uint8_t COMMAND_LEN_RE_MODEL[2]={4,12};
 code uint8_t COMMAND_LEN_RE_CURTAD[2]={4,8};
+code uint8_t COMMAND_LEN_RE_CURTSTATUS[2]={4,10};
 code uint8_t COMMAND_LEN_RE_DEMA[2]={4,10};
 code uint8_t COMMAND_LEN_CANCEL_WARMUP[2]={4,6};
 
@@ -1193,6 +1194,66 @@ void main(void)
                             uart_buffer[COMMAND_LEN_RE_SERIALNUM[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_SERIALNUM[1]);
                             uart_buffer[COMMAND_LEN_RE_SERIALNUM[1] - 1] = 0x55;
                             for (i = 0; i < COMMAND_LEN_RE_SERIALNUM[1]; i++)
+                            {
+                                uart_send(uart_buffer[i]);
+                                /* 串口输出 延时函数 关键参数 */
+                                delay_1ms(10);
+                            }
+                            break;
+                        }
+
+                        /* 读设备状态 */
+                        /* Re:AC 07 00 20 0X 00 ADH ADL CRC 55 */
+                        case 0x07:
+                        {
+                            if (get_crc(uart_buffer, COMMAND_LEN_RE_CURTSTATUS[0]) == uart_buffer[COMMAND_LEN_RE_CURTSTATUS[0] - 2])
+                            {
+                                uart_buffer[3] = device_status[1] & 0xe0;
+                            }
+                            else
+                            {
+                                uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
+                            }
+                            uart_buffer[2] = device_status[0];
+
+                            uart_buffer[4] = 0x00;
+
+                            /* 设备正常 */
+                            if ((device_status[1] & 0xe0) == 0x20)
+                            {
+                                uart_buffer[4] |= 0x00;
+                            }
+
+                            /* 设备预热 */
+                            if ((device_status[1] & 0xe0) == 0x00)
+                            {
+                                uart_buffer[4] |= 0x01;
+                            }
+
+                            /* 设备报警 */
+                            if ((device_status[1] & 0xe0) == 0x40)
+                            {
+                                uart_buffer[4] |= 0x02;
+                            }
+
+                            /* 设备故障 */
+                            if ((device_status[1] & 0xe0) == 0x60)
+                            {
+                                uart_buffer[4] |= 0x04;
+                            }
+
+                            /* 传感器过期 */
+                            if (sensor_expired_flag == true)
+                            {
+                                uart_buffer[4] |= 0x08; 
+                            }
+
+                            uart_buffer[5] = 0x00;
+                            uart_buffer[6] = ch4_adc_value >> 8;
+                            uart_buffer[7] = ch4_adc_value;
+                            uart_buffer[COMMAND_LEN_RE_CURTSTATUS[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_RE_CURTSTATUS[1]);
+                            uart_buffer[COMMAND_LEN_RE_CURTSTATUS[1] - 1] = 0x55;
+                            for (i = 0; i < COMMAND_LEN_RE_CURTSTATUS[1]; i++)
                             {
                                 uart_send(uart_buffer[i]);
                                 /* 串口输出 延时函数 关键参数 */

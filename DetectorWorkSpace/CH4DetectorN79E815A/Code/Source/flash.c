@@ -473,9 +473,9 @@ void flash_write_record(uint8_t record_type)
     start_addr = RECORD_FIRST_ADDRESS[record_type];
 #ifdef _DEBUG_
     uart_send((uint8_t)(start_addr >> 8));
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send((uint8_t)start_addr);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
 #endif
 
     /* 读取记录总数 */
@@ -486,9 +486,9 @@ void flash_write_record(uint8_t record_type)
     record_total = (record_total << 8) + temp_record_total[1];
 #ifdef _DEBUG_
     uart_send(temp_record_total[0]);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send(temp_record_total[1]);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
 #endif
 
     /* 读取最新记录的地址 */
@@ -499,9 +499,9 @@ void flash_write_record(uint8_t record_type)
     newest_addr = (newest_addr << 8) + temp_newest_addr[1];
 #ifdef _DEBUG_
     uart_send(temp_newest_addr[0]);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send(temp_newest_addr[1]);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
 #endif
 
     /* 该记录类型未存储过记录 */
@@ -550,15 +550,15 @@ void flash_write_record(uint8_t record_type)
     page_offset = (newest_addr - start_addr) % 128;
 #ifdef _DEBUG_
     uart_send((uint8_t)(newest_addr >> 8));
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send((uint8_t)newest_addr);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send((uint8_t)(page_addr >> 8));
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send((uint8_t)page_addr);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send(page_offset);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
 #endif
 
     /* 压缩当前时间至 zipped_time */
@@ -568,13 +568,13 @@ void flash_write_record(uint8_t record_type)
     zipped_time[0] |= 0x80;
 #ifdef _DEBUG_
     uart_send(zipped_time[0]);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send(zipped_time[1]);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send(zipped_time[2]);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
     uart_send(zipped_time[3]);
-    delay_1ms_without_BOD(5);
+    delay_1ms_without_BOD(10);
 #endif
 
     /* 写记录 需要计算页首地址 */
@@ -666,7 +666,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             /* uart_buffer[4] 至 uart_buffer[11] 已处理 */
 
             /* 校验符 */
-            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
+            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06));
             /* 结束符 */
             uart_buffer[12] = 0x55;
 
@@ -725,7 +725,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             }
 
             /* 校验符 */
-            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
+            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06));
             /* 结束符 */
             uart_buffer[12] = 0x55;
 
@@ -765,7 +765,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             /* n6 分 */
             uart_buffer[9] = i2c_time_code[1];
             /* 校验符 */
-            uart_buffer[10] = get_crc(uart_buffer, (0x06 + 0x06 - 0x02));
+            uart_buffer[10] = get_crc(uart_buffer, (0x06 + 0x06));
             /* 结束符 */
             uart_buffer[11] = 0x55;
 
@@ -889,7 +889,7 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             /* uart_buffer[4] 至 uart_buffer[11] 已处理 */
 
             /* 校验符 */
-            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06 - 0x02));
+            uart_buffer[11] = get_crc(uart_buffer, (0x07 + 0x06));
             /* 结束符 */
             uart_buffer[12] = 0x55;
 

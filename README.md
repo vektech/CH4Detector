@@ -83,3 +83,9 @@
 > 2020/2/17 16:09
 
 - Fix sensor expired led problem
+
+#### Version 3.3
+
+> 2020/2/18 16:21
+
+- Fix read records checksum error
