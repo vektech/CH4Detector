@@ -820,6 +820,8 @@ void flash_read_record(uint8_t record_type, uint8_t record_number)
             }
             else
             {
+                /* 转换记录序号 序号越大记录越新 序号越小记录越旧 01号记录为最旧记录 */
+                record_number = temp_record_total[1] + 1 - record_number;
                 /* 计算要读取的记录地址 */
                 storage_length = max_of_each_record[record_type] * 4;
                 /* ZZZ 此计算可以有不同的计算形式 */

@@ -518,8 +518,8 @@ void main(void)
         /* 得到ADC采样并滤波之后的值 */
         ch4_adc_value = adc_sensor();
 
-        /* 得到ADC采样并滤波之后的值 超过 sensor_ch4_3500 的报警阈值 报警状态处理 */
-        if (ch4_adc_value >= sensor_ch4_3500)
+        /* 得到ADC采样并滤波之后的值 超过 sensor_ch4_3500 的报警阈值 且 小于故障值 Short_Fault_H 报警状态处理 */
+        if ((ch4_adc_value >= sensor_ch4_3500) && (ch4_adc_value < Short_Fault_H))
         {
             /* Brown-Out Detector 电源电压检测 */
             check_BOD();
@@ -587,7 +587,7 @@ void main(void)
             }
         }
         /* 得到ADC采样并滤波之后的值 小于 Short_Fault_L 的故障阈值 故障状态处理 */
-        else if (ch4_adc_value <= Short_Fault_L)
+        else if ((ch4_adc_value <= Short_Fault_L) || (ch4_adc_value >= Short_Fault_H))
         {
             /* Brown-Out Detector 电源电压检测 */
             check_BOD();

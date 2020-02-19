@@ -89,3 +89,10 @@
 > 2020/2/18 16:21
 
 - Fix read records checksum error
+
+#### Version 3.4
+
+> 2020/2/19 10:43
+
+- Fix query record index.  No.01 means the oldest record and the maximum one means the newest.  
+- Add sensor high value fault. When adc sample value is too high, the device will trigger a fault alarm.
