@@ -514,7 +514,9 @@ void main(void)
                 }
             }
         }
-
+        
+        /* 初始化ADC */
+        adc_init();
         /* 得到ADC采样并滤波之后的值 */
         ch4_adc_value = adc_sensor();
 

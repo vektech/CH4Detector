@@ -96,3 +96,9 @@
 
 - Fix query record index.  No.01 means the oldest record and the maximum one means the newest.  
 - Add sensor high value fault. When adc sample value is too high, the device will trigger a fault alarm.
+
+#### Version 3.5
+
+> 2020/2/19 15:26
+
+- Fix adc sample procedure. Whenever device sample signal, initialize it first.
