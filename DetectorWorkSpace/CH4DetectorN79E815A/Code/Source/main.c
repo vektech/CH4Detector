@@ -259,6 +259,9 @@ void main(void)
         /* 已预热完成 */
         if (sensor_preheat_flag == true)
         {
+            /* AAA Brown-Out Detector 电源电压检测 */
+            check_BOD();
+            
             /* 电源灯开 */
             LED_POWER_ON;
 
@@ -315,7 +318,7 @@ void main(void)
                 /* 读取当前时间 存入Time_Code */
                 i2c_get_time();
                 /* 读取的时间非法 */
-                if (i2c_time_code[6] < 15 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
+                if (i2c_time_code[6] < 19 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
                 {
                     /* 将 i2c_time_code 转换为 time_data */
                     format_to_RTC_time();
@@ -340,112 +343,120 @@ void main(void)
         if (timer2_life_hour_flag == true)
         {
             timer2_life_hour_flag = false;
-
-            /* Brown-Out Detector 电源电压检测 */
-            check_BOD();
-            /* 读取当前时间 存入Time_Code */
-            i2c_get_time();
-
-            /* 从Flash中读取生产日期 */
-            flash_read_data(production_date, PRODUCTION_DATE_ADDR, 5);
-            /* 读取生产日期失败 则设置默认生产日期为 15年12月31日23时59分 */
-            if (production_date[0] >= 255 || (production_date[1] >= 255) || (production_date[2] >= 255))
+            /* 未写出厂日期和RTC */
+            if (life_check_flag == false)
             {
-                production_date[0] = 15;
-                production_date[1] = 12;
-                production_date[2] = 31;
-                production_date[3] = 23;
-                production_date[4] = 59;
+                break;
             }
-
-            /* 进行读取的当前时间和记录的生产日期的比较 */
-            /* 当前时间的年 大于 生产日期中的年 */
-            if (i2c_time_code[6] >= production_date[0])
+            /* 已写出厂日期或RTC */
+            else
             {
-                /* 计算年差 */
-                production_date[0] = i2c_time_code[6] - production_date[0];
-                /* 年差 已经到达五年 如 2020 - 2015 = 5 */
-                if (production_date[0] == SENSOR_LIFE)
+                /* Brown-Out Detector 电源电压检测 */
+                check_BOD();
+                /* 读取当前时间 存入Time_Code */
+                i2c_get_time();
+
+                /* 从Flash中读取生产日期 */
+                flash_read_data(production_date, PRODUCTION_DATE_ADDR, 5);
+                /* 读取生产日期失败 则设置默认生产日期为 19年12月31日23时59分 */
+                if (production_date[0] >= 255 || (production_date[1] >= 255) || (production_date[2] >= 255))
                 {
-                    /* 当前时间的月 大于 生产日期中的月 2020.6 > 2015.5 */
-                    if (i2c_time_code[5] > production_date[1])
+                    production_date[0] = 19;
+                    production_date[1] = 12;
+                    production_date[2] = 31;
+                    production_date[3] = 23;
+                    production_date[4] = 59;
+                }
+
+                /* 进行读取的当前时间和记录的生产日期的比较 */
+                /* 当前时间的年 大于 生产日期中的年 */
+                if (i2c_time_code[6] >= production_date[0])
+                {
+                    /* 计算年差 */
+                    production_date[0] = i2c_time_code[6] - production_date[0];
+                    /* 年差 已经到达五年 如 2020 - 2015 = 5 */
+                    if (production_date[0] == SENSOR_LIFE)
                     {
-                        /* 已使用年数 加1 变为6 */
-                        production_date[0]++;
-                    }
-                    /* 当前时间的月 等于 生产日期中的月 2020.5 = 2015.5 */
-                    if (i2c_time_code[5] == production_date[1])
-                    {
-                        /* 当前时间的日 大于 生产日期中的日 2020.5.6 > 2015.5.5 */
-                        if (i2c_time_code[3] > production_date[2])
+                        /* 当前时间的月 大于 生产日期中的月 2020.6 > 2015.5 */
+                        if (i2c_time_code[5] > production_date[1])
                         {
                             /* 已使用年数 加1 变为6 */
                             production_date[0]++;
                         }
-                        /* 当前时间的日 等于 生产日期中的日 2020.5.5 = 2015.5.5 */
-                        if (i2c_time_code[3] == production_date[2])
+                        /* 当前时间的月 等于 生产日期中的月 2020.5 = 2015.5 */
+                        if (i2c_time_code[5] == production_date[1])
                         {
-                            /* 以此类推比较时 */
-                            if (i2c_time_code[2] > production_date[3])
+                            /* 当前时间的日 大于 生产日期中的日 2020.5.6 > 2015.5.5 */
+                            if (i2c_time_code[3] > production_date[2])
                             {
                                 /* 已使用年数 加1 变为6 */
                                 production_date[0]++;
                             }
-                            /* 时相等 */
-                            if (i2c_time_code[2] == production_date[3])
+                            /* 当前时间的日 等于 生产日期中的日 2020.5.5 = 2015.5.5 */
+                            if (i2c_time_code[3] == production_date[2])
                             {
-                                /* 以此类推比较分 */
-                                if (i2c_time_code[1] > production_date[4])
+                                /* 以此类推比较时 */
+                                if (i2c_time_code[2] > production_date[3])
                                 {
                                     /* 已使用年数 加1 变为6 */
                                     production_date[0]++;
                                 }
+                                /* 时相等 */
+                                if (i2c_time_code[2] == production_date[3])
+                                {
+                                    /* 以此类推比较分 */
+                                    if (i2c_time_code[1] > production_date[4])
+                                    {
+                                        /* 已使用年数 加1 变为6 */
+                                        production_date[0]++;
+                                    }
+                                }
                             }
                         }
                     }
-                }
 
-                /* 使用寿命超时 5年时间到 */
-                if (production_date[0] > SENSOR_LIFE)
-                {
-                    /* 传感器寿命到期标志置位 */
-                    sensor_expired_flag = true;
-
-                    /* 写失效记录标志 */
-                    if (write_expired_record_flag == false)
+                    /* 使用寿命超时 5年时间到 */
+                    if (production_date[0] > SENSOR_LIFE)
                     {
-                        write_expired_record_flag = true;
+                        /* 传感器寿命到期标志置位 */
+                        sensor_expired_flag = true;
 
-                        /* 从FLASH中读取 寿命到期存储地址 的第一个字节 0x01代表失效 0xFF代表未失效 使用 production_date[0] 暂存 */
-                        flash_read_data(production_date, SENSOR_EXPIRED_RECORD_ADDR, 1);
-                        /* 该字节非0x01 表示未写过失效记录 */
-                        if (production_date[0] != 0x01)
+                        /* 写失效记录标志 */
+                        if (write_expired_record_flag == false)
                         {
-                            /* Brown-Out Detector 电源电压检测 */
-                            check_BOD();
-                            /* 写寿命到期记录 */
-                            production_date[0] = 0x01;
-                            flash_write_data(production_date, 1, DEVICE_INFO_ADDR, OFFSET_OF_SENSOR_EXPIRED);
+                            write_expired_record_flag = true;
 
-                            /* 当前时间 年 */
-                            production_date[0] = i2c_time_code[6];
-                            /* 当前时间 年 */
-                            production_date[1] = i2c_time_code[5];
-                            /* 当前时间 年 */
-                            production_date[2] = i2c_time_code[3];                                                        
-                            /* 当前时间 年 */
-                            production_date[3] = i2c_time_code[2];
-                            /* 当前时间 年 */
-                            production_date[4] = i2c_time_code[1];
-                            /* 方式1 写寿命到期时间 */
-                            flash_write_data(production_date, 5, DEVICE_INFO_ADDR, OFFSET_OF_SENSOR_EXPIRED + 1);
+                            /* 从FLASH中读取 寿命到期存储地址 的第一个字节 0x01代表失效 0xFF代表未失效 使用 production_date[0] 暂存 */
+                            flash_read_data(production_date, SENSOR_EXPIRED_RECORD_ADDR, 1);
+                            /* 该字节非0x01 表示未写过失效记录 */
+                            if (production_date[0] != 0x01)
+                            {
+                                /* Brown-Out Detector 电源电压检测 */
+                                check_BOD();
+                                /* 写寿命到期记录 */
+                                production_date[0] = 0x01;
+                                flash_write_data(production_date, 1, DEVICE_INFO_ADDR, OFFSET_OF_SENSOR_EXPIRED);
+
+                                /* 当前时间 年 */
+                                production_date[0] = i2c_time_code[6];
+                                /* 当前时间 年 */
+                                production_date[1] = i2c_time_code[5];
+                                /* 当前时间 年 */
+                                production_date[2] = i2c_time_code[3];
+                                /* 当前时间 年 */
+                                production_date[3] = i2c_time_code[2];
+                                /* 当前时间 年 */
+                                production_date[4] = i2c_time_code[1];
+                                /* 方式1 写寿命到期时间 */
+                                flash_write_data(production_date, 5, DEVICE_INFO_ADDR, OFFSET_OF_SENSOR_EXPIRED + 1);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    /* 传感器寿命到期标志复位 */
-                    sensor_expired_flag = false;
+                    else
+                    {
+                        /* 传感器寿命到期标志复位 */
+                        sensor_expired_flag = false;
+                    }
                 }
             }
         }
@@ -701,6 +712,8 @@ void main(void)
         /* UART接收完成 */
         if (rx_finished)
         {   
+            /* AAA Brown-Out Detector 电源电压检测 */
+            check_BOD();
             /* ZZZ 取第一个字节的最高一位 如果为0B 表示是工装板发来的命令 */
             if (!(uart_buffer[0] & 0x80))
             {
@@ -758,6 +771,8 @@ void main(void)
                             /* 若检查校验和通过 */
                             if ((rx_index >= (GB_READ_FRAME_LEN - 1)) && uart_buffer[4] == get_crc(uart_buffer, GB_READ_FRAME_LEN))
                             {
+                                /* AAA Brown-Out Detector 电源电压检测 */
+                                check_BOD();
                                 /* 查询记录 */
                                 flash_read_record(uart_buffer[2], uart_buffer[1]);
                             }
@@ -770,7 +785,7 @@ void main(void)
                 {
                     switch (uart_buffer[1])
                     {
-                        /* 擦除所有EEP 包括所有记录和设备信息 ZZZ 不可用需修改 */
+                        /* 擦除所有EEP 包括所有记录和设备信息 */
                         case 0x00:
                         {
                             if (get_crc(uart_buffer, COMMAND_LEN_EASE_REC[0]) == uart_buffer[COMMAND_LEN_EASE_REC[0] - 2])
@@ -811,7 +826,7 @@ void main(void)
                                 {
                                     /* 如果输入的时间不正确 */
                                     /* 年 错误 */
-                                    if (uart_buffer[2] < 15)
+                                    if (uart_buffer[2] < 19)
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
                                         goto WR_CLOCK_EROR;
@@ -1128,7 +1143,7 @@ void main(void)
 
                             /* 从FLASH中读取标定数据 ch4_0 & ch4_3500 因两个标定数据地址相连共 4 bytes */
                             flash_read_data(&uart_buffer[4], ADC_VALUE_OF_CH4_0_ADDR, 4);
-                            /* ZZZ */
+                            /* ZZZ 未测试 */
                             uart_buffer[8] = uart_buffer[4];
                             uart_buffer[4] = uart_buffer[5];
                             uart_buffer[5] = uart_buffer[8];

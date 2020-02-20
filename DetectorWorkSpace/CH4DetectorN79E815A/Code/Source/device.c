@@ -121,7 +121,7 @@ void device_init(void)
     /* P0.0 = 0 电磁阀关 */
     VALVE_OFF;
 
-    delay_1ms(3000);
+    delay_1ms_without_BOD(3000);
 
     /* P2.2 = 0 继电器关 */
     DELAY_OFF;
@@ -164,7 +164,7 @@ void device_init(void)
     /* 中断优先级寄存器高字节 PBODH = 1 设置BOD检测中断高优先级为最高优先级 */
     IPH |= 0X20;
 
-    delay_1ms(1000);
+    delay_1ms_without_BOD(1000);
 
     // /* 9600 Baud Rate @ 22.1184MHz */
     // uart_init(9600);
@@ -192,6 +192,8 @@ void check_BOD(void)
         DELAY_OFF;
         /* 电磁阀关 */
         VALVE_OFF;
+        /* 传感器开关关闭 */
+        SENSER_OFF;
         /* 故障灯关 */
         LED_FAULT_OFF;
         /* 报警灯关 */
@@ -205,6 +207,10 @@ void check_BOD(void)
         /* 电源灯关 */
         LED_POWER_OFF;
 
+        /* 串口电平拉低 */
+        P10 = 0;
+        P11 = 0;
+        
         /* 向FLASH中写掉电记录 */
         flash_write_record(POWER_DOWN_RECORD);
 
