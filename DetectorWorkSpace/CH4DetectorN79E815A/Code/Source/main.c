@@ -124,8 +124,12 @@ void main(void)
     uint8_t production_date[5] = {0};
     uint8_t expired_date[5] = {0};
 
-    /* 设备RTC和出场日期检测标志 */
-    uint8_t life_check_flag = false;
+    /* 已设置RTC标志 */
+    bit set_rtc_flag = false;
+    /* 已设置出厂日期标志 */
+    bit set_production_date_flag = false;
+
+    /* RTC和出厂日期存储标志 */
     uint8_t life_check[4] = {0x00, 0x00, 0x00, 0x00};
 
     /* 写传感器寿命到期记录标志 */
@@ -183,7 +187,8 @@ void main(void)
         (life_check[2] == 0x5a) && 
         (life_check[3] == 0xe7))
     {
-        life_check_flag = true;
+        set_rtc_flag = true;
+        set_production_date_flag = true;
     }
 
     /* 设备标定 */
@@ -238,7 +243,7 @@ void main(void)
             timer2_second_expired_flag = false;
 
             /* 未写出厂日期和RTC */
-            if (life_check_flag == false)
+            if ((set_rtc_flag == false) || (set_production_date_flag == false))
             {
                 /* 传感器寿命灯开 */
                 LED_LIFE_ON;
@@ -339,18 +344,14 @@ void main(void)
             device_time_renew_flag = 0;
         }
 
-        /* 1小时时间到就进行一次寿命比较 */
-        if (timer2_life_hour_flag == true)
+        /* 写了厂日期和RTC 1小时时间到就进行一次寿命比较 ZZZ */
+        if ((set_rtc_flag == true) && (set_production_date_flag == true))
         {
-            timer2_life_hour_flag = false;
-            /* 未写出厂日期和RTC */
-            if (life_check_flag == false)
+            /* 1小时时间到就进行一次寿命比较 */
+            if (timer2_life_hour_flag == true)
             {
-                break;
-            }
-            /* 已写出厂日期或RTC */
-            else
-            {
+                timer2_life_hour_flag = false;
+
                 /* Brown-Out Detector 电源电压检测 */
                 check_BOD();
                 /* 读取当前时间 存入Time_Code */
@@ -929,7 +930,7 @@ void main(void)
                                 /* 时钟写入标志 */
                                 life_check[0] = 0xa5;
                                 life_check[1] = 0x36;
-                                life_check_flag = true;
+                                set_rtc_flag = true;
 
                                 /* 将时钟写入标志存在FLASH中 */
                                 flash_write_data(life_check, 4, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
@@ -1000,7 +1001,7 @@ void main(void)
                             {
                                 life_check[2] = 0x5a;
                                 life_check[3] = 0xe7;
-                                life_check_flag = true;
+                                set_production_date_flag = true;
 
                                 flash_write_data(life_check, 4, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
                             }

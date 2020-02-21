@@ -112,3 +112,12 @@
 - Set default production date to 19/12/31 23:59. If RTC and Production date are not set,  device won't check the sensor expiration.
 - When device power on use delay functions without `check_BOD()` instead of  the normal one.
 
+#### Version 3.7
+
+> 2020/2/21 14:40
+
+- Add separate flag for setting rtc and production date.
+- Reduce BOD check repeat time to one.
+- Every time power on device, preheat sensor for 3 minutes.
+- In demarcation, add preheat time and gas mixture time to 5 minutes.
+- Undo query record index.  No.01 means the newest record and the maximum one means the oldest . 

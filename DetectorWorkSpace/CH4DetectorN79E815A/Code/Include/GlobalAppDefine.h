@@ -127,10 +127,10 @@
 #define DEMED_TR_LW (P06 = 0) 
 
 /* 3分钟 */
-#define PREHEAT_TIME_COUNT 750
+#define PREHEAT_TIME_COUNT 900
 
-/*  */
-#define POWER_DOWN_LIMIT 2
+/* ZZZ 掉电触发掉电处理次数 */
+#define POWER_DOWN_LIMIT 1
 
 /* Unused */
 #define SERIAL_ADDRESS 0x2FF0

@@ -99,6 +99,7 @@ void timer2_init(void)
         */
     T2MOD = 0x80;
     /* 定时器计数值 0x2806 = 10246 */
+    /* 10ms */
     /* 定时器2 高字节 */
     TH2 = 0x28;
     /* 定时器2 低字节 */
@@ -162,7 +163,7 @@ void Timer2_ISR(void) interrupt 5
         sensor_preheat_time_count++;
     }
 
-    /* 预热完成 标志位置 PREHEAT_TIME_COUNT = 750 为3分钟*/
+    /* 预热完成 标志位置 PREHEAT_TIME_COUNT = 900 为3分钟*/
     if (sensor_preheat_time_count == PREHEAT_TIME_COUNT)
     {
         sensor_preheat_flag = true;

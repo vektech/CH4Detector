@@ -108,7 +108,8 @@ void sersor_demarcation(void)
             
             /* ---- 1.传感器预热 ---- */
             /* 等待 255 * 2 = 510s */
-            for (i = 0; i < 225; i++)
+            /* wait 5 minutes fixed to 450 */
+            for (i = 0; i < 450; i++)
             {
                 /* 电源灯开 */
                 LED_POWER_ON;
@@ -231,8 +232,8 @@ void sersor_demarcation(void)
                 delay_1ms(250);
 
                 /* ---- 4.等待气体浓度上升 未进行采集 ---- */
-                /* Wait 120s 此举在等待气体浓度上升 */
-                for (i = 0; i <= 300; i++)
+                /* Wait 3min 此举在等待气体浓度上升 */
+                for (i = 0; i <= 450; i++)
                 {
                     /* <2> 电源灯常亮 报警故障两颗灯闪烁 */
                     delay_1ms(500);

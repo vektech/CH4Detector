@@ -41,7 +41,10 @@
 #endif
 
 #ifdef FOSC_221184
-/* 54*4/22.1184 = 10 uS */
+/* 定时器0 模式为8位定时器 CKCON = 0x00 12分频 22118400 / 12 = 1843200 
+    - 错误 54*4/22.1184 = 10 uS 
+    - 应为 (54 * 12) / 22.1184 = 29.3 uS
+    */
 #define VALUE_10us 65536 - 54
 /* 5529*4/22.1184 = 1 mS */
 #define VALUE_1ms 65536 - 5529
@@ -105,7 +108,7 @@ void delay_10us(uint16_t count)
     TR0 = 0;
 }
 
-/* Delay with BOD */
+/* Delay with BOD after test the time is about 0.375ms 1/3ms */
 void delay_1ms(uint16_t count)
 {
     /* Brown-Out Detector 电源电压检测 */
