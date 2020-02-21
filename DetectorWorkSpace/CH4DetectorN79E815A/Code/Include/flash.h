@@ -76,7 +76,7 @@
 #define  OFFSET_OF_CH4_0            22  /* 2 bytes */
 /* CH4 3500点AD值 */  
 #define  OFFSET_OF_CH4_3500         24  /* 2 bytes */
-/* 写时钟和出厂日期标志 life_check ZZZ */
+/* 写时钟和出厂日期标志 life_check */
 #define  OFFSET_OF_RTC              30  /* 5 bytes */
 
 /* 各类记录类型在寻址数组中的标号 */

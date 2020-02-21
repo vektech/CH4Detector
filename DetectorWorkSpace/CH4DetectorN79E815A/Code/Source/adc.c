@@ -50,6 +50,9 @@
  ******************************************************************************/
 void adc_init(void)
 {
+    /* AAA Brown-Out Detector 电源电压检测 */
+    check_BOD();
+
     /* 关闭P0.1 的数字逻辑输入输出功能 设置P0.1 为输入(高阻)模式 */
     adc_set_input_mode(E_CHANNEL0);
     /* AADR2 AADR1 AADR2 = 000B 选择ADC0 即P0.1作为ADC采样端口 */
@@ -187,6 +190,8 @@ uint16_t adc_sensor(void)
     /* 采集10次用来滤波 */
     for (i = 0; i < 10; i++)
     {
+        /* AAA Brown-Out Detector 电源电压检测 */
+        check_BOD();        
         /* 获取单次的ADC采样结果 */
         temp[i] = adc_single_sample();
     }

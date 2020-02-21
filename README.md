@@ -102,3 +102,13 @@
 > 2020/2/19 15:26
 
 - Fix adc sample procedure. Whenever device sample signal, initialize it first.
+
+#### Version 3.6
+
+> 2020/2/20 10:45
+
+- Add five `check_BOD()` for power down check.
+- In  `check_BOD()` function, add sensor off and uart pin set low.
+- Set default production date to 19/12/31 23:59. If RTC and Production date are not set,  device won't check the sensor expiration.
+- When device power on use delay functions without `check_BOD()` instead of  the normal one.
+
