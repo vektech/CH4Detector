@@ -26,6 +26,7 @@
 #include "adc.h"
 #include "i2c.h"
 #include "flash.h"
+#include "utilities.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')
@@ -180,6 +181,24 @@ void device_init(void)
     
     /* I2C初始化 */
     i2c_init();
+
+    /* 读取当前时间 存入Time_Code */
+    i2c_get_time();
+    /* 读取的时间非法 */
+    if (i2c_time_code[6] < 19 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
+    {
+        /* 寿命灯亮 */
+        LED_LIFE_ON;
+    }
+    else
+    {
+        /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
+        EBO = 0;
+        /* 复制从时钟芯片获取的时间戳 将 i2c_time_code 存储至 time_data */
+        store_device_time();
+        /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
+        EBO = 1;
+    }
 }
 
 /* Brown-Out Detector 电源电压检测  Power-On Reset 上电复位 */

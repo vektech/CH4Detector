@@ -22,7 +22,7 @@
 #include "delay.h"
 #include "i2c.h"
 #include "uart.h"
-#include "utlities.h"
+#include "utilities.h"
 
 #include <intrins.h>
 
@@ -421,6 +421,53 @@ void zip_current_time(uint8_t *p)
     }    
 }
 
+/* 压缩设备时间 应用于掉电记录存储 RTC在掉电时数据传输不稳定 */
+void zip_device_time(uint8_t *p)
+{
+    uint8_t i;
+
+    /* 暂时存储压缩之后的时间 */
+    uint8_t temp_zipped_time[4] = {0};
+    /* 暂时存储解压之后的时间 */
+    uint8_t temp_unzipped_time[5] = {0};
+
+    /* second */
+    /* i2c_time_code[0]; */
+    /* minute */
+    temp_unzipped_time[4] = time_data[1];
+    /* hour */
+    temp_unzipped_time[3] = time_data[2];
+    /* day */
+    temp_unzipped_time[2] = time_data[3];
+    /* week */
+    /* i2c_time_code[4]; */
+    /* month */
+    temp_unzipped_time[1] = time_data[5];
+    /* year */
+    temp_unzipped_time[0] = time_data[6];
+
+    /* 通过移位压缩 */
+
+    /* flag & year 0000 00|11 */
+    temp_zipped_time[0] = (temp_unzipped_time[0] >> 4);
+    /* year & month 1111|1111 */
+    temp_zipped_time[1] = temp_unzipped_time[1];
+    temp_zipped_time[1] |= (temp_unzipped_time[0] << 4);
+    /* day & hour 1111 1|111 */
+    temp_zipped_time[2] = temp_unzipped_time[2];
+    temp_zipped_time[2] <<= 3;
+    temp_zipped_time[2] |= (temp_unzipped_time[3] >> 2);
+    /* hour & minute 11|11 1111 */
+    temp_zipped_time[3] = temp_unzipped_time[4];
+    temp_zipped_time[3] |= (temp_unzipped_time[3] << 6);
+
+    /* 拷贝至目标数组中 */
+    for ( i = 0; i < 4; i++)
+    {
+        *(p + i) = temp_zipped_time[i];
+    }    
+}
+
 /* 解压缩时间 p 存储压缩过的时间 q 存储解压后的时间 */
 void unzip_time(uint8_t *p, uint8_t *q)
 {
@@ -561,8 +608,18 @@ void flash_write_record(uint8_t record_type)
     delay_1ms_without_BOD(10);
 #endif
 
-    /* 压缩当前时间至 zipped_time */
-    zip_current_time(zipped_time);
+    /* 根据记录类型选择记录时间的方式 */
+    if (record_type == POWER_DOWN_RECORD)
+    {
+        /* 压缩设备时间至 zipped_time */
+        zip_device_time(zipped_time);
+    }
+    else
+    {
+        /* 压缩当前时间至 zipped_time */
+        zip_current_time(zipped_time);
+    }
+
     /* 设置最新数据标志 1000 00 */
     zipped_time[0] &= 0x03;
     zipped_time[0] |= 0x80;

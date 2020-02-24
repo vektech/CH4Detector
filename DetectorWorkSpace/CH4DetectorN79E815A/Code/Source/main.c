@@ -27,7 +27,7 @@
 #include "signal.h"
 #include "timer.h"
 #include "i2c.h"
-#include "utlities.h"
+#include "utilities.h"
 #include "adc.h"
 #include "flash.h"
 
@@ -325,15 +325,14 @@ void main(void)
                 /* 读取的时间非法 */
                 if (i2c_time_code[6] < 19 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
                 {
-                    /* 将 i2c_time_code 转换为 time_data */
-                    format_to_RTC_time();
+                    break;
                 }
                 else
                 {
                     /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
                     EBO = 0;
-                    /* ZZZ 复制从时钟芯片获取的时间戳 将 time_data 转换为 i2c_time_code */
-                    format_to_device_time();
+                    /* 复制从时钟芯片获取的时间戳 将 i2c_time_code 存储至 time_data */
+                    store_device_time();
                     /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
                     EBO = 1;
                 }
@@ -341,7 +340,7 @@ void main(void)
         }
         else
         {
-            device_time_renew_flag = 0;
+            device_time_renew_flag = false;
         }
 
         /* 写了厂日期和RTC 1小时时间到就进行一次寿命比较 ZZZ */

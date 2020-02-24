@@ -25,7 +25,7 @@
 #include "adc.h"
 #include "uart.h"
 #include "i2c.h"
-#include "utlities.h"
+#include "utilities.h"
 #include "flash.h"
 
 /*******************************************************************************
@@ -314,7 +314,7 @@ void sersor_demarcation(void)
                     /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
                     EBO = 0;
                     /* 复制从时钟芯片获取的时间戳 */
-                    format_to_device_time();
+                    store_device_time();
                     /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
                     EBO = 1;
                     

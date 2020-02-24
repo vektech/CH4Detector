@@ -33,7 +33,7 @@
 #include "N79E81x.h"
 #include "i2c.h"
 #include "delay.h"
-#include "utlities.h"
+#include "utilities.h"
 
 /*******************************************************************************
  *                 Macro Define Section ('#define')

@@ -121,3 +121,9 @@
 - Every time power on device, preheat sensor for 3 minutes.
 - In demarcation, add preheat time and gas mixture time to 5 minutes.
 - Undo query record index.  No.01 means the newest record and the maximum one means the oldest . 
+
+#### Version 3.8
+
+> 2020/2/24 18:21
+
+- Fix power down record.
