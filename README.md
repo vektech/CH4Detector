@@ -126,4 +126,14 @@
 
 > 2020/2/24 18:21
 
-- Fix power down record.
+- Fix power down record with RTC buffer.
+
+#### Version 3.9
+
+> 2020/2/25 13:25
+
+- Delete default production date setting
+- Fix RTC and production date flag's flash saving.
+- Fix command about flash erase, reset the value of expiration flags.
+- Reduce the cycle of expiration checking.
+

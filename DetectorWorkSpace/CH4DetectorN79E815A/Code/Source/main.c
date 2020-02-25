@@ -361,11 +361,14 @@ void main(void)
                 /* 读取生产日期失败 则设置默认生产日期为 19年12月31日23时59分 */
                 if (production_date[0] >= 255 || (production_date[1] >= 255) || (production_date[2] >= 255))
                 {
-                    production_date[0] = 19;
-                    production_date[1] = 12;
-                    production_date[2] = 31;
-                    production_date[3] = 23;
-                    production_date[4] = 59;
+                    // production_date[0] = 19;
+                    // production_date[1] = 12;
+                    // production_date[2] = 31;
+                    // production_date[3] = 23;
+                    // production_date[4] = 59;
+
+                    /* 时间写入错误需要重新写时间 */
+                    set_production_date_flag = false;
                 }
 
                 /* 进行读取的当前时间和记录的生产日期的比较 */
@@ -788,6 +791,10 @@ void main(void)
                         /* 擦除所有EEP 包括所有记录和设备信息 */
                         case 0x00:
                         {
+                            set_rtc_flag = false;
+                            set_production_date_flag = false;
+                            sensor_expired_flag = false;
+
                             if (get_crc(uart_buffer, COMMAND_LEN_EASE_REC[0]) == uart_buffer[COMMAND_LEN_EASE_REC[0] - 2])
                             {
                                 for (i = 0; i < 28; i++)
@@ -932,7 +939,7 @@ void main(void)
                                 set_rtc_flag = true;
 
                                 /* 将时钟写入标志存在FLASH中 */
-                                flash_write_data(life_check, 4, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
+                                flash_write_data(&life_check[0], 2, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
                             }
                             break;
                         }
@@ -1002,7 +1009,7 @@ void main(void)
                                 life_check[3] = 0xe7;
                                 set_production_date_flag = true;
 
-                                flash_write_data(life_check, 4, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
+                                flash_write_data(&life_check[2], 2, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
                             }
                             break;
                         }

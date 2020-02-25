@@ -188,8 +188,8 @@ void Timer2_ISR(void) interrupt 5
         }
     }
 
-    /* 1小时标志位 ZZZ 3600 */
-    if (timer2_life_second_count == 150)
+    /* 1小时标志位 ZZZ 3600 150 1 */
+    if (timer2_life_second_count == 1)
     {
         /* 小时到期标志 */
         timer2_life_hour_flag = true;
