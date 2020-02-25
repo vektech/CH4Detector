@@ -112,6 +112,7 @@
 - Set default production date to 19/12/31 23:59. If RTC and Production date are not set,  device won't check the sensor expiration.
 - When device power on use delay functions without `check_BOD()` instead of  the normal one.
 
+<<<<<<< HEAD
 #### Version 3.7
 
 > 2020/2/21 14:40
@@ -137,3 +138,5 @@
 - Fix command about flash erase, reset the value of expiration flags.
 - Reduce the cycle of expiration checking.
 
+=======
+>>>>>>> d17f88543bc81ad966e6f3612c62b15d0cd1a274
