@@ -346,23 +346,11 @@ void main(void)
         /* 写了厂日期和RTC 1小时时间到就进行一次寿命比较 ZZZ */
         if ((set_rtc_flag == true) && (set_production_date_flag == true))
         {
-<<<<<<< HEAD
             /* 1小时时间到就进行一次寿命比较 */
             if (timer2_life_hour_flag == true)
             {
                 timer2_life_hour_flag = false;
 
-=======
-            timer2_life_hour_flag = false;
-            /* 未写出厂日期和RTC */
-            if (life_check_flag == false)
-            {
-                break;
-            }
-            /* 已写出厂日期或RTC */
-            else
-            {
->>>>>>> d17f88543bc81ad966e6f3612c62b15d0cd1a274
                 /* Brown-Out Detector 电源电压检测 */
                 check_BOD();
                 /* 读取当前时间 存入Time_Code */
@@ -372,7 +360,6 @@ void main(void)
                 flash_read_data(production_date, PRODUCTION_DATE_ADDR, 5);
                 /* 读取生产日期失败 则设置默认生产日期为 19年12月31日23时59分 */
                 if (production_date[0] >= 255 || (production_date[1] >= 255) || (production_date[2] >= 255))
-<<<<<<< HEAD
                 {
                     // production_date[0] = 19;
                     // production_date[1] = 12;
@@ -388,20 +375,6 @@ void main(void)
                 /* 当前时间的年 大于 生产日期中的年 */
                 if (i2c_time_code[6] >= production_date[0])
                 {
-=======
-                {
-                    production_date[0] = 19;
-                    production_date[1] = 12;
-                    production_date[2] = 31;
-                    production_date[3] = 23;
-                    production_date[4] = 59;
-                }
-
-                /* 进行读取的当前时间和记录的生产日期的比较 */
-                /* 当前时间的年 大于 生产日期中的年 */
-                if (i2c_time_code[6] >= production_date[0])
-                {
->>>>>>> d17f88543bc81ad966e6f3612c62b15d0cd1a274
                     /* 计算年差 */
                     production_date[0] = i2c_time_code[6] - production_date[0];
                     /* 年差 已经到达五年 如 2020 - 2015 = 5 */
@@ -435,7 +408,7 @@ void main(void)
                                 if (i2c_time_code[2] == production_date[3])
                                 {
                                     /* 以此类推比较分 */
-                                    if (i2c_time_code[1] > production_date[4])
+                                    if (i2c_time_code[1] >= production_date[4])
                                     {
                                         /* 已使用年数 加1 变为6 */
                                         production_date[0]++;
@@ -1036,7 +1009,7 @@ void main(void)
                                 life_check[3] = 0xe7;
                                 set_production_date_flag = true;
 
-                                flash_write_data(&life_check[2], 2, DEVICE_INFO_ADDR, OFFSET_OF_RTC);
+                                flash_write_data(&life_check[2], 2, DEVICE_INFO_ADDR, OFFSET_OF_RTC + 2);
                             }
                             break;
                         }
