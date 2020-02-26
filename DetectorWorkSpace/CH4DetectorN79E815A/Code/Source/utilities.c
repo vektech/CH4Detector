@@ -45,12 +45,19 @@ uint8_t time_data[7];
  ******************************************************************************/
 void store_device_time(void)
 {
+    /* second */
     time_data[0] = i2c_time_code[0];
+    /* minute */
     time_data[1] = i2c_time_code[1];
+    /* hour */
     time_data[2] = i2c_time_code[2];
+    /* day */
     time_data[3] = i2c_time_code[3];
+    /* week */
     /* ÂÔÈ¥ÁËi2c_time_code[4] ÐÇÆÚ */
+    /* month */
     time_data[5] = i2c_time_code[5];
+    /* year */
     time_data[6] = i2c_time_code[6];
 }
 

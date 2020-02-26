@@ -137,3 +137,9 @@
 - Fix command about flash erase, reset the value of expiration flags.
 - Reduce the cycle of expiration checking.
 
+#### Version 4.0
+
+> 2020/2/25 17:01
+
+- Renew device time every second, delete old method.
+- When erase flash, reset flags. Rewrite threshold in flash.

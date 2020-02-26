@@ -237,10 +237,27 @@ void main(void)
         /* Brown-Out Detector 电源电压检测 */
         check_BOD();
 
-        /* 检查是否已写入RTC和出厂日期 传感器寿命过期信号执行 */
+        /* 更新缓存设备时间 检查是否已写入RTC和出厂日期 传感器寿命过期信号执行 */
         if (timer2_second_expired_flag == true)
         {
             timer2_second_expired_flag = false;
+
+            /* 读取当前时间 存入Time_Code */
+            i2c_get_time();
+            /* 读取的时间非法 */
+            if (i2c_time_code[6] > 99 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
+            {
+                break;
+            }
+            else
+            {
+                /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
+                EBO = 0;
+                /* 复制从时钟芯片获取的时间戳 将 i2c_time_code 存储至 time_data */
+                store_device_time();
+                /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
+                EBO = 1;
+            }
 
             /* 未写出厂日期和RTC */
             if ((set_rtc_flag == false) || (set_production_date_flag == false))
@@ -261,7 +278,7 @@ void main(void)
             }
         }
         
-        /* 已预热完成 */
+        /* 已预热完成 没有从FLASH中读取标定值 尝试从FLASH中读取标定数据 */
         if (sensor_preheat_flag == true)
         {
             /* AAA Brown-Out Detector 电源电压检测 */
@@ -310,39 +327,6 @@ void main(void)
             }
         }
 
-        /* 每两秒执行一次 从RTC更新设备时间 */
-        if (!(timer2_life_second_count % 2))
-        {
-            /* 没有从I2C中读取时间 */
-            if (!device_time_renew_flag)
-            {   
-                /* 设备时间已更新 */
-                device_time_renew_flag = true;
-                /* Brown-Out Detector 电源电压检测 */
-                check_BOD();
-                /* 读取当前时间 存入Time_Code */
-                i2c_get_time();
-                /* 读取的时间非法 */
-                if (i2c_time_code[6] < 19 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
-                {
-                    break;
-                }
-                else
-                {
-                    /* EBO 为BOD电源电压检测的中断使能位 关中断 sbit EBO = IE ^ 5 */
-                    EBO = 0;
-                    /* 复制从时钟芯片获取的时间戳 将 i2c_time_code 存储至 time_data */
-                    store_device_time();
-                    /* EBO 为BOD电源电压检测的中断使能位 开中断 sbit EBO = IE ^ 5 */
-                    EBO = 1;
-                }
-            }
-        }
-        else
-        {
-            device_time_renew_flag = false;
-        }
-
         /* 写了厂日期和RTC 1小时时间到就进行一次寿命比较 ZZZ */
         if ((set_rtc_flag == true) && (set_production_date_flag == true))
         {
@@ -361,12 +345,6 @@ void main(void)
                 /* 读取生产日期失败 则设置默认生产日期为 19年12月31日23时59分 */
                 if (production_date[0] >= 255 || (production_date[1] >= 255) || (production_date[2] >= 255))
                 {
-                    // production_date[0] = 19;
-                    // production_date[1] = 12;
-                    // production_date[2] = 31;
-                    // production_date[3] = 23;
-                    // production_date[4] = 59;
-
                     /* 时间写入错误需要重新写时间 */
                     set_production_date_flag = false;
                 }
@@ -791,12 +769,16 @@ void main(void)
                         /* 擦除所有EEP 包括所有记录和设备信息 */
                         case 0x00:
                         {
-                            set_rtc_flag = false;
-                            set_production_date_flag = false;
-                            sensor_expired_flag = false;
-
                             if (get_crc(uart_buffer, COMMAND_LEN_EASE_REC[0]) == uart_buffer[COMMAND_LEN_EASE_REC[0] - 2])
                             {
+                                set_rtc_flag              = false;
+                                set_production_date_flag  = false;
+                                sensor_expired_flag       = false;
+                                write_expired_record_flag = false;
+
+                                /* 从FLASH中读取标定数据 ch4_0 & ch4_3500 因两个标定数据地址相连共 4 bytes */
+                                flash_read_data(sensor_demarcation_result, ADC_VALUE_OF_CH4_0_ADDR, 4);
+                                
                                 for (i = 0; i < 28; i++)
                                 {
                                     /* 按页擦除 */
@@ -805,12 +787,16 @@ void main(void)
                                     check_BOD();
                                 }
 
+                                /* 将采样结果数组存入FLASH中 */
+                                flash_write_data(sensor_demarcation_result, 4, DEVICE_INFO_ADDR, OFFSET_OF_CH4_0);
+
                                 uart_buffer[3] = device_status[1] & 0xe0;
                             }
                             else
                             {
                                 uart_buffer[3] = (device_status[1] & 0xe0) | CHECKSUM_EROR;
                             }
+
                             uart_buffer[2] = device_status[0];
                             uart_buffer[COMMAND_LEN_EASE_REC[1] - 2] = get_crc(uart_buffer, COMMAND_LEN_EASE_REC[1]);
                             uart_buffer[COMMAND_LEN_EASE_REC[1] - 1] = 0x55;
@@ -833,7 +819,7 @@ void main(void)
                                 {
                                     /* 如果输入的时间不正确 */
                                     /* 年 错误 */
-                                    if (uart_buffer[2] < 19)
+                                    if (uart_buffer[2] > 99)
                                     {
                                         uart_buffer[3] = (device_status[1] & 0xe0) | ILLEGAL_PARA_EROR;
                                         goto WR_CLOCK_EROR;

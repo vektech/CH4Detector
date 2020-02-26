@@ -185,7 +185,7 @@ void device_init(void)
     /* 读取当前时间 存入Time_Code */
     i2c_get_time();
     /* 读取的时间非法 */
-    if (i2c_time_code[6] < 19 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
+    if (i2c_time_code[6] > 99 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
     {
         /* 寿命灯亮 */
         LED_LIFE_ON;
