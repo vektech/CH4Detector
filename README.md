@@ -143,3 +143,9 @@
 
 - Renew device time every second, delete old method.
 - When erase flash, reset flags. Rewrite threshold in flash.
+
+Version 4.1
+
+> 2020/2/27 10:00
+
+- If the RTC time is invalid, set RTC time to 2019/12/31 00:00:00

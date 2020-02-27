@@ -247,7 +247,34 @@ void main(void)
             /* 读取的时间非法 */
             if (i2c_time_code[6] > 99 || (i2c_time_code[5] > 12) || (i2c_time_code[3] > 31) || (i2c_time_code[2] > 23) || (i2c_time_code[1] > 59) || (i2c_time_code[0] > 59))
             {
-                break;
+                /* 向RTC写入默认日期 */
+                /* 19 年 */
+                uart_buffer[2] = 19;
+                /* 12 月 */
+                uart_buffer[3] = 12;
+                /* 31 日 */
+                uart_buffer[4] = 31;
+                /* 0 时、0 分、0 秒 */
+                uart_buffer[5] = 0;
+                uart_buffer[6] = 0;
+                uart_buffer[7] = 0;
+
+                for (i = 2; i < 8; i++)
+                {
+                    /* 十六进制转为BCD码 */
+                    i2c_time_code[8 - i] = hex2bcd(uart_buffer[i]);
+                }
+
+                i2c_time_code[0] = i2c_time_code[1];
+                i2c_time_code[1] = i2c_time_code[2];
+                i2c_time_code[2] = i2c_time_code[3];
+                i2c_time_code[3] = i2c_time_code[4];
+                i2c_time_code[4] = 0;
+
+                /* 写入数据 */
+                i2c_set_time();
+
+                delay_1ms(100);
             }
             else
             {
