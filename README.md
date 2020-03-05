@@ -144,8 +144,15 @@
 - Renew device time every second, delete old method.
 - When erase flash, reset flags. Rewrite threshold in flash.
 
-Version 4.1
+#### Version 4.1
 
 > 2020/2/27 10:00
 
 - If the RTC time is invalid, set RTC time to 2019/12/31 00:00:00
+
+#### Version 4.2
+
+> 2020/3/2 13:50
+
+- (8.9s) Fix the valve and relay actions when long pressing the test key.
+- (4s)    Fix the valve and relay actions when CH4 alarm.

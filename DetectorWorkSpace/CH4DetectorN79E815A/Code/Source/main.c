@@ -141,9 +141,14 @@ void main(void)
     /* 写传感器故障恢复记录标志 */
     bit write_no_fault_record_flag = false;
 
+    /* 按键长按标志 */
+    bit key_long_press_flag = false;
+
     /* 自检按键 */
     uint8_t selfcheck_key;
 
+    /* 长按计数 */
+    uint8_t key_long_press_count;
     /* 尝试次数计数 */
     uint8_t i;
 
@@ -480,14 +485,21 @@ void main(void)
             if (selfcheck_key == 0x00)
             {
                 /* 测试键长按标志未置位 */
-                if (!key_long_press_flag)
+                if (key_long_press_flag == false)
                 {
-                    timer2_key_long_press_count = 0;
                     /* 置位测试键长按标志 */
                     key_long_press_flag = true;
+
+                    /* 自检计数清零 */
+                    key_long_press_count = 0;
                 }
-                /* 这里等于6 通过实际测试出延时时间为11s 国标规定测试键按下后 在7~30s内 应触发继电器 阀 */
-                if (timer2_key_long_press_count >= 6)
+                else
+                {
+                    key_long_press_count++;
+                }
+
+                /* 这里等于8 通过实际测试出延时时间为8.7s 国标规定测试键按下后 在7~30s内 应触发继电器 阀 */
+                if (key_long_press_count >= 8)
                 {
                     /* 阀检测 当阀关闭时 */
                     if (!device_valve_state)
@@ -504,7 +516,7 @@ void main(void)
                     }
                     /* 继电器开 */
                     DELAY_ON;
-                    timer2_key_long_press_count = 8;
+                    key_long_press_count = 8;
                 }
                 device_alarm(Alarm_Selfcheck);
             }
@@ -513,7 +525,7 @@ void main(void)
         else
         {
             /* 测试键长按标志已置位 */
-            if (key_long_press_flag)
+            if (key_long_press_flag == true)
             {
                 /* 延时去抖 */
                 delay_1ms(30);
@@ -566,10 +578,10 @@ void main(void)
                         exceeded_flag = true;
                     }
 
-                    /* 报警次数大于 5 */
-                    if (exceeded_count > 5)
+                    /* 报警次数大于等于 4 实测4秒左右 */
+                    if (exceeded_count >= 4)
                     {
-                        exceeded_count = 5;
+                        exceeded_count = 4;
                         /* 继电器开 */
                         DELAY_ON;
                         /* 阀操作执行的次数为8的倍数 */
