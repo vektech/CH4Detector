@@ -156,3 +156,9 @@
 
 - (8.9s) Fix the valve and relay actions when long pressing the test key.
 - (4s)    Fix the valve and relay actions when CH4 alarm.
+
+#### Version 4.3
+
+> 2020/3/11 13:22
+
+- Fix ADC input channel setting, it won't influence the VALVE output.

@@ -70,8 +70,8 @@ void adc_set_input_mode(enum E_ADCCNL_SEL channel)
         /* 关闭P0.1 的数字逻辑输入输出功能 */
         P0DIDS |= SET_BIT1;
         /* 设置P0.1 输入(高阻)模式 */
-        P0M1 = SET_BIT1;
-        P0M2 = 0x00;
+        P0M1 |= SET_BIT1;
+        P0M2 &= CLR_BIT1;
         break;
     case E_CHANNEL1:        // ADC1(P0.2) is input-only mode
         P0DIDS |= SET_BIT2; // Disable digital function for P0.2
